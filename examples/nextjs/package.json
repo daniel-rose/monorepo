@@ -2,31 +2,36 @@
   "name": "nextjs-example",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build  && cp -R .next/static/ .next/standalone/examples/nextjs/.next/static/",
     "start": "next start",
     "standalone": "node .next/standalone/examples/nextjs/server.js",
-    "lint": "next lint",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "lint": "eslint",
     "test:e2e": "playwright test --config playwright.config.ts --ui",
     "test:e2e:ci:pre": "playwright install",
     "test:e2e:ci": "pnpm run test:e2e:ci:pre && playwright test --config playwright.config.ts"
   },
   "dependencies": {
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "next": "^15.5.3",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "next": "^16.0.1",
     "@daniel-rose/envex": "^1.2.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
-    "@playwright/test": "^1.55.0",
-    "@types/node": "^24.3.1",
-    "@types/react": "^19.1.12",
-    "@types/react-dom": "^19.1.9",
+    "@playwright/test": "^1.56.1",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "^15.5.3",
-    "playwright": "^1.55.0",
+    "eslint-config-next": "^16.0.1",
+    "playwright": "^1.56.1",
+    "prettier": "^3.6.2",
+    "prettier-plugin-organize-imports": "^4.3.0",
     "typescript": "^5"
   }
 }

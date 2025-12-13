@@ -18,6 +18,7 @@ const EnvexProvider = (props: EnvexProviderPropsInterface) => {
       )
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setEnv(window.ENV)
   }, [])
 

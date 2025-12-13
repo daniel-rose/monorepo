@@ -23,9 +23,9 @@ export default defineConfig({
       timeout: 360 * 1000,
       stdout: 'pipe',
       env: {
-        'NEXT_PUBLIC_FOO': 'bar',
-        'BAR': 'foo'
-      }
+        NEXT_PUBLIC_FOO: 'bar',
+        BAR: 'foo',
+      },
     },
   ],
 })

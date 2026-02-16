@@ -1,0 +1,3 @@
+{
+  "extends": "@daniel-rose/semantic-release-config"
+}

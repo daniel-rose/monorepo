@@ -34,6 +34,42 @@ updates:
       - "dependencies"
       - "auto-update"
 
+  - package-ecosystem: "npm"
+    directory: "/configs/eslint"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "auto-update"
+
+  - package-ecosystem: "npm"
+    directory: "/configs/prettier"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "auto-update"
+
+  - package-ecosystem: "npm"
+    directory: "/configs/semantic-release"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "auto-update"
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

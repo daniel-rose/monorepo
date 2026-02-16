@@ -1,100 +1,41 @@
-# envex
+# Monorepo
 
-> Runtime environment variables for Next.js
-
-[![npm version](https://img.shields.io/npm/v/@daniel-rose/envex.svg)](https://www.npmjs.com/package/@daniel-rose/envex)  
 [![License](https://img.shields.io/npm/l/@daniel-rose/envex.svg)](https://github.com/daniel-rose/envex/blob/main/LICENSE)
 
-Envex dynamically injects environment variables into your Next.js (>= 15) application at runtime.  
-This approach follows the **"build once, deploy many"** principle, allowing the same build to be used across different environments without requiring rebuilds.  
-Fully supports both client- and server-side usage with TypeScript.
+Monorepo for envex and shared configurations.
 
-> **Note:** The main package code is located in `packages/envex`.
+## Packages
 
----
+| Package | Description |
+|---------|-------------|
+| [@daniel-rose/envex](./packages/envex) | Runtime environment variables for Next.js |
+| [@daniel-rose/eslint-config](./configs/eslint) | Shared ESLint configuration |
+| [@daniel-rose/prettier-config](./configs/prettier) | Shared Prettier configuration |
+| [@daniel-rose/semantic-release-config](./configs/semantic-release) | Shared semantic-release configuration |
 
 ## Monorepo Structure
 
 ```text
 envex/
-├─ packages/
-│  └─ envex/           # main package code
-└─ examples/
-   └─ nextjs/          # example Next.js integration
+├─ packages/envex/           # main library
+├─ configs/eslint/           # ESLint config
+├─ configs/prettier/         # Prettier config
+├─ configs/semantic-release/ # semantic-release config
+└─ examples/nextjs/          # example Next.js integration
 ```
 
-## Installation
+## Development
 
 ```bash
-# npm
-npm install @daniel-rose/envex
+# install dependencies
+pnpm install
 
-# yarn
-yarn add @daniel-rose/envex
+# build all packages
+pnpm build
 
-# pnpm
-pnpm add @daniel-rose/envex
+# run tests
+pnpm test
 ```
-
-## Usage
-
-### Client
-
-Wrap your app in layout.tsx with EnvScript and EnvProvider to enable the useEnv hook:
-
-```tsx
-// app/layout.tsx
-import { EnvScript } from "@daniel-rose/envex/script";
-import { EnvexProvider } from "@daniel-rose/envex";
-import { getPublicEnv } from "@daniel-rose/envex/server";
-
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-    const initialEnv = await getPublicEnv()
-    
-    return (
-        <html lang="en">
-            <body>
-                <EnvScript />
-                <EnvexProvider initialEnv={initialEnv}>{children}</EnvexProvider>
-            </body>
-        </html>
-    )
-}
-```
-
-Then you can use useEnv anywhere in your client components:
-
-```tsx
-import { useEnv } from '@daniel-rose/envex'
-
-export function Example() {
-    const env = useEnv()
-    return <div>{env['NEXT_PUBLIC_API_URL']}</div>
-}
-```
-
-### Server
-
-Access environment variables via callbacks:
-
-```ts
-import { getEnv, getEnvByName, getPublicEnv, getPublicEnvByName } from '@daniel-rose/envex/server'
-
-const allEnv = getEnv()
-const secret = getEnvByName('DATABASE_PASSWORD')
-
-const onlyPublicEnv = getPublicEnv()
-const apiUrl = getPublicEnvByName('NEXT_PUBLIC_API_URL')
-```
-
-## Example
-
-See examples/nextjs for a full integration.
-
-## Testing
-
-- Unit tests: Vitest
-- End-to-end: Playwright
 
 ## License
 
@@ -102,5 +43,4 @@ MIT &copy; Daniel Rose
 
 Links
 
-- GitHub: https://github.com/daniel-rose/envex
-- npm: https://www.npmjs.com/package/@daniel-rose/envex
+- GitHub: https://github.com/daniel-rose/monorepo

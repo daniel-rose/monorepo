@@ -1,0 +1,44 @@
+{
+  "name": "@daniel-rose/semantic-release-config",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": "Daniel Rose",
+  "keywords": [
+    "semantic-release",
+    "config"
+  ],
+  "type": "module",
+  "scripts": {
+    "build": "mkdir -p ./dist && cp .releaserc.json ./dist/index.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "dist/index.json",
+  "dependencies": {
+    "@semantic-release/npm": "^13.1.4",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^12.0.6",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/release-notes-generator": "^14.1.0"
+  },
+  "devDependencies": {
+    "semantic-release": "^25.0.3"
+  },
+  "peerDependencies": {
+    "semantic-release": "^25"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/daniel-rose/monorepo.git",
+    "directory": "configs/semantic-release"
+  },
+  "bugs": {
+    "url": "https://github.com/daniel-rose/monorepo/issues"
+  },
+  "homepage": "https://github.com/daniel-rose/monorepo/blob/main/configs/semantic-release/README.md"
+}

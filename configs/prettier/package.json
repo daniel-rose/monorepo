@@ -1,0 +1,43 @@
+{
+  "name": "@daniel-rose/prettier-config",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": "Daniel Rose",
+  "keywords": [
+    "prettier",
+    "config"
+  ],
+  "type": "module",
+  "scripts": {
+    "build": "mkdir -p ./dist && cp .prettierrc.js ./dist/index.js",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "dist/index.js",
+  "dependencies": {
+    "prettier-plugin-organize-imports": "^4.3.0"
+  },
+  "devDependencies": {
+    "@daniel-rose/semantic-release-config": "^1.0.0",
+    "prettier": "^3.8.1",
+    "semantic-release": "^25.0.3"
+  },
+  "peerDependencies": {
+    "prettier": "^3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/daniel-rose/monorepo.git",
+    "directory": "configs/prettier"
+  },
+  "bugs": {
+    "url": "https://github.com/daniel-rose/monorepo/issues"
+  },
+  "homepage": "https://github.com/daniel-rose/monorepo/blob/main/configs/prettier/README.md"
+}

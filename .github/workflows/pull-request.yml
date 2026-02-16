@@ -23,14 +23,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Build
+        run: pnpm --filter "./packages/*" --filter "./configs/*" --filter "./examples/*" build
+
       - name: Run linter
         run: pnpm --filter "./packages/*" --filter "./examples/*" lint
 
       - name: Run unit tests
         run: pnpm --filter "./packages/*" --filter "./examples/*" test:unit:ci
-
-      - name: Build
-        run: pnpm --filter "./packages/*" --filter "./examples/*" build
 
       - name: Run e2e tests
         run: pnpm --filter "./packages/*" --filter "./examples/*" test:e2e:ci

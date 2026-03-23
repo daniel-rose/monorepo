@@ -1,0 +1,29 @@
+name: Close conflicted Dependabot PRs
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  close-conflicted:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close Dependabot PRs with merge conflicts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr list \
+            --repo "${{ github.repository }}" \
+            --state open \
+            --label "dependencies" \
+            --json number,author,mergeable \
+            --jq '.[] | select(.author.login == "dependabot[bot]") | select(.mergeable == "CONFLICTING") | .number' \
+          | while read -r num; do
+            gh pr close "$num" \
+              --repo "${{ github.repository }}" \
+              --comment "Closed automatically — this PR has merge conflicts. Dependabot will open a new PR when the next version is available."
+          done

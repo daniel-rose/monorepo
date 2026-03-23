@@ -1,1 +1,1 @@
-export { default as EnvScript } from './EnvScript'
+export { default as EnvScript } from './nextjs/EnvScript'

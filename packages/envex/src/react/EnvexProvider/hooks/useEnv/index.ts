@@ -1,9 +1,9 @@
 'use client'
 
 import { useContext } from 'react'
-import EnvexContext from '../EnvexContext'
-import { EnvexProviderIsMissingError } from '../errors.ts'
-import type { Env } from '../types.ts'
+import { EnvexProviderIsMissingError } from '../../../../errors.ts'
+import type { Env } from '../../../../types.ts'
+import { EnvexContext } from '../../contexts'
 
 const useEnv = (): Env => {
   const env = useContext(EnvexContext)

@@ -8,7 +8,7 @@ Monorepo for envex and shared configurations.
 
 | Package | Description |
 |---------|-------------|
-| [@daniel-rose/envex](./packages/envex) | Runtime environment variables for Next.js |
+| [@daniel-rose/envex](./packages/envex) | Runtime environment variables for React applications |
 | [@daniel-rose/eslint-config](./configs/eslint) | Shared ESLint configuration |
 | [@daniel-rose/prettier-config](./configs/prettier) | Shared Prettier configuration |
 | [@daniel-rose/semantic-release-config](./configs/semantic-release) | Shared semantic-release configuration |

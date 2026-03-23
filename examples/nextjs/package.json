@@ -16,21 +16,21 @@
     "test:e2e:ci": "pnpm run test:e2e:ci:pre && playwright test --config playwright.config.ts"
   },
   "dependencies": {
-    "react": "^19",
-    "react-dom": "^19",
-    "next": "^16",
-    "@daniel-rose/envex": "workspace:^"
+    "@daniel-rose/envex": "workspace:^",
+    "next": "^16.2.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   },
   "devDependencies": {
-    "@playwright/test": "^1.57.0",
-    "@types/node": "^24",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "^16",
-    "playwright": "^1.57.0",
-    "prettier": "^3",
-    "prettier-plugin-organize-imports": "^4",
-    "typescript": "^5"
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^24.12.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.1",
+    "playwright": "^1.58.2",
+    "prettier": "^3.8.1",
+    "prettier-plugin-organize-imports": "^4.3.0",
+    "typescript": "^5.9.3"
   }
 }

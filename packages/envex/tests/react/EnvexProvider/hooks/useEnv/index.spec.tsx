@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { EnvexProvider, EnvexProviderIsMissingError } from '../../src'
-import EnvList from '../../src/EnvList'
+import { EnvexProvider, EnvexProviderIsMissingError } from '../../../../../src'
+import EnvList from '../../../../../src/react/EnvList'
 
 test('Try to render a component which uses "useEnv" without EnvexProvider as parent.', async () => {
   try {

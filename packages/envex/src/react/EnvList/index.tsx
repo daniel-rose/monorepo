@@ -1,6 +1,6 @@
 'use client'
 
-import { useEnv } from '../index.ts'
+import { useEnv } from '../EnvexProvider/hooks'
 
 const EnvList = () => {
   const env = useEnv()

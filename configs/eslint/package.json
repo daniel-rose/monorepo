@@ -29,10 +29,10 @@
     }
   },
   "dependencies": {
-    "@eslint/js": "^9.39.2",
+    "@eslint/js": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
-    "typescript-eslint": "^8.55.0"
+    "typescript-eslint": "^8.57.1"
   },
   "peerDependencies": {
     "eslint": "^9",
@@ -48,11 +48,11 @@
     }
   },
   "devDependencies": {
-    "@daniel-rose/prettier-config": "^1.0.0",
-    "@daniel-rose/semantic-release-config": "^1.0.0",
-    "eslint": "^9.39.2",
+    "@daniel-rose/prettier-config": "workspace:^",
+    "@daniel-rose/semantic-release-config": "workspace:^",
+    "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-react-refresh": "^0.5.0",
+    "eslint-plugin-react-refresh": "^0.5.2",
     "prettier": "^3.8.1",
     "semantic-release": "^25.0.3"
   },

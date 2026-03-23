@@ -1,5 +1,5 @@
-export { default as EnvexProvider } from './EnvexProvider'
 export * from './errors'
-export { default as useEnv } from './useEnv'
+export { default as EnvexProvider } from './react/EnvexProvider'
+export { useEnv } from './react/EnvexProvider/hooks'
 
 export * from './types'

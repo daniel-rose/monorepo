@@ -1,6 +1,6 @@
 {
   "name": "@daniel-rose/eslint-config",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "MIT",
   "author": "Daniel Rose",
   "keywords": [
@@ -48,8 +48,8 @@
     }
   },
   "devDependencies": {
-    "@daniel-rose/prettier-config": "workspace:^",
-    "@daniel-rose/semantic-release-config": "workspace:^",
+    "@daniel-rose/prettier-config": "^1.1.0",
+    "@daniel-rose/semantic-release-config": "^1.1.0",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",

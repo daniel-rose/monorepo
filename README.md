@@ -41,6 +41,6 @@ pnpm test
 
 MIT &copy; Daniel Rose
 
-Links
+## Links
 
-- GitHub: https://github.com/daniel-rose/monorepo
+- [GitHub](https://github.com/daniel-rose/monorepo)

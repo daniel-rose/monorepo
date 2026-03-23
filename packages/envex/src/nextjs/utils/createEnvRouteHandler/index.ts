@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import getPublicEnv from '../getPublicEnv'
+import { getPublicEnv } from '../'
 import type { EnvRouteHandlerOptions } from './types.ts'
 
 const createEnvRouteHandler = (options: EnvRouteHandlerOptions = {}) => {

@@ -1,4 +1,4 @@
-import getPublicEnv from '../getPublicEnv'
+import { getPublicEnv } from '../'
 
 const getPublicEnvByName = async (
   name: string

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { EnvexWindowEnvIsMissingError } from '../../errors.ts'
 import type { Env } from '../../types.ts'
-import filterPublicEnv from '../../utils/filterPublicEnv'
+import { filterPublicEnv } from '../../utils'
 import { EnvexContext } from './contexts'
 import type { EnvexProviderPropsInterface } from './types.ts'
 

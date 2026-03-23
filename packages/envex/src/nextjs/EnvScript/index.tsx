@@ -1,5 +1,5 @@
 import Script from 'next/script'
-import getPublicEnv from '../utils/getPublicEnv'
+import { getPublicEnv } from '../utils'
 
 const EnvScript = async () => {
   const env = await getPublicEnv()

@@ -1,6 +1,6 @@
+import { getEnv } from '../'
 import type { Env } from '../../../types.ts'
-import filterPublicEnv from '../../../utils/filterPublicEnv'
-import getEnv from '../getEnv'
+import { filterPublicEnv } from '../../../utils'
 
 const getPublicEnv = async (): Promise<Env> => {
   const env = await getEnv()

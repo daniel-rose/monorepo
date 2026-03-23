@@ -4,4 +4,4 @@ export {
   getEnvByName,
   getPublicEnv,
   getPublicEnvByName,
-} from './nextjs/utils'
+} from './nextjs'

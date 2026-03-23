@@ -24,7 +24,7 @@ pnpm add @daniel-rose/envex
 | ------------------------------ | ---------------- | --------------------------------------------------------------------------------------- |
 | `@daniel-rose/envex`           | No               | `EnvexProvider`, `useEnv` hook, error classes, types                                    |
 | `@daniel-rose/envex/dev-tools` | No               | `EnvList` debug component                                                               |
-| `@daniel-rose/envex/script`    | Yes              | `EnvScript` server component                                                            |
+| `@daniel-rose/envex/script`    | Yes              | `EnvScript`, `InlineEnvScript` server components                                        |
 | `@daniel-rose/envex/server`    | Yes              | `createEnvRouteHandler`, `getEnv`, `getEnvByName`, `getPublicEnv`, `getPublicEnvByName` |
 
 ## Usage with Next.js
@@ -57,8 +57,17 @@ export default async function RootLayout({
 }
 ```
 
-`EnvScript` injects all `NEXT_PUBLIC_*` environment variables into `window.ENV` at runtime.
+`EnvScript` uses the Next.js `<Script>` component with `strategy="beforeInteractive"` to inject all `NEXT_PUBLIC_*` environment variables into `window.ENV` at runtime.
 `initialEnv` provides the same values for SSR hydration.
+
+Alternatively, use `InlineEnvScript` which renders a plain `<script>` tag instead of the Next.js `<Script>` component:
+
+```tsx
+import { InlineEnvScript } from '@daniel-rose/envex/script'
+
+// use instead of <EnvScript /> in your layout
+const script = <InlineEnvScript />
+```
 
 ### Client components
 

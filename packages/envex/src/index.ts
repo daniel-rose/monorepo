@@ -1,5 +1,4 @@
 export * from './errors'
-export { default as EnvexProvider } from './react/EnvexProvider'
-export { useEnv } from './react/EnvexProvider/hooks'
+export { EnvexProvider, useEnv } from './react'
 
 export * from './types'

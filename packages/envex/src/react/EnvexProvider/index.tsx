@@ -8,21 +8,29 @@ import { EnvexContext } from './contexts'
 import type { EnvexProviderPropsInterface } from './types.ts'
 
 const EnvexProvider = (props: EnvexProviderPropsInterface) => {
-  const { initialEnv, prefix, children } = props
+  const { initialEnv, prefix, endpoint, children } = props
   const [env, setEnv] = useState<Env>(
     initialEnv ? filterPublicEnv(initialEnv, prefix) : {}
   )
 
   useEffect(() => {
+    if (endpoint) {
+      void fetch(endpoint)
+        .then(res => res.json())
+        .then((data: Env) => setEnv(data))
+
+      return
+    }
+
     if (!window.ENV || typeof window.ENV !== 'object') {
       throw new EnvexWindowEnvIsMissingError(
-        'window.ENV is required. Use EnvScript (Next.js) or set window.ENV manually via a <script> tag.'
+        'window.ENV is required. Use EnvScript (Next.js), set window.ENV manually via a <script> tag, or use the endpoint prop.'
       )
     }
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setEnv(window.ENV)
-  }, [])
+  }, [endpoint])
 
   return <EnvexContext.Provider value={env}>{children}</EnvexContext.Provider>
 }

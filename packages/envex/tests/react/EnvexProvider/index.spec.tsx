@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest'
+import { expect, test, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import {
   EnvexProvider,
@@ -39,4 +39,39 @@ test('Try to render "EnvProvider" without initialEnv (PHP scenario).', async () 
   await expect.element(getByText('Children')).toBeInTheDocument()
 
   delete window.ENV
+})
+
+test('Try to render "EnvProvider" with endpoint prop.', async () => {
+  const mockEnv = { API_URL: 'https://api.example.com' }
+
+  vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+    json: () => Promise.resolve(mockEnv),
+  } as Response)
+
+  const { getByText } = await render(
+    <EnvexProvider endpoint='/api/env'>Children</EnvexProvider>
+  )
+
+  await expect.element(getByText('Children')).toBeInTheDocument()
+
+  vi.restoreAllMocks()
+})
+
+test('Try to render "EnvProvider" with endpoint ignores window.ENV.', async () => {
+  window.ENV = { NEXT_PUBLIC_TEST: 'test' }
+
+  const mockEnv = { API_URL: 'https://api.example.com' }
+
+  vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+    json: () => Promise.resolve(mockEnv),
+  } as Response)
+
+  const { getByText } = await render(
+    <EnvexProvider endpoint='/api/env'>Children</EnvexProvider>
+  )
+
+  await expect.element(getByText('Children')).toBeInTheDocument()
+
+  delete window.ENV
+  vi.restoreAllMocks()
 })

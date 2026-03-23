@@ -20,12 +20,12 @@ pnpm add @daniel-rose/envex
 
 ## Exports
 
-| Export path                    | Requires Next.js | Description                                                    |
-| ------------------------------ | ---------------- | -------------------------------------------------------------- |
-| `@daniel-rose/envex`           | No               | `EnvexProvider`, `useEnv` hook, error classes, types           |
-| `@daniel-rose/envex/dev-tools` | No               | `EnvList` debug component                                      |
-| `@daniel-rose/envex/script`    | Yes              | `EnvScript` server component                                   |
-| `@daniel-rose/envex/server`    | Yes              | `getEnv`, `getEnvByName`, `getPublicEnv`, `getPublicEnvByName` |
+| Export path                    | Requires Next.js | Description                                                                             |
+| ------------------------------ | ---------------- | --------------------------------------------------------------------------------------- |
+| `@daniel-rose/envex`           | No               | `EnvexProvider`, `useEnv` hook, error classes, types                                    |
+| `@daniel-rose/envex/dev-tools` | No               | `EnvList` debug component                                                               |
+| `@daniel-rose/envex/script`    | Yes              | `EnvScript` server component                                                            |
+| `@daniel-rose/envex/server`    | Yes              | `createEnvRouteHandler`, `getEnv`, `getEnvByName`, `getPublicEnv`, `getPublicEnvByName` |
 
 ## Usage with Next.js
 
@@ -80,6 +80,20 @@ const allEnv = await getEnv()
 const apiUrl = await getPublicEnvByName('NEXT_PUBLIC_API_URL')
 ```
 
+### REST route
+
+Expose public environment variables via an API endpoint:
+
+```ts
+// app/api/env/route.ts
+import { createEnvRouteHandler } from '@daniel-rose/envex/server'
+
+export const GET = createEnvRouteHandler()
+
+// with HTTP caching (5 minutes)
+export const GET = createEnvRouteHandler({ maxAge: 300 })
+```
+
 ## Usage without Next.js
 
 For non-Next.js setups (React islands with PHP, Python, Ruby, etc.), your backend sets `window.ENV` directly via a `<script>` tag. No Next.js dependency is needed.
@@ -118,19 +132,40 @@ function MyComponent() {
 
 Set `prefix={null}` to disable the default `NEXT_PUBLIC_` filter, or use a custom prefix like `prefix="APP_"` to match your naming convention.
 
+### Fetching from an endpoint
+
+Alternatively, use the `endpoint` prop to fetch env vars from a REST API instead of `window.ENV`:
+
+```tsx
+<EnvexProvider endpoint='/api/env'>
+  <MyComponent />
+</EnvexProvider>
+```
+
+This is useful for micro-frontends or SPAs that don't control the host page's script tags. When `endpoint` is set, `window.ENV` is ignored.
+
 ## API
 
 ### `EnvexProvider`
 
-| Prop         | Type                                  | Default          | Description                                                                  |
-| ------------ | ------------------------------------- | ---------------- | ---------------------------------------------------------------------------- |
-| `initialEnv` | `Record<string, string \| undefined>` | `{}`             | Initial env for SSR hydration (Next.js). Optional for non-SSR setups.        |
-| `prefix`     | `string \| null`                      | `'NEXT_PUBLIC_'` | Filter prefix for `initialEnv`. Set to `null` to pass all variables through. |
-| `children`   | `ReactNode`                           | —                | Required                                                                     |
+| Prop         | Type                                  | Default          | Description                                                                                     |
+| ------------ | ------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------- |
+| `initialEnv` | `Record<string, string \| undefined>` | `{}`             | Initial env for SSR hydration (Next.js). Optional for non-SSR setups.                           |
+| `prefix`     | `string \| null`                      | `'NEXT_PUBLIC_'` | Filter prefix for `initialEnv`. Set to `null` to pass all variables through.                    |
+| `endpoint`   | `string`                              | —                | Fetch env vars from a REST endpoint instead of `window.ENV`. When set, `window.ENV` is ignored. |
+| `children`   | `ReactNode`                           | —                | Required                                                                                        |
 
 ### `useEnv`
 
 Returns the current environment variables as `Record<string, string | undefined>`. Must be used within an `EnvexProvider`.
+
+### `createEnvRouteHandler`
+
+Creates a Next.js route handler that returns public environment variables as JSON. Requires Next.js.
+
+| Option   | Type     | Default     | Description                                           |
+| -------- | -------- | ----------- | ----------------------------------------------------- |
+| `maxAge` | `number` | `undefined` | Sets `Cache-Control: public, max-age=<value>` header. |
 
 ## Example
 

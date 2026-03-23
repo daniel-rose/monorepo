@@ -13,6 +13,9 @@
 # Dependency directory
 node_modules/
 
+# Claude Code
+CLAUDE.md
+
 # Logs
 logs
 *.log

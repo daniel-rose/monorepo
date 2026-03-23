@@ -1,1 +1,1 @@
-export { default as EnvList } from './EnvList'
+export { EnvList } from './react'

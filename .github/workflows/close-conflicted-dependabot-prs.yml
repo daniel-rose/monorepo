@@ -36,21 +36,33 @@ jobs:
             fi
 
             # Close PRs where the bumped version is already superseded
-            # Dependabot branch: dependabot/npm_and_yarn/[path/]PACKAGE-VERSION
-            # Extract last segment (PACKAGE-VERSION) after stripping optional directory prefix
-            slug="${branch##*/}"
-            package=$(echo "$slug" | sed -n 's|\(.*\)-[0-9].*|\1|p')
-            pr_version=$(echo "$slug" | sed -n 's|.*-\([0-9].*\)|\1|p')
+            # Strip dependabot prefix and known workspace directories
+            path="${branch#dependabot/npm_and_yarn/}"
+            path=$(echo "$path" | sed 's|^packages/[^/]*/||; s|^examples/[^/]*/||; s|^configs/[^/]*/||')
+
+            # Handle scoped packages (scope/name-version → @scope/name)
+            if echo "$path" | grep -q '/'; then
+              scope=$(echo "$path" | cut -d'/' -f1)
+              rest=$(echo "$path" | cut -d'/' -f2-)
+              package="@${scope}/$(echo "$rest" | sed -n 's|\(.*\)-[0-9].*|\1|p')"
+              pr_version=$(echo "$rest" | sed -n 's|.*-\([0-9].*\)|\1|p')
+            else
+              package=$(echo "$path" | sed -n 's|\(.*\)-[0-9].*|\1|p')
+              pr_version=$(echo "$path" | sed -n 's|.*-\([0-9].*\)|\1|p')
+            fi
 
             if [ -z "$package" ] || [ -z "$pr_version" ]; then
               continue
             fi
 
-            # Check if any package.json already has a higher or equal version
-            current_version=$(grep -r "\"$package\"" --include="package.json" -l . | grep -v node_modules | head -1 | xargs grep "\"$package\"" | sed -n 's/.*"\^*~*\([0-9][0-9.]*\)".*/\1/p')
+            # Find the highest installed version across all package.json files (exclude build artifacts)
+            current_version=$(grep -r "\"$package\"" --include="package.json" . \
+              | grep -v node_modules | grep -v .next \
+              | sed -n 's/.*"\^*~*\([0-9][0-9.]*[0-9]\)".*/\1/p' \
+              | sort -V | tail -1)
 
             if [ -n "$current_version" ]; then
-              if [ "$(printf '%s\n' "$pr_version" "$current_version" | sort -V | tail -1)" = "$current_version" ] && [ "$pr_version" != "$current_version" ]; then
+              if [ "$(printf '%s\n' "$pr_version" "$current_version" | sort -V | tail -1)" = "$current_version" ]; then
                 gh pr close "$num" \
                   --repo "${{ github.repository }}" \
                   --delete-branch \

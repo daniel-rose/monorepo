@@ -36,9 +36,11 @@ jobs:
             fi
 
             # Close PRs where the bumped version is already superseded
-            # Dependabot branch format: dependabot/npm_and_yarn/PACKAGE-VERSION
-            package=$(echo "$branch" | sed -n 's|dependabot/npm_and_yarn/\(.*\)-[0-9].*|\1|p')
-            pr_version=$(echo "$branch" | sed -n 's|dependabot/npm_and_yarn/.*-\([0-9].*\)|\1|p')
+            # Dependabot branch: dependabot/npm_and_yarn/[path/]PACKAGE-VERSION
+            # Extract last segment (PACKAGE-VERSION) after stripping optional directory prefix
+            slug="${branch##*/}"
+            package=$(echo "$slug" | sed -n 's|\(.*\)-[0-9].*|\1|p')
+            pr_version=$(echo "$slug" | sed -n 's|.*-\([0-9].*\)|\1|p')
 
             if [ -z "$package" ] || [ -z "$pr_version" ]; then
               continue

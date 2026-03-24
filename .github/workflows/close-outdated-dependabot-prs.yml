@@ -6,7 +6,7 @@ on:
 
 permissions:
   pull-requests: write
-  contents: read
+  contents: write
 
 jobs:
   close-outdated:
@@ -24,7 +24,7 @@ jobs:
             --state open \
             --label "dependencies" \
             --json number,author,headRefName,mergeable \
-            --jq '.[] | select(.author.login == "dependabot[bot]") | "\(.number) \(.mergeable) \(.headRefName)"' \
+            --jq '.[] | select(.author.login | test("dependabot")) | "\(.number) \(.mergeable) \(.headRefName)"' \
           | while read -r num mergeable branch; do
             # Close PRs with merge conflicts
             if [ "$mergeable" = "CONFLICTING" ]; then
@@ -34,6 +34,12 @@ jobs:
                 --comment "Closed automatically — this PR has merge conflicts. Dependabot will open a new PR."
               continue
             fi
+
+            # Only check npm/yarn PRs for superseded versions
+            case "$branch" in
+              dependabot/npm_and_yarn/*) ;;
+              *) continue ;;
+            esac
 
             # Close PRs where the bumped version is already superseded
             # Strip dependabot prefix and known workspace directories

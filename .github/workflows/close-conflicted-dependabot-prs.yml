@@ -1,4 +1,4 @@
-name: Close conflicted Dependabot PRs
+name: Close outdated Dependabot PRs
 
 on:
   push:
@@ -9,10 +9,13 @@ permissions:
   contents: read
 
 jobs:
-  close-conflicted:
+  close-outdated:
     runs-on: ubuntu-latest
     steps:
-      - name: Close Dependabot PRs with merge conflicts
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Close conflicting or superseded Dependabot PRs
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -20,10 +23,36 @@ jobs:
             --repo "${{ github.repository }}" \
             --state open \
             --label "dependencies" \
-            --json number,author,mergeable \
-            --jq '.[] | select(.author.login == "dependabot[bot]") | select(.mergeable == "CONFLICTING") | .number' \
-          | while read -r num; do
-            gh pr close "$num" \
-              --repo "${{ github.repository }}" \
-              --comment "Closed automatically — this PR has merge conflicts. Dependabot will open a new PR when the next version is available."
+            --json number,author,headRefName,mergeable \
+            --jq '.[] | select(.author.login == "dependabot[bot]") | "\(.number) \(.mergeable) \(.headRefName)"' \
+          | while read -r num mergeable branch; do
+            # Close PRs with merge conflicts
+            if [ "$mergeable" = "CONFLICTING" ]; then
+              gh pr close "$num" \
+                --repo "${{ github.repository }}" \
+                --delete-branch \
+                --comment "Closed automatically — this PR has merge conflicts. Dependabot will open a new PR."
+              continue
+            fi
+
+            # Close PRs where the bumped version is already superseded
+            # Dependabot branch format: dependabot/npm_and_yarn/PACKAGE-VERSION
+            package=$(echo "$branch" | sed -n 's|dependabot/npm_and_yarn/\(.*\)-[0-9].*|\1|p')
+            pr_version=$(echo "$branch" | sed -n 's|dependabot/npm_and_yarn/.*-\([0-9].*\)|\1|p')
+
+            if [ -z "$package" ] || [ -z "$pr_version" ]; then
+              continue
+            fi
+
+            # Check if any package.json already has a higher or equal version
+            current_version=$(grep -r "\"$package\"" --include="package.json" -l . | grep -v node_modules | head -1 | xargs grep "\"$package\"" | sed -n 's/.*"\^*~*\([0-9][0-9.]*\)".*/\1/p')
+
+            if [ -n "$current_version" ]; then
+              if [ "$(printf '%s\n' "$pr_version" "$current_version" | sort -V | tail -1)" = "$current_version" ] && [ "$pr_version" != "$current_version" ]; then
+                gh pr close "$num" \
+                  --repo "${{ github.repository }}" \
+                  --delete-branch \
+                  --comment "Closed automatically — already on $package@$current_version which supersedes the proposed $pr_version."
+              fi
+            fi
           done

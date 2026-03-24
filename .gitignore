@@ -16,6 +16,12 @@ node_modules/
 # Claude Code
 CLAUDE.md
 
+# Coverage
+coverage/
+
+# Screenshots
+__screenshots__/
+
 # Logs
 logs
 *.log

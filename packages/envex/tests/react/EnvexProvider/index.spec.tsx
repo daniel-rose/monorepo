@@ -1,10 +1,16 @@
-import { expect, test, vi } from 'vitest'
+import { afterEach, expect, test, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import {
   EnvexProvider,
   EnvexScriptIsMissingError,
   EnvexWindowEnvIsMissingError,
 } from '../../../src'
+import resetFetchEnvCache from '../../../src/react/EnvexProvider/utils/resetFetchEnvCache'
+
+afterEach(() => {
+  resetFetchEnvCache()
+  vi.restoreAllMocks()
+})
 
 test('Try to render "EnvProvider" without required window variable "ENV".', async () => {
   try {
@@ -53,8 +59,6 @@ test('Try to render "EnvProvider" with endpoint prop.', async () => {
   )
 
   await expect.element(getByText('Children')).toBeInTheDocument()
-
-  vi.restoreAllMocks()
 })
 
 test('Try to render "EnvProvider" with endpoint ignores window.ENV.', async () => {
@@ -73,5 +77,22 @@ test('Try to render "EnvProvider" with endpoint ignores window.ENV.', async () =
   await expect.element(getByText('Children')).toBeInTheDocument()
 
   delete window.ENV
-  vi.restoreAllMocks()
+})
+
+test('Multiple providers with same endpoint fire only one fetch.', async () => {
+  const mockEnv = { API_URL: 'https://api.example.com' }
+  const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+    json: () => Promise.resolve(mockEnv),
+  } as Response)
+
+  const { getByText } = await render(
+    <>
+      <EnvexProvider endpoint='/api/env'>Provider A</EnvexProvider>
+      <EnvexProvider endpoint='/api/env'>Provider B</EnvexProvider>
+    </>
+  )
+
+  await expect.element(getByText('Provider A')).toBeInTheDocument()
+  await expect.element(getByText('Provider B')).toBeInTheDocument()
+  expect(fetchSpy).toHaveBeenCalledTimes(1)
 })

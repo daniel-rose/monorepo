@@ -6,6 +6,7 @@ import type { Env } from '../../types.ts'
 import { filterPublicEnv } from '../../utils'
 import { EnvexContext } from './contexts'
 import type { EnvexProviderPropsInterface } from './types.ts'
+import { fetchEnv } from './utils'
 
 const EnvexProvider = (props: EnvexProviderPropsInterface) => {
   const { initialEnv, prefix, endpoint, children } = props
@@ -15,11 +16,23 @@ const EnvexProvider = (props: EnvexProviderPropsInterface) => {
 
   useEffect(() => {
     if (endpoint) {
-      void fetch(endpoint)
-        .then(res => res.json())
-        .then((data: Env) => setEnv(data))
+      let isCancelled = false
 
-      return
+      void fetchEnv(endpoint)
+        .then((data: Env) => {
+          if (!isCancelled) {
+            setEnv(data)
+          }
+        })
+        .catch((error: unknown) => {
+          if (!isCancelled) {
+            console.error('[envex] Failed to fetch env from endpoint:', error)
+          }
+        })
+
+      return () => {
+        isCancelled = true
+      }
     }
 
     if (!window.ENV || typeof window.ENV !== 'object') {

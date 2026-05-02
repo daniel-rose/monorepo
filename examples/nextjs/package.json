@@ -17,19 +17,19 @@
   },
   "dependencies": {
     "@daniel-rose/envex": "workspace:^",
-    "next": "^16.2.1",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "next": "^16.2.4",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58.2",
-    "@types/node": "^24.12.0",
+    "@playwright/test": "^1.59.1",
+    "@types/node": "^24.12.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "eslint": "^9.39.4",
-    "eslint-config-next": "^16.2.1",
-    "playwright": "^1.58.2",
-    "prettier": "^3.8.1",
+    "eslint-config-next": "^16.2.4",
+    "playwright": "^1.59.1",
+    "prettier": "^3.8.3",
     "prettier-plugin-organize-imports": "^4.3.0",
     "typescript": "^5.9.3"
   }

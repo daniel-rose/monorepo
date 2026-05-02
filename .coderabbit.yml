@@ -1,0 +1,116 @@
+# CodeRabbit Configuration
+# Docs: https://docs.coderabbit.ai/guides/configure-coderabbit
+
+language: en-US
+
+tone_instructions: |
+  Be precise and direct. Avoid verbose explanations for obvious things.
+  Focus on real issues: bugs, security, performance, and API compatibility.
+  For React libraries, pay special attention to breaking changes in the public API.
+
+reviews:
+  profile: assertive
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+
+  path_filters:
+    - "!**/dist/**"
+    - "!**/node_modules/**"
+    - "!**/coverage/**"
+    - "!**/*.cjs"
+    - "!**/*.cjs.map"
+    - "!**/*.js.map"
+    - "!**/pnpm-lock.yaml"
+
+  path_instructions:
+    - path: "packages/envex/src/**"
+      instructions: |
+        This is the core of the `@daniel-rose/envex` library.
+        - Check for breaking changes in public exports (index.ts, script.ts, server.ts, dev-tools.ts)
+        - `use client` / `use server` directives must be preserved on Next.js components
+        - `console.log` is forbidden — only `console.warn` and `console.error` are allowed
+        - Type imports must use the `type` keyword (consistent-type-imports rule enforced)
+        - Keep barrel exports in react/index.ts, nextjs/index.ts, and utils/index.ts consistent
+        - Do not break the request deduplication logic in EnvexProvider (introduced in v1.6.0)
+
+    - path: "packages/envex/src/nextjs/**"
+      instructions: |
+        Next.js-specific modules — next is an optional peer dependency.
+        - `'use client'` / `'use server'` directives are critical for the Next.js App Router
+        - Do not import directly from `next` without a guard (Next.js is optional)
+        - Server-side functions (getEnv, getPublicEnv) must not access window or document
+
+    - path: "packages/envex/src/react/**"
+      instructions: |
+        Framework-agnostic React components.
+        - No Next.js imports allowed here
+        - Ensure React 19 compatibility
+
+    - path: "packages/envex/src/**/*.test.*"
+      instructions: |
+        Unit tests run in a real browser via @vitest/browser-playwright (Chromium).
+        - Tests should verify actual DOM behavior — do not mock browser APIs
+        - Keep coverage paths in mind
+
+    - path: "examples/nextjs/**"
+      instructions: |
+        This is an example project — production-grade standards are not required,
+        but the integration with @daniel-rose/envex must remain correct.
+        Review Playwright E2E tests for proper assertions.
+
+    - path: "configs/**"
+      instructions: |
+        Shared config packages (ESLint, Prettier, semantic-release).
+        Changes here affect all packages in the monorepo.
+        - ESLint: use Flat Config format (v9)
+        - Prettier: no semicolons, single quotes, trailing commas (ES5), 2-space indent
+
+    - path: ".github/workflows/**"
+      instructions: |
+        GitHub Actions workflows.
+        - Keep pnpm at version 10
+        - Use Node.js LTS
+        - Include all packages (packages/*, configs/*, examples/*) in the build step
+        - semantic-release runs only on `main` (release.yml)
+
+    - path: "**/package.json"
+      instructions: |
+        pnpm v10 monorepo. Verify workspace protocol (`workspace:^`) for internal dependencies.
+        Peer dependencies for envex: react ^19, react-dom ^19, next ^15||^16 (optional).
+
+  tools:
+    github-checks:
+      enabled: true
+    eslint:
+      enabled: true
+    gitleaks:
+      enabled: true
+    semgrep:
+      enabled: true
+    ast-grep:
+      enabled: true
+      rule_dirs:
+        - .coderabbit/rules
+      essential_rules: true
+    biome:
+      enabled: false
+    shellcheck:
+      enabled: true
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  learnings:
+    scope: auto
+  issues:
+    scope: auto

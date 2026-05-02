@@ -1,0 +1,2 @@
+pnpm --filter "./packages/*" --filter "./examples/*" lint
+pnpm --filter "./packages/*" --filter "./examples/*" test:unit:ci

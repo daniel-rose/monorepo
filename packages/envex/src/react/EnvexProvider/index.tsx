@@ -3,30 +3,37 @@
 import { useEffect, useState } from 'react'
 import { EnvexWindowEnvIsMissingError } from '../../errors.ts'
 import type { Env } from '../../types.ts'
-import { filterPublicEnv } from '../../utils'
+import { filterPublicEnv, validateEnv } from '../../utils'
 import { EnvexContext } from './contexts'
 import type { EnvexProviderPropsInterface } from './types.ts'
 import { fetchEnv } from './utils'
 
 const EnvexProvider = (props: EnvexProviderPropsInterface) => {
-  const { initialEnv, prefix, endpoint, children } = props
+  const { initialEnv, prefix, endpoint, schema, children } = props
   const [env, setEnv] = useState<Env>(
     initialEnv ? filterPublicEnv(initialEnv, prefix) : {}
   )
+  const [error, setError] = useState<Error | null>(null)
+
+  if (error) throw error
 
   useEffect(() => {
-    if (endpoint) {
-      let isCancelled = false
+    let isCancelled = false
 
+    if (endpoint) {
       void fetchEnv(endpoint)
-        .then((data: Env) => {
-          if (!isCancelled) {
-            setEnv(data)
-          }
+        .then(async (data: Env) => {
+          if (isCancelled) return
+          const result = schema ? await validateEnv(schema, data) : data
+          if (!isCancelled) setEnv(result as Env)
         })
-        .catch((error: unknown) => {
+        .catch((err: unknown) => {
           if (!isCancelled) {
-            console.error('[envex] Failed to fetch env from endpoint:', error)
+            if (err instanceof Error) {
+              setError(err)
+            } else {
+              console.error('[envex] Failed to fetch env from endpoint:', err)
+            }
           }
         })
 
@@ -41,9 +48,22 @@ const EnvexProvider = (props: EnvexProviderPropsInterface) => {
       )
     }
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setEnv(window.ENV)
-  }, [endpoint])
+    const windowEnv = window.ENV
+
+    void Promise.resolve(schema ? validateEnv(schema, windowEnv) : windowEnv)
+      .then(result => {
+        if (!isCancelled) setEnv(result as Env)
+      })
+      .catch((err: unknown) => {
+        if (!isCancelled && err instanceof Error) {
+          setError(err)
+        }
+      })
+
+    return () => {
+      isCancelled = true
+    }
+  }, [endpoint, schema])
 
   return <EnvexContext.Provider value={env}>{children}</EnvexContext.Provider>
 }

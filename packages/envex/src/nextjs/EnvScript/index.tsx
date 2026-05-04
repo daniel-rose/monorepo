@@ -1,8 +1,13 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec'
 import Script from 'next/script'
 import { getPublicEnv } from '../utils'
 
-const EnvScript = async () => {
-  const env = await getPublicEnv()
+interface EnvScriptProps {
+  schema?: StandardSchemaV1
+}
+
+const EnvScript = async ({ schema }: EnvScriptProps = {}) => {
+  const env = await getPublicEnv({ schema })
 
   const innerHTML = {
     __html: `window.ENV = ${JSON.stringify(env)}`,

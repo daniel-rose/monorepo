@@ -1,20 +1,12 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec'
 import { getEnv } from '../'
-import type { Env, ScanConfig } from '../../../types.ts'
+import type { Env } from '../../../types.ts'
 import {
   assertNoCredentialLeak,
   filterPublicEnv,
   validateEnv,
 } from '../../../utils'
-
-export interface GetPublicEnvOptions<
-  TSchema extends StandardSchemaV1 | undefined = undefined,
-> {
-  schema?: TSchema
-  prefix?: string | null
-  /** Enable credential scanning: `true` for defaults or a config object. Off by default. */
-  scan?: ScanConfig
-}
+import type { GetPublicEnvOptions } from './types.ts'
 
 const getPublicEnv = async <
   TSchema extends StandardSchemaV1 | undefined = undefined,

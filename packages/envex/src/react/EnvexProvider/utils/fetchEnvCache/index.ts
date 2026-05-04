@@ -1,9 +1,4 @@
-import type { Env } from '../../../../types.ts'
-
-interface FetchEnvCache {
-  promise: Promise<Env> | null
-  endpoint: string | null
-}
+import type { FetchEnvCache } from './types.ts'
 
 const fetchEnvCache: FetchEnvCache = {
   promise: null,

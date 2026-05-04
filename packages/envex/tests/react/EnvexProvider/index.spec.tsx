@@ -1,11 +1,34 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec'
 import { afterEach, expect, test, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import {
   EnvexProvider,
   EnvexScriptIsMissingError,
+  EnvexValidationError,
   EnvexWindowEnvIsMissingError,
 } from '../../../src'
 import resetFetchEnvCache from '../../../src/react/EnvexProvider/utils/resetFetchEnvCache'
+
+const makePassSchema = (
+  output: Record<string, string>
+): StandardSchemaV1<unknown, Record<string, string>> => ({
+  '~standard': {
+    version: 1,
+    vendor: 'test',
+    validate: () => ({ value: output }),
+  },
+})
+
+const makeFailSchema = (): StandardSchemaV1<
+  unknown,
+  Record<string, string>
+> => ({
+  '~standard': {
+    version: 1,
+    vendor: 'test',
+    validate: () => ({ issues: [{ message: 'invalid' }] }),
+  },
+})
 
 afterEach(() => {
   resetFetchEnvCache()
@@ -77,6 +100,72 @@ test('Try to render "EnvProvider" with endpoint ignores window.ENV.', async () =
   await expect.element(getByText('Children')).toBeInTheDocument()
 
   delete window.ENV
+})
+
+test('Schema validates window.ENV and provider renders children.', async () => {
+  window.ENV = { NEXT_PUBLIC_API_URL: 'https://api.example.com' }
+  const schema = makePassSchema({
+    NEXT_PUBLIC_API_URL: 'https://api.example.com',
+  })
+
+  const { getByText } = await render(
+    <EnvexProvider schema={schema}>Children</EnvexProvider>
+  )
+
+  await expect.element(getByText('Children')).toBeInTheDocument()
+
+  delete window.ENV
+})
+
+test('Schema validates fetched env from endpoint.', async () => {
+  const mockEnv = { API_URL: 'https://api.example.com' }
+  const schema = makePassSchema(mockEnv)
+
+  vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+    json: () => Promise.resolve(mockEnv),
+  } as Response)
+
+  const { getByText } = await render(
+    <EnvexProvider endpoint='/api/env' schema={schema}>
+      Children
+    </EnvexProvider>
+  )
+
+  await expect.element(getByText('Children')).toBeInTheDocument()
+})
+
+test('Schema validation failure on window.ENV surfaces EnvexValidationError.', async () => {
+  expect.assertions(1)
+  window.ENV = { NEXT_PUBLIC_API_URL: 'https://api.example.com' }
+  const schema = makeFailSchema()
+
+  try {
+    await render(<EnvexProvider schema={schema}>Children</EnvexProvider>)
+  } catch (error) {
+    expect(error).toBeInstanceOf(EnvexValidationError)
+  }
+
+  delete window.ENV
+})
+
+test('Schema validation failure on endpoint surfaces EnvexValidationError.', async () => {
+  expect.assertions(1)
+  const mockEnv = { API_URL: 'https://api.example.com' }
+  const schema = makeFailSchema()
+
+  vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+    json: () => Promise.resolve(mockEnv),
+  } as Response)
+
+  try {
+    await render(
+      <EnvexProvider endpoint='/api/env' schema={schema}>
+        Children
+      </EnvexProvider>
+    )
+  } catch (error) {
+    expect(error).toBeInstanceOf(EnvexValidationError)
+  }
 })
 
 test('Multiple providers with same endpoint fire only one fetch.', async () => {

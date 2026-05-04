@@ -1,8 +1,9 @@
 import Script from 'next/script'
 import { getPublicEnv } from '../utils'
+import type { EnvScriptProps } from './types'
 
-const EnvScript = async () => {
-  const env = await getPublicEnv()
+const EnvScript = async ({ schema }: EnvScriptProps = {}) => {
+  const env = await getPublicEnv({ schema })
 
   const innerHTML = {
     __html: `window.ENV = ${JSON.stringify(env)}`,

@@ -92,5 +92,8 @@
   "bugs": {
     "url": "https://github.com/daniel-rose/monorepo/issues"
   },
-  "homepage": "https://github.com/daniel-rose/monorepo/blob/main/packages/envex/README.md"
+  "homepage": "https://github.com/daniel-rose/monorepo/blob/main/packages/envex/README.md",
+  "dependencies": {
+    "@standard-schema/spec": "^1.1.0"
+  }
 }

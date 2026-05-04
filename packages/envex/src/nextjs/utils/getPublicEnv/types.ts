@@ -1,8 +1,8 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec'
 
-export interface EnvRouteHandlerOptions<
+export interface GetPublicEnvOptions<
   TSchema extends StandardSchemaV1 | undefined = undefined,
 > {
-  maxAge?: number
   schema?: TSchema
+  prefix?: string | null
 }

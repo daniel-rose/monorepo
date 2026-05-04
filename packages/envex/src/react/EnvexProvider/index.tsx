@@ -63,16 +63,17 @@ const EnvexProvider = (props: EnvexProviderPropsInterface) => {
       }
     }
 
-    if (!window.ENV || typeof window.ENV !== 'object') {
-      throw new EnvexWindowEnvIsMissingError(
-        'window.ENV is required. Use EnvScript (Next.js), set window.ENV manually via a <script> tag, or use the endpoint prop.'
-      )
-    }
-
     let isCancelled = false
-    const windowEnv = window.ENV
 
-    void Promise.resolve(schema ? validateEnv(schema, windowEnv) : windowEnv)
+    void Promise.resolve()
+      .then(() => {
+        if (!window.ENV || typeof window.ENV !== 'object') {
+          throw new EnvexWindowEnvIsMissingError(
+            'window.ENV is required. Use EnvScript (Next.js), set window.ENV manually via a <script> tag, or use the endpoint prop.'
+          )
+        }
+        return schema ? validateEnv(schema, window.ENV) : window.ENV
+      })
       .then(result => {
         if (!isCancelled) setEnv(result as Env)
       })

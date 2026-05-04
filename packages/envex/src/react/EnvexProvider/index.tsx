@@ -53,6 +53,7 @@ const EnvexProvider = (props: EnvexProviderPropsInterface) => {
               setError(err)
             } else {
               console.error('[envex] Failed to fetch env from endpoint:', err)
+              setError(new Error(String(err)))
             }
           }
         })
@@ -76,8 +77,13 @@ const EnvexProvider = (props: EnvexProviderPropsInterface) => {
         if (!isCancelled) setEnv(result as Env)
       })
       .catch((err: unknown) => {
-        if (!isCancelled && err instanceof Error) {
-          setError(err)
+        if (!isCancelled) {
+          if (err instanceof Error) {
+            setError(err)
+          } else {
+            console.error('[envex] Failed to load env from window.ENV:', err)
+            setError(new Error(String(err)))
+          }
         }
       })
 

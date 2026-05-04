@@ -352,6 +352,7 @@ Creates a Next.js route handler that returns public environment variables as JSO
 | Option   | Type               | Default     | Description                                             |
 | -------- | ------------------ | ----------- | ------------------------------------------------------- |
 | `schema` | `StandardSchemaV1` | `undefined` | Validates the env and returns the schema's output type. |
+| `prefix` | `string \| null`   | `undefined` | **`getPublicEnv` only.** Filters returned keys to those starting with the given prefix. When `null` or `undefined`, no prefix filtering is applied and all public env keys are returned. Use this to restrict which variables are exposed — only keys matching the prefix are included, reducing the risk of leaking unintended variables. |
 | `scan`   | `ScanConfig`       | `undefined` | Enable credential scanning (see below). Off by default. |
 
 ### `EnvScript` / `InlineEnvScript`

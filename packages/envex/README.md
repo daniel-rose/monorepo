@@ -262,7 +262,7 @@ export const GET = createEnvRouteHandler({ schema: envSchema })
 
 ### Client-side validation
 
-Pass the schema to `EnvexProvider` — validation runs on every env source (`window.ENV`, `initialEnv`, or fetched endpoint response):
+Pass the schema to `EnvexProvider` — validation runs on `window.ENV` or the fetched endpoint response:
 
 ```tsx
 import { EnvexProvider } from '@daniel-rose/envex'

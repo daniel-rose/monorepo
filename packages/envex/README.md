@@ -8,7 +8,7 @@
 Envex provides runtime access to environment variables in React applications via `window.ENV`.
 This follows the **"build once, deploy many"** principle — the same build can be used across different environments without rebuilding.
 
-Works with **Next.js** out of the box and with **any backend** (PHP, Python, Ruby, Go, etc.) that can render a `<script>` tag.
+Works with **Next.js** out of the box and with **any backend** (PHP, Python, Ruby, Go, etc.) that can render a `<script>` tag. Supports optional schema validation via any [Standard Schema](https://standardschema.dev)-compatible library (Zod, Valibot, ArkType, and more).
 
 ## Installation
 
@@ -197,30 +197,178 @@ strategy is also exported as `nativeFetchStrategy` if you want to compose with i
 prop may be an inline arrow function; it is read via a ref, so it never triggers a refetch on
 re-render (a refetch only happens when `endpoint` changes).
 
+## Validation
+
+Envex supports optional schema validation via any library that implements the [Standard Schema](https://standardschema.dev) spec — including **Zod**, **Valibot**, **ArkType**, and **Effect Schema**.
+
+When a schema is provided, envex validates the environment variables before making them available. If validation fails, an `EnvexValidationError` is thrown with the list of issues.
+
+### Setup with Zod
+
+```bash
+npm install zod
+```
+
+Define your schema in a shared module:
+
+```ts
+// app/env.ts
+import { z } from 'zod'
+
+export const envSchema = z.object({
+  NEXT_PUBLIC_API_URL: z.string().url(),
+  NEXT_PUBLIC_FEATURE_X: z.coerce.boolean().default(false),
+})
+
+export type AppEnv = z.output<typeof envSchema>
+```
+
+### Server-side validation (Next.js)
+
+Pass the schema to server utilities — validation runs before the env is serialized or returned:
+
+```tsx
+// app/layout.tsx
+import { EnvScript } from '@daniel-rose/envex/script'
+import { EnvexProvider } from '@daniel-rose/envex'
+import { getPublicEnv } from '@daniel-rose/envex/server'
+import { envSchema } from './env'
+
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const initialEnv = await getPublicEnv({ schema: envSchema })
+
+  return (
+    <html lang='en'>
+      <body>
+        <EnvScript schema={envSchema} />
+        <EnvexProvider initialEnv={initialEnv}>{children}</EnvexProvider>
+      </body>
+    </html>
+  )
+}
+```
+
+```ts
+// app/api/env/route.ts
+import { createEnvRouteHandler } from '@daniel-rose/envex/server'
+import { envSchema } from '../env'
+
+export const GET = createEnvRouteHandler({ schema: envSchema })
+```
+
+### Client-side validation
+
+Pass the schema to `EnvexProvider` — validation runs on every env source (`window.ENV`, `initialEnv`, or fetched endpoint response):
+
+```tsx
+import { EnvexProvider } from '@daniel-rose/envex'
+import { envSchema } from './env'
+
+;<EnvexProvider schema={envSchema}>
+  <App />
+</EnvexProvider>
+```
+
+### Type-safe access with `useEnv`
+
+Use the generic overload to get the inferred output type from your schema:
+
+```tsx
+import { useEnv } from '@daniel-rose/envex'
+import type { AppEnv } from './env'
+
+export function ApiUrl() {
+  const env = useEnv<typeof envSchema>()
+  //    ^? AppEnv — fully typed, e.g. env.NEXT_PUBLIC_API_URL is string
+  return <span>{env.NEXT_PUBLIC_API_URL}</span>
+}
+```
+
+Or create a typed wrapper hook in your app:
+
+```ts
+// app/useAppEnv.ts
+import { useEnv } from '@daniel-rose/envex'
+import type { AppEnv } from './env'
+
+export const useAppEnv = () => useEnv<typeof envSchema>()
+```
+
+### Error handling
+
+`EnvexValidationError` is thrown when validation fails. Catch it in an [Error Boundary](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary) for graceful degradation:
+
+```ts
+import { EnvexValidationError } from '@daniel-rose/envex'
+
+try {
+  const env = await getPublicEnv({ schema: envSchema })
+} catch (error) {
+  if (error instanceof EnvexValidationError) {
+    console.error(error.issues) // StandardSchemaV1.Issue[]
+  }
+}
+```
+
 ## API
 
 ### `EnvexProvider`
 
-| Prop            | Type                                  | Default          | Description                                                                                     |
-| --------------- | ------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------- |
-| `initialEnv`    | `Record<string, string \| undefined>` | `{}`             | Initial env for SSR hydration (Next.js). Optional for non-SSR setups.                           |
-| `prefix`        | `string \| null`                      | `'NEXT_PUBLIC_'` | Filter prefix for `initialEnv`. Set to `null` to pass all variables through.                    |
-| `endpoint`      | `string`                              | —                | Fetch env vars from a REST endpoint instead of `window.ENV`. When set, `window.ENV` is ignored. |
-| `fetchStrategy` | `(endpoint: string) => Promise<Env>`  | —                | Custom fetcher; overrides the native fetch. Owns its own dedup/caching.                         |
-| `children`      | `ReactNode`                           | —                | Required                                                                                        |
+| Prop            | Type                                  | Default          | Description                                                                                              |
+| --------------- | ------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------- |
+| `initialEnv`    | `Record<string, string \| undefined>` | `{}`             | Initial env for SSR hydration (Next.js). Optional for non-SSR setups.                                   |
+| `prefix`        | `string \| null`                      | `'NEXT_PUBLIC_'` | Filter prefix for `initialEnv`. Set to `null` to pass all variables through.                            |
+| `endpoint`      | `string`                              | —                | Fetch env vars from a REST endpoint instead of `window.ENV`. When set, `window.ENV` is ignored.         |
+| `fetchStrategy` | `(endpoint: string) => Promise<Env>`  | —                | Custom fetcher; overrides the native fetch. Owns its own dedup/caching.                                 |
+| `schema`        | `StandardSchemaV1`                    | —                | Optional schema. Validates `window.ENV` and fetched payloads. Throws `EnvexValidationError` on failure. |
+| `children`      | `ReactNode`                           | —                | Required                                                                                                |
 
 ### `useEnv`
 
 Returns the current environment variables as `Record<string, string | undefined>`. Must be used within an `EnvexProvider`.
 
+Accepts an optional generic for type inference when a schema is used:
+
+```ts
+const env = useEnv<typeof envSchema>() // returns StandardSchemaV1.InferOutput<typeof envSchema>
+```
+
 ### `createEnvRouteHandler`
 
 Creates a Next.js route handler that returns public environment variables as JSON. Requires Next.js.
 
-| Option   | Type         | Default     | Description                                             |
-| -------- | ------------ | ----------- | ------------------------------------------------------- |
-| `maxAge` | `number`     | `undefined` | Sets `Cache-Control: public, max-age=<value>` header.   |
-| `scan`   | `ScanConfig` | `undefined` | Enable credential scanning (see below). Off by default. |
+| Option   | Type               | Default     | Description                                             |
+| -------- | ------------------ | ----------- | ------------------------------------------------------- |
+| `maxAge` | `number`           | `undefined` | Sets `Cache-Control: public, max-age=<value>` header.   |
+| `schema` | `StandardSchemaV1` | `undefined` | Validates env before serializing the response.          |
+| `scan`   | `ScanConfig`       | `undefined` | Enable credential scanning (see below). Off by default. |
+
+### `getEnv` / `getPublicEnv`
+
+| Option   | Type               | Default     | Description                                             |
+| -------- | ------------------ | ----------- | ------------------------------------------------------- |
+| `schema` | `StandardSchemaV1` | `undefined` | Validates the env and returns the schema's output type. |
+| `scan`   | `ScanConfig`       | `undefined` | Enable credential scanning (see below). Off by default. |
+
+### `EnvScript` / `InlineEnvScript`
+
+| Prop     | Type               | Default | Description                                                |
+| -------- | ------------------ | ------- | ---------------------------------------------------------- |
+| `schema` | `StandardSchemaV1` | —       | Validates public env before serializing into `window.ENV`. |
+| `scan`   | `ScanConfig`       | —       | Enable credential scanning (see below). Off by default.    |
+
+### `EnvexValidationError`
+
+Thrown when schema validation fails. Extends `Error`.
+
+| Property  | Type                       | Description                           |
+| --------- | -------------------------- | ------------------------------------- |
+| `issues`  | `StandardSchemaV1.Issue[]` | The list of validation issues.        |
+| `message` | `string`                   | Human-readable summary of all issues. |
 
 ## Credential scanning
 
@@ -239,7 +387,7 @@ server-side emission point by passing `scan`:
 ```tsx
 ;<EnvScript scan /> // built-in engine, default settings
 export const GET = createEnvRouteHandler({ scan: true })
-const env = await getPublicEnv(true)
+const env = await getPublicEnv({ scan: true })
 ```
 
 It is only meaningful server-side; `EnvexProvider` (client) never scans, since by then the value
@@ -279,7 +427,7 @@ Two engines, selectable via `scan.engine`:
 ```
 
 The `scan` option is accepted by `EnvScript`, `InlineEnvScript`, `createEnvRouteHandler({ scan })`,
-`getPublicEnv(scan)` and `getPublicEnvByName(name, scan)`. The primitives `scanForCredentials(env, options)`
+`getPublicEnv({ scan })` and `getPublicEnvByName(name, scan)`. The primitives `scanForCredentials(env, options)`
 (sync, built-in) and `assertNoCredentialLeak(env, scan)` (async, engine-aware) are also exported for
 running the scan yourself.
 

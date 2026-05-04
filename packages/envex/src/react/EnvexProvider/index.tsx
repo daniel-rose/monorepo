@@ -11,8 +11,9 @@ import { fetchEnv } from './utils'
 const EnvexProvider = (props: EnvexProviderPropsInterface) => {
   const { initialEnv, prefix, endpoint, fetchStrategy, schema, children } =
     props
+  const [rawEnv, setRawEnv] = useState<Env | null>(null)
   const [env, setEnv] = useState<Env>(
-    initialEnv ? filterPublicEnv(initialEnv, prefix) : {}
+    initialEnv && !schema ? filterPublicEnv(initialEnv, prefix) : {}
   )
   const [error, setError] = useState<Error | null>(null)
 
@@ -27,6 +28,8 @@ const EnvexProvider = (props: EnvexProviderPropsInterface) => {
     fetchStrategyRef.current = fetchStrategy
   }, [fetchStrategy])
 
+  // Fetches raw env from endpoint, an injected strategy, or window.ENV — no
+  // schema dependency so the effect doesn't re-run when schema identity changes.
   useEffect(() => {
     const strategy = fetchStrategyRef.current
     let request: Promise<Env> | null = null
@@ -38,14 +41,12 @@ const EnvexProvider = (props: EnvexProviderPropsInterface) => {
       request = fetchEnv(endpoint)
     }
 
-    if (request) {
-      let isCancelled = false
+    let isCancelled = false
 
+    if (request) {
       void request
-        .then(async (data: Env) => {
-          if (isCancelled) return
-          const result = schema ? await validateEnv(schema, data) : data
-          if (!isCancelled) setEnv(result as Env)
+        .then((data: Env) => {
+          if (!isCancelled) setRawEnv(data)
         })
         .catch((err: unknown) => {
           if (!isCancelled) {
@@ -63,8 +64,6 @@ const EnvexProvider = (props: EnvexProviderPropsInterface) => {
       }
     }
 
-    let isCancelled = false
-
     void Promise.resolve()
       .then(() => {
         if (!window.ENV || typeof window.ENV !== 'object') {
@@ -72,10 +71,10 @@ const EnvexProvider = (props: EnvexProviderPropsInterface) => {
             'window.ENV is required. Use EnvScript (Next.js), set window.ENV manually via a <script> tag, or use the endpoint prop.'
           )
         }
-        return schema ? validateEnv(schema, window.ENV) : window.ENV
+        return window.ENV
       })
-      .then(result => {
-        if (!isCancelled) setEnv(result as Env)
+      .then(data => {
+        if (!isCancelled) setRawEnv(data)
       })
       .catch((err: unknown) => {
         if (!isCancelled) {
@@ -91,7 +90,33 @@ const EnvexProvider = (props: EnvexProviderPropsInterface) => {
     return () => {
       isCancelled = true
     }
-  }, [endpoint, schema])
+  }, [endpoint])
+
+  // Validates raw env against schema and publishes the result. Runs whenever
+  // the raw data or schema changes, decoupled from the fetch effect above.
+  useEffect(() => {
+    if (rawEnv === null) return
+    let isCancelled = false
+
+    void Promise.resolve(schema ? validateEnv(schema, rawEnv) : rawEnv)
+      .then(result => {
+        if (!isCancelled) setEnv(result as Env)
+      })
+      .catch((err: unknown) => {
+        if (!isCancelled) {
+          if (err instanceof Error) {
+            setError(err)
+          } else {
+            console.error('[envex] Failed to validate env:', err)
+            setError(new Error(String(err)))
+          }
+        }
+      })
+
+    return () => {
+      isCancelled = true
+    }
+  }, [rawEnv, schema])
 
   return <EnvexContext.Provider value={env}>{children}</EnvexContext.Provider>
 }

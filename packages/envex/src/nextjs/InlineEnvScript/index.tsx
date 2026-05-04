@@ -1,9 +1,5 @@
-import type { StandardSchemaV1 } from '@standard-schema/spec'
 import { getPublicEnv } from '../utils'
-
-interface InlineEnvScriptProps {
-  schema?: StandardSchemaV1
-}
+import type { InlineEnvScriptProps } from './types'
 
 const InlineEnvScript = async ({ schema }: InlineEnvScriptProps = {}) => {
   const env = await getPublicEnv({ schema })

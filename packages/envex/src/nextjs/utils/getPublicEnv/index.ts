@@ -2,13 +2,7 @@ import type { StandardSchemaV1 } from '@standard-schema/spec'
 import { getEnv } from '../'
 import type { Env } from '../../../types.ts'
 import { filterPublicEnv, validateEnv } from '../../../utils'
-
-export interface GetPublicEnvOptions<
-  TSchema extends StandardSchemaV1 | undefined = undefined,
-> {
-  schema?: TSchema
-  prefix?: string | null
-}
+import type { GetPublicEnvOptions } from './types.ts'
 
 const getPublicEnv = async <
   TSchema extends StandardSchemaV1 | undefined = undefined,

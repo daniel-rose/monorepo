@@ -135,6 +135,7 @@ test('Schema validates fetched env from endpoint.', async () => {
 })
 
 test('Schema validation failure on window.ENV surfaces EnvexValidationError.', async () => {
+  expect.assertions(1)
   window.ENV = { NEXT_PUBLIC_API_URL: 'https://api.example.com' }
   const schema = makeFailSchema()
 
@@ -148,6 +149,7 @@ test('Schema validation failure on window.ENV surfaces EnvexValidationError.', a
 })
 
 test('Schema validation failure on endpoint surfaces EnvexValidationError.', async () => {
+  expect.assertions(1)
   const mockEnv = { API_URL: 'https://api.example.com' }
   const schema = makeFailSchema()
 

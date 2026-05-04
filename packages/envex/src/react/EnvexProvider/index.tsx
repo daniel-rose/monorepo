@@ -80,7 +80,10 @@ const EnvexProvider = (props: EnvexProviderPropsInterface) => {
 
     void Promise.resolve(schema ? validateEnv(schema, rawEnv) : rawEnv)
       .then(result => {
-        if (!isCancelled) setEnv(result as Env)
+        if (!isCancelled)
+          setEnv(
+            schema ? (result as Env) : filterPublicEnv(result as Env, prefix)
+          )
       })
       .catch((err: unknown) => {
         if (!isCancelled) {
@@ -96,7 +99,7 @@ const EnvexProvider = (props: EnvexProviderPropsInterface) => {
     return () => {
       isCancelled = true
     }
-  }, [rawEnv, schema])
+  }, [rawEnv, schema, prefix])
 
   return <EnvexContext.Provider value={env}>{children}</EnvexContext.Provider>
 }

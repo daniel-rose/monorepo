@@ -51,6 +51,7 @@ test('Try to render "EnvProvider" with endpoint prop.', async () => {
   const mockEnv = { API_URL: 'https://api.example.com' }
 
   vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+    ok: true,
     json: () => Promise.resolve(mockEnv),
   } as Response)
 
@@ -67,6 +68,7 @@ test('Try to render "EnvProvider" with endpoint ignores window.ENV.', async () =
   const mockEnv = { API_URL: 'https://api.example.com' }
 
   vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+    ok: true,
     json: () => Promise.resolve(mockEnv),
   } as Response)
 
@@ -82,6 +84,7 @@ test('Try to render "EnvProvider" with endpoint ignores window.ENV.', async () =
 test('Multiple providers with same endpoint fire only one fetch.', async () => {
   const mockEnv = { API_URL: 'https://api.example.com' }
   const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+    ok: true,
     json: () => Promise.resolve(mockEnv),
   } as Response)
 

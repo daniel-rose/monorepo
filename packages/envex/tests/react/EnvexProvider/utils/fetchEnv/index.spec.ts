@@ -11,6 +11,7 @@ test('Returns data on successful fetch.', async () => {
   const mockEnv = { API_URL: 'https://api.example.com' }
 
   vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+    ok: true,
     json: () => Promise.resolve(mockEnv),
   } as Response)
 
@@ -22,6 +23,7 @@ test('Returns data on successful fetch.', async () => {
 test('Deduplicates: second call with same endpoint does not fetch again.', async () => {
   const mockEnv = { API_URL: 'https://api.example.com' }
   const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+    ok: true,
     json: () => Promise.resolve(mockEnv),
   } as Response)
 
@@ -35,6 +37,7 @@ test('Both calls receive the same data.', async () => {
   const mockEnv = { API_URL: 'https://api.example.com' }
 
   vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+    ok: true,
     json: () => Promise.resolve(mockEnv),
   } as Response)
 
@@ -52,9 +55,11 @@ test('Different endpoint invalidates cache and fetches again.', async () => {
   const fetchSpy = vi
     .spyOn(globalThis, 'fetch')
     .mockResolvedValueOnce({
+      ok: true,
       json: () => Promise.resolve(mockEnv1),
     } as Response)
     .mockResolvedValueOnce({
+      ok: true,
       json: () => Promise.resolve(mockEnv2),
     } as Response)
 
@@ -72,6 +77,7 @@ test('Error invalidates cache so next call retries.', async () => {
     .spyOn(globalThis, 'fetch')
     .mockRejectedValueOnce(new Error('Network error'))
     .mockResolvedValueOnce({
+      ok: true,
       json: () => Promise.resolve(mockEnv),
     } as Response)
 

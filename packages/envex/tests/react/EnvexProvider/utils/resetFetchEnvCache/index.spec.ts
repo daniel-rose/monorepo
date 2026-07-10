@@ -12,9 +12,11 @@ test('resetFetchEnvCache clears the cache.', async () => {
   const fetchSpy = vi
     .spyOn(globalThis, 'fetch')
     .mockResolvedValueOnce({
+      ok: true,
       json: () => Promise.resolve(mockEnv),
     } as Response)
     .mockResolvedValueOnce({
+      ok: true,
       json: () => Promise.resolve(mockEnv),
     } as Response)
 

@@ -12,3 +12,10 @@ allowBuilds:
   esbuild: true
   sharp: true
   unrs-resolver: true
+ignoreWorkspaceRootCheck: true
+shellEmulator: true
+workspacesUpdate: false
+storeDir: ${PNPM_HOME}/store
+preferWorkspacePackages: true
+linkWorkspacePackages: true
+autoInstallPeers: true

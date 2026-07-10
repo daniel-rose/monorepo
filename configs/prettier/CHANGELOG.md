@@ -1,3 +1,15 @@
+# @daniel-rose/prettier-config [1.2.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/prettier-config@1.1.0...@daniel-rose/prettier-config@1.2.0) (2026-07-10)
+
+
+### Features
+
+* **envex:** add injectable fetchStrategy prop to EnvexProvider ([#139](https://github.com/daniel-rose/monorepo/issues/139)) ([1cda273](https://github.com/daniel-rose/monorepo/commit/1cda273cb7d1adaa1d2025baeba0672c5a139bf9))
+
+
+### Dependencies
+
+* **@daniel-rose/semantic-release-config:** upgraded to 1.2.0
+
 # @daniel-rose/prettier-config [1.1.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/prettier-config@1.0.0...@daniel-rose/prettier-config@1.1.0) (2026-03-23)
 
 

@@ -2,3 +2,20 @@ packages:
   - 'examples/*'
   - 'packages/*'
   - 'configs/*'
+overrides:
+  '@daniel-rose/envex': 'workspace:^'
+  '@daniel-rose/eslint-config': 'workspace:^'
+  '@daniel-rose/prettier-config': 'workspace:^'
+  '@daniel-rose/semantic-release-config': 'workspace:^'
+allowBuilds:
+  '@swc/core': true
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
+ignoreWorkspaceRootCheck: true
+shellEmulator: true
+workspacesUpdate: false
+storeDir: ${PNPM_HOME}/store
+preferWorkspacePackages: true
+linkWorkspacePackages: true
+autoInstallPeers: true

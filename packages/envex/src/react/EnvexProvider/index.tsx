@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { EnvexWindowEnvIsMissingError } from '../../errors.ts'
 import type { Env } from '../../types.ts'
 import { filterPublicEnv } from '../../utils'
@@ -9,16 +9,35 @@ import type { EnvexProviderPropsInterface } from './types.ts'
 import { fetchEnv } from './utils'
 
 const EnvexProvider = (props: EnvexProviderPropsInterface) => {
-  const { initialEnv, prefix, endpoint, children } = props
+  const { initialEnv, prefix, endpoint, fetchStrategy, children } = props
   const [env, setEnv] = useState<Env>(
     initialEnv ? filterPublicEnv(initialEnv, prefix) : {}
   )
 
+  // Keep the latest strategy in a ref so the fetch effect can read it without
+  // depending on it — an inline `fetchStrategy` prop would otherwise change
+  // identity on every render and trigger an endless refetch loop.
+  const fetchStrategyRef = useRef(fetchStrategy)
+
   useEffect(() => {
-    if (endpoint) {
+    fetchStrategyRef.current = fetchStrategy
+  }, [fetchStrategy])
+
+  useEffect(() => {
+    const strategy = fetchStrategyRef.current
+    let request: Promise<Env> | null = null
+
+    if (strategy) {
+      // Injected strategy owns its own dedup/caching; the module cache is bypassed.
+      request = strategy(endpoint ?? '')
+    } else if (endpoint) {
+      request = fetchEnv(endpoint)
+    }
+
+    if (request) {
       let isCancelled = false
 
-      void fetchEnv(endpoint)
+      void request
         .then((data: Env) => {
           if (!isCancelled) {
             setEnv(data)
@@ -41,7 +60,6 @@ const EnvexProvider = (props: EnvexProviderPropsInterface) => {
       )
     }
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setEnv(window.ENV)
   }, [endpoint])
 

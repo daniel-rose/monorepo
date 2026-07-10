@@ -51,6 +51,7 @@ test('Try to render "EnvProvider" with endpoint prop.', async () => {
   const mockEnv = { API_URL: 'https://api.example.com' }
 
   vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+    ok: true,
     json: () => Promise.resolve(mockEnv),
   } as Response)
 
@@ -67,6 +68,7 @@ test('Try to render "EnvProvider" with endpoint ignores window.ENV.', async () =
   const mockEnv = { API_URL: 'https://api.example.com' }
 
   vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+    ok: true,
     json: () => Promise.resolve(mockEnv),
   } as Response)
 
@@ -82,6 +84,7 @@ test('Try to render "EnvProvider" with endpoint ignores window.ENV.', async () =
 test('Multiple providers with same endpoint fire only one fetch.', async () => {
   const mockEnv = { API_URL: 'https://api.example.com' }
   const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+    ok: true,
     json: () => Promise.resolve(mockEnv),
   } as Response)
 
@@ -95,4 +98,42 @@ test('Multiple providers with same endpoint fire only one fetch.', async () => {
   await expect.element(getByText('Provider A')).toBeInTheDocument()
   await expect.element(getByText('Provider B')).toBeInTheDocument()
   expect(fetchSpy).toHaveBeenCalledTimes(1)
+})
+
+test('Uses fetchStrategy instead of fetch and passes the endpoint string.', async () => {
+  const mockEnv = { API_URL: 'https://api.example.com' }
+  const fetchSpy = vi.spyOn(globalThis, 'fetch')
+  const fetchStrategy = vi.fn().mockResolvedValue(mockEnv)
+
+  const { getByText } = await render(
+    <EnvexProvider endpoint='/api/env' fetchStrategy={fetchStrategy}>
+      Children
+    </EnvexProvider>
+  )
+
+  await expect.element(getByText('Children')).toBeInTheDocument()
+  expect(fetchStrategy).toHaveBeenCalledWith('/api/env')
+  expect(fetchSpy).not.toHaveBeenCalled()
+})
+
+test('Injected strategy owns dedup: two providers call the strategy per instance.', async () => {
+  const mockEnv = { API_URL: 'https://api.example.com' }
+  const fetchSpy = vi.spyOn(globalThis, 'fetch')
+  const fetchStrategy = vi.fn().mockResolvedValue(mockEnv)
+
+  const { getByText } = await render(
+    <>
+      <EnvexProvider endpoint='/api/env' fetchStrategy={fetchStrategy}>
+        Provider A
+      </EnvexProvider>
+      <EnvexProvider endpoint='/api/env' fetchStrategy={fetchStrategy}>
+        Provider B
+      </EnvexProvider>
+    </>
+  )
+
+  await expect.element(getByText('Provider A')).toBeInTheDocument()
+  await expect.element(getByText('Provider B')).toBeInTheDocument()
+  expect(fetchStrategy).toHaveBeenCalledTimes(2)
+  expect(fetchSpy).not.toHaveBeenCalled()
 })

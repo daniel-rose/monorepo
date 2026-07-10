@@ -1,5 +1,6 @@
 import type { Env } from '../../../../types.ts'
 import fetchEnvCache from '../fetchEnvCache'
+import nativeFetchStrategy from '../nativeFetchStrategy'
 
 const fetchEnv = (endpoint: string): Promise<Env> => {
   if (fetchEnvCache.promise && fetchEnvCache.endpoint === endpoint) {
@@ -7,13 +8,13 @@ const fetchEnv = (endpoint: string): Promise<Env> => {
   }
 
   fetchEnvCache.endpoint = endpoint
-  fetchEnvCache.promise = fetch(endpoint)
-    .then(res => res.json() as Promise<Env>)
-    .catch((error: unknown) => {
+  fetchEnvCache.promise = nativeFetchStrategy(endpoint).catch(
+    (error: unknown) => {
       fetchEnvCache.promise = null
       fetchEnvCache.endpoint = null
       throw error
-    })
+    }
+  )
 
   return fetchEnvCache.promise
 }

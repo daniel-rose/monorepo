@@ -1,4 +1,4 @@
 export * from './errors'
-export { EnvexProvider, useEnv } from './react'
+export { EnvexProvider, nativeFetchStrategy, useEnv } from './react'
 
 export * from './types'

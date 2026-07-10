@@ -12,14 +12,6 @@
     "husky": "^9.1.7",
     "semantic-release": "^25.0.5"
   },
-  "pnpm": {
-    "overrides": {
-      "@daniel-rose/envex": "workspace:^",
-      "@daniel-rose/eslint-config": "workspace:^",
-      "@daniel-rose/prettier-config": "workspace:^",
-      "@daniel-rose/semantic-release-config": "workspace:^"
-    }
-  },
   "scripts": {
     "prepare": "husky"
   }

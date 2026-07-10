@@ -2,6 +2,11 @@ packages:
   - 'examples/*'
   - 'packages/*'
   - 'configs/*'
+overrides:
+  '@daniel-rose/envex': 'workspace:^'
+  '@daniel-rose/eslint-config': 'workspace:^'
+  '@daniel-rose/prettier-config': 'workspace:^'
+  '@daniel-rose/semantic-release-config': 'workspace:^'
 allowBuilds:
   '@swc/core': true
   esbuild: true

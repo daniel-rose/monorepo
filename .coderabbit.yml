@@ -77,14 +77,14 @@ reviews:
     - path: ".github/workflows/**"
       instructions: |
         GitHub Actions workflows.
-        - Keep pnpm at version 10
+        - Keep pnpm at version 11
         - Use Node.js LTS
         - Include all packages (packages/*, configs/*, examples/*) in the build step
         - semantic-release runs only on `main` (release.yml)
 
     - path: "**/package.json"
       instructions: |
-        pnpm v10 monorepo. Verify workspace protocol (`workspace:^`) for internal dependencies.
+        pnpm v11 monorepo. Verify workspace protocol (`workspace:^`) for internal dependencies.
         Peer dependencies for envex: react ^19, react-dom ^19, next ^15||^16 (optional).
 
   tools:

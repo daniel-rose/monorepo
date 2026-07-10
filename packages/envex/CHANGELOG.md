@@ -1,3 +1,17 @@
+# @daniel-rose/envex [1.7.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/envex@1.6.0...@daniel-rose/envex@1.7.0) (2026-07-10)
+
+
+### Features
+
+* **envex:** add injectable fetchStrategy prop to EnvexProvider ([#139](https://github.com/daniel-rose/monorepo/issues/139)) ([1cda273](https://github.com/daniel-rose/monorepo/commit/1cda273cb7d1adaa1d2025baeba0672c5a139bf9))
+
+
+### Dependencies
+
+* **@daniel-rose/eslint-config:** upgraded to 1.2.0
+* **@daniel-rose/prettier-config:** upgraded to 1.2.0
+* **@daniel-rose/semantic-release-config:** upgraded to 1.2.0
+
 # @daniel-rose/envex [1.6.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/envex@1.5.0...@daniel-rose/envex@1.6.0) (2026-03-24)
 
 

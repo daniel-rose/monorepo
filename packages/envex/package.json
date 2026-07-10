@@ -1,6 +1,6 @@
 {
   "name": "@daniel-rose/envex",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "license": "MIT",
   "author": "Daniel Rose",
   "keywords": [
@@ -61,9 +61,9 @@
     }
   },
   "devDependencies": {
-    "@daniel-rose/eslint-config": "workspace:^",
-    "@daniel-rose/prettier-config": "workspace:^",
-    "@daniel-rose/semantic-release-config": "workspace:^",
+    "@daniel-rose/eslint-config": "^1.2.0",
+    "@daniel-rose/prettier-config": "^1.2.0",
+    "@daniel-rose/semantic-release-config": "^1.2.0",
     "@types/node": "^25.9.5",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",

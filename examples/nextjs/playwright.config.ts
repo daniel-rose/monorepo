@@ -25,6 +25,10 @@ export default defineConfig({
       env: {
         NEXT_PUBLIC_FOO: 'bar',
         BAR: 'foo',
+        // Legitimately public, high-entropy tokens: must pass the default
+        // credential scan via the built-in value allowlist (regression).
+        NEXT_PUBLIC_STRIPE_PK: 'pk_live_51AbCdEfGhIjKlMnOpQrStUvWx',
+        NEXT_PUBLIC_ANALYTICS_ID: 'G-ABCDEF1234',
       },
     },
   ],

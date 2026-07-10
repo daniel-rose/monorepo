@@ -1,11 +1,13 @@
 import { getEnv } from '../'
-import type { Env } from '../../../types.ts'
-import { filterPublicEnv } from '../../../utils'
+import type { Env, ScanConfig } from '../../../types.ts'
+import { assertNoCredentialLeak, filterPublicEnv } from '../../../utils'
 
-const getPublicEnv = async (): Promise<Env> => {
-  const env = await getEnv()
+const getPublicEnv = async (scan?: ScanConfig): Promise<Env> => {
+  const publicEnv = filterPublicEnv(await getEnv())
 
-  return filterPublicEnv(env)
+  await assertNoCredentialLeak(publicEnv, scan)
+
+  return publicEnv
 }
 
 export default getPublicEnv

@@ -3,10 +3,10 @@ import { getPublicEnv } from '../'
 import type { EnvRouteHandlerOptions } from './types.ts'
 
 const createEnvRouteHandler = (options: EnvRouteHandlerOptions = {}) => {
-  const { maxAge } = options
+  const { maxAge, scan } = options
 
   return async () => {
-    const env = await getPublicEnv()
+    const env = await getPublicEnv(scan)
 
     const headers: HeadersInit = {}
 

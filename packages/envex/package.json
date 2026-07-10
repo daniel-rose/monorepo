@@ -51,11 +51,19 @@
     }
   },
   "peerDependencies": {
+    "@secretlint/core": "^13",
+    "@secretlint/secretlint-rule-preset-recommend": "^13",
     "next": "^15 || ^16",
     "react": "^19",
     "react-dom": "^19"
   },
   "peerDependenciesMeta": {
+    "@secretlint/core": {
+      "optional": true
+    },
+    "@secretlint/secretlint-rule-preset-recommend": {
+      "optional": true
+    },
     "next": {
       "optional": true
     }
@@ -64,6 +72,8 @@
     "@daniel-rose/eslint-config": "^1.2.0",
     "@daniel-rose/prettier-config": "^1.2.0",
     "@daniel-rose/semantic-release-config": "^1.2.0",
+    "@secretlint/core": "^13.0.2",
+    "@secretlint/secretlint-rule-preset-recommend": "^13.0.2",
     "@types/node": "^25.9.5",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",

@@ -19,15 +19,15 @@
   },
   "main": "dist/index.json",
   "dependencies": {
+    "@anolilab/semantic-release-pnpm": "^8.1.16",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^12.0.6",
-    "@anolilab/semantic-release-pnpm": "^8.1.8",
-    "@semantic-release/release-notes-generator": "^14.1.0"
+    "@semantic-release/github": "^12.0.9",
+    "@semantic-release/release-notes-generator": "^14.1.1"
   },
   "devDependencies": {
-    "semantic-release": "^25.0.3"
+    "semantic-release": "^25.0.5"
   },
   "peerDependencies": {
     "semantic-release": "^25"

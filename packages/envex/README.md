@@ -22,7 +22,7 @@ pnpm add @daniel-rose/envex
 
 | Export path                    | Requires Next.js | Description                                                                             |
 | ------------------------------ | ---------------- | --------------------------------------------------------------------------------------- |
-| `@daniel-rose/envex`           | No               | `EnvexProvider`, `useEnv` hook, error classes, types                                    |
+| `@daniel-rose/envex`           | No               | `EnvexProvider`, `useEnv` hook, `nativeFetchStrategy`, error classes, types             |
 | `@daniel-rose/envex/dev-tools` | No               | `EnvList` debug component                                                               |
 | `@daniel-rose/envex/script`    | Yes              | `EnvScript`, `InlineEnvScript` server components                                        |
 | `@daniel-rose/envex/server`    | Yes              | `createEnvRouteHandler`, `getEnv`, `getEnvByName`, `getPublicEnv`, `getPublicEnvByName` |
@@ -153,6 +153,50 @@ Alternatively, use the `endpoint` prop to fetch env vars from a REST API instead
 
 This is useful for micro-frontends or SPAs that don't control the host page's script tags. When `endpoint` is set, `window.ENV` is ignored.
 
+### Custom fetch strategy
+
+The `fetchStrategy` prop replaces the built-in native `fetch` entirely, so you can plug in your own
+HTTP client, retry logic, or caching layer. It receives the `endpoint` string and must resolve to an
+env object:
+
+```tsx
+// axios
+<EnvexProvider
+  endpoint='/api/env'
+  fetchStrategy={url => axios.get(url).then(r => r.data)}
+>
+  <MyComponent />
+</EnvexProvider>
+```
+
+```tsx
+// ky
+<EnvexProvider endpoint='/api/env' fetchStrategy={url => ky.get(url).json()}>
+  <MyComponent />
+</EnvexProvider>
+```
+
+```tsx
+// TanStack Query — the queryClient handles deduplication and caching via the queryKey
+<EnvexProvider
+  endpoint='/api/env'
+  fetchStrategy={url =>
+    queryClient.fetchQuery({
+      queryKey: ['envex', url],
+      queryFn: () => fetch(url).then(r => r.json()),
+    })
+  }
+>
+  <MyComponent />
+</EnvexProvider>
+```
+
+When you inject a `fetchStrategy`, deduplication and caching are **your** responsibility — the
+built-in module-level request cache only applies to the default native-fetch strategy. The default
+strategy is also exported as `nativeFetchStrategy` if you want to compose with it. The `fetchStrategy`
+prop may be an inline arrow function; it is read via a ref, so it never triggers a refetch on
+re-render (a refetch only happens when `endpoint` changes).
+
 ## API
 
 ### `EnvexProvider`
@@ -162,6 +206,7 @@ This is useful for micro-frontends or SPAs that don't control the host page's sc
 | `initialEnv` | `Record<string, string \| undefined>` | `{}`             | Initial env for SSR hydration (Next.js). Optional for non-SSR setups.                           |
 | `prefix`     | `string \| null`                      | `'NEXT_PUBLIC_'` | Filter prefix for `initialEnv`. Set to `null` to pass all variables through.                    |
 | `endpoint`   | `string`                              | —                | Fetch env vars from a REST endpoint instead of `window.ENV`. When set, `window.ENV` is ignored. |
+| `fetchStrategy` | `(endpoint: string) => Promise<Env>` | —             | Custom fetcher; overrides the native fetch. Owns its own dedup/caching.                         |
 | `children`   | `ReactNode`                           | —                | Required                                                                                        |
 
 ### `useEnv`

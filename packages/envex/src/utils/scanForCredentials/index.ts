@@ -55,8 +55,10 @@ const detectReason = (
     regex.test(value)
   )?.reason
 
+  // Clone each pattern so a stateful /g or /y flag (lastIndex) can't skip
+  // matches across values.
   const hasCustomMatch = (options.patterns ?? []).some(pattern =>
-    pattern.test(value)
+    new RegExp(pattern).test(value)
   )
 
   const threshold = options.entropyThreshold ?? DEFAULT_ENTROPY_THRESHOLD

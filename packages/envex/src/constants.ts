@@ -41,10 +41,10 @@ export const CREDENTIAL_PATTERNS: ReadonlyArray<{
     reason: CredentialReason.KnownSecretPattern,
     regex: /\bAKIA[0-9A-Z]{16}\b/,
   },
-  // user:password@ inside a connection URL.
+  // user:password@ inside a connection URL (scheme may be compound, e.g. postgresql+psycopg2).
   {
     reason: CredentialReason.CredentialsInUrl,
-    regex: /\w+:\/\/[^/\s:@]+:[^/\s:@]+@/,
+    regex: /[\w+.-]+:\/\/[^/\s:@]+:[^/\s:@]+@/,
   },
 ]
 

@@ -6,11 +6,14 @@ import {
   type ScanOptions,
 } from '../../types.ts'
 
-const missingPeerDependencyError = (): Error =>
-  new Error(
-    `envex: scan engine 'secretlint' requires the optional peer dependencies ` +
-      `'@secretlint/core' and '${SECRETLINT_PRESET_ID}'. ` +
-      `Install them, or use the default built-in engine.`
+const missingPeerDependencyError = (cause: unknown): Error =>
+  Object.assign(
+    new Error(
+      `envex: scan engine 'secretlint' requires the optional peer dependencies ` +
+        `'@secretlint/core' and '${SECRETLINT_PRESET_ID}'. ` +
+        `Install them, or use the default built-in engine.`
+    ),
+    { cause }
   )
 
 const loadSecretlint = async () => {
@@ -21,8 +24,8 @@ const loadSecretlint = async () => {
     ])
 
     return { lintSource: core.lintSource, creator: preset.creator }
-  } catch {
-    throw missingPeerDependencyError()
+  } catch (error) {
+    throw missingPeerDependencyError(error)
   }
 }
 

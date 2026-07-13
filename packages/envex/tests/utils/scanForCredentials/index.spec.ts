@@ -52,6 +52,28 @@ test('flags credentials embedded in a connection URL', () => {
   ])
 })
 
+test('flags credentials in URLs with compound schemes', () => {
+  const findings = scanForCredentials({
+    NEXT_PUBLIC_DB: 'postgresql+psycopg2://admin:s3cr3tpw@db.internal/app',
+  })
+
+  expect(findings).toEqual([
+    { key: 'NEXT_PUBLIC_DB', reason: CredentialReason.CredentialsInUrl },
+  ])
+})
+
+test('handles stateful (/g) custom patterns across values', () => {
+  const findings = scanForCredentials(
+    { NEXT_PUBLIC_A: 'token', NEXT_PUBLIC_B: 'token' },
+    { patterns: [/token/g] }
+  )
+
+  expect(findings).toEqual([
+    { key: 'NEXT_PUBLIC_A', reason: CredentialReason.KnownSecretPattern },
+    { key: 'NEXT_PUBLIC_B', reason: CredentialReason.KnownSecretPattern },
+  ])
+})
+
 test('flags high-entropy opaque tokens', () => {
   const findings = scanForCredentials({
     NEXT_PUBLIC_TOKEN: 'Zk9xQ2vT7pR4wN1mB6yH8sL3aD5eF0gJ2cU',

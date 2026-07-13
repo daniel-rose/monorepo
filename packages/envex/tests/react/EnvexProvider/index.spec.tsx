@@ -6,8 +6,15 @@ import {
   EnvexScriptIsMissingError,
   EnvexValidationError,
   EnvexWindowEnvIsMissingError,
+  useEnv,
 } from '../../../src'
 import resetFetchEnvCache from '../../../src/react/EnvexProvider/utils/resetFetchEnvCache'
+
+const ShowEnv = ({ envKey }: { envKey: string }) => {
+  const env = useEnv()
+
+  return <span>value:{env[envKey]}</span>
+}
 
 const makePassSchema = (
   output: Record<string, string>
@@ -104,22 +111,26 @@ test('Try to render "EnvProvider" with endpoint ignores window.ENV.', async () =
   delete window.ENV
 })
 
-test('Schema validates window.ENV and provider renders children.', async () => {
+test('Schema validates window.ENV and provider exposes validated value.', async () => {
   window.ENV = { NEXT_PUBLIC_API_URL: 'https://api.example.com' }
   const schema = makePassSchema({
     NEXT_PUBLIC_API_URL: 'https://api.example.com',
   })
 
   const { getByText } = await render(
-    <EnvexProvider schema={schema}>Children</EnvexProvider>
+    <EnvexProvider schema={schema}>
+      <ShowEnv envKey='NEXT_PUBLIC_API_URL' />
+    </EnvexProvider>
   )
 
-  await expect.element(getByText('Children')).toBeInTheDocument()
+  await expect
+    .element(getByText('value:https://api.example.com'))
+    .toBeInTheDocument()
 
   delete window.ENV
 })
 
-test('Schema validates fetched env from endpoint.', async () => {
+test('Schema validates fetched env from endpoint and exposes validated value.', async () => {
   const mockEnv = { API_URL: 'https://api.example.com' }
   const schema = makePassSchema(mockEnv)
 
@@ -130,11 +141,13 @@ test('Schema validates fetched env from endpoint.', async () => {
 
   const { getByText } = await render(
     <EnvexProvider endpoint='/api/env' schema={schema}>
-      Children
+      <ShowEnv envKey='API_URL' />
     </EnvexProvider>
   )
 
-  await expect.element(getByText('Children')).toBeInTheDocument()
+  await expect
+    .element(getByText('value:https://api.example.com'))
+    .toBeInTheDocument()
 })
 
 test('Schema validation failure on window.ENV surfaces EnvexValidationError.', async () => {

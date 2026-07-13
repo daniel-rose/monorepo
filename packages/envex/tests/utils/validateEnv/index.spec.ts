@@ -59,6 +59,7 @@ test('throws EnvexValidationError when sync schema fails', async () => {
 })
 
 test('includes issue messages in error', async () => {
+  expect.assertions(4)
   const schema = makeFailSchema('API_URL is required')
 
   try {

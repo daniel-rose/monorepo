@@ -12,8 +12,16 @@ const EnvexProvider = (props: EnvexProviderPropsInterface) => {
   const { initialEnv, prefix, endpoint, fetchStrategy, schema, children } =
     props
   const [rawEnv, setRawEnv] = useState<Env | null>(null)
+  // Seed the first paint (incl. SSR) from initialEnv. With a schema, initialEnv
+  // is already the server-validated output, so it is used as-is; otherwise it is
+  // prefix-filtered. The fetch/validation effects still refresh from window.ENV
+  // (or the endpoint) on the client.
   const [env, setEnv] = useState<Env>(
-    initialEnv && !schema ? filterPublicEnv(initialEnv, prefix) : {}
+    initialEnv
+      ? schema
+        ? initialEnv
+        : filterPublicEnv(initialEnv, prefix)
+      : {}
   )
   const [error, setError] = useState<Error | null>(null)
 

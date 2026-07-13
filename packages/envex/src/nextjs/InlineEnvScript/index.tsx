@@ -1,8 +1,8 @@
 import { getPublicEnv } from '../utils'
-import type { InlineEnvScriptProps } from './types.ts'
+import type { InlineEnvScriptProps } from './types'
 
-const InlineEnvScript = async ({ scan }: InlineEnvScriptProps = {}) => {
-  const env = await getPublicEnv(scan)
+const InlineEnvScript = async ({ scan, schema }: InlineEnvScriptProps = {}) => {
+  const env = await getPublicEnv({ scan, schema })
 
   return (
     <script

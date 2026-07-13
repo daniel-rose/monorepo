@@ -1,4 +1,4 @@
-import { expect, test } from 'playwright/test'
+import { expect, test } from '@playwright/test'
 
 test('Try to get dynamic env variable with prefix "NEXT_PUBLIC_"', async ({
   page,

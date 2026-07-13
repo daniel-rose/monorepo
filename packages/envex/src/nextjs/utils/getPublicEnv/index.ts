@@ -1,13 +1,30 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec'
 import { getEnv } from '../'
-import type { Env, ScanConfig } from '../../../types.ts'
-import { assertNoCredentialLeak, filterPublicEnv } from '../../../utils'
+import type { Env } from '../../../types.ts'
+import {
+  assertNoCredentialLeak,
+  filterPublicEnv,
+  validateEnv,
+} from '../../../utils'
+import type { GetPublicEnvOptions } from './types.ts'
 
-const getPublicEnv = async (scan?: ScanConfig): Promise<Env> => {
-  const publicEnv = filterPublicEnv(await getEnv())
+const getPublicEnv = async <
+  TSchema extends StandardSchemaV1 | undefined = undefined,
+>(
+  options?: GetPublicEnvOptions<TSchema>
+): Promise<
+  TSchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<TSchema> : Env
+> => {
+  const env = await getEnv()
+  const filtered = filterPublicEnv(env, options?.prefix)
 
-  await assertNoCredentialLeak(publicEnv, scan)
+  await assertNoCredentialLeak(filtered, options?.scan)
 
-  return publicEnv
+  if (options?.schema) {
+    return validateEnv(options.schema, filtered) as never
+  }
+
+  return filtered as never
 }
 
 export default getPublicEnv

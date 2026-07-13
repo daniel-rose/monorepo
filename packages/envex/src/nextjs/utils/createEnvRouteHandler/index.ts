@@ -1,12 +1,17 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec'
 import { NextResponse } from 'next/server'
 import { getPublicEnv } from '../'
 import type { EnvRouteHandlerOptions } from './types.ts'
 
-const createEnvRouteHandler = (options: EnvRouteHandlerOptions = {}) => {
-  const { maxAge, scan } = options
+const createEnvRouteHandler = <
+  TSchema extends StandardSchemaV1 | undefined = undefined,
+>(
+  options: EnvRouteHandlerOptions<TSchema> = {}
+) => {
+  const { maxAge, schema, scan } = options
 
   return async () => {
-    const env = await getPublicEnv(scan)
+    const env = await getPublicEnv({ schema, scan })
 
     const headers: HeadersInit = {}
 

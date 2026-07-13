@@ -3,3 +3,4 @@ export {
   assertNoCredentialLeak,
   scanForCredentials,
 } from './scanForCredentials'
+export { validateEnv } from './validateEnv'

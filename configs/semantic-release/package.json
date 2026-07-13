@@ -27,7 +27,7 @@
     "@semantic-release/release-notes-generator": "^14.1.1"
   },
   "devDependencies": {
-    "semantic-release": "^25.0.5"
+    "semantic-release": "^25.0.6"
   },
   "peerDependencies": {
     "semantic-release": "^25"

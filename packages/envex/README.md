@@ -201,13 +201,13 @@ re-render (a refetch only happens when `endpoint` changes).
 
 ### `EnvexProvider`
 
-| Prop         | Type                                  | Default          | Description                                                                                     |
-| ------------ | ------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------- |
-| `initialEnv` | `Record<string, string \| undefined>` | `{}`             | Initial env for SSR hydration (Next.js). Optional for non-SSR setups.                           |
-| `prefix`     | `string \| null`                      | `'NEXT_PUBLIC_'` | Filter prefix for `initialEnv`. Set to `null` to pass all variables through.                    |
-| `endpoint`   | `string`                              | —                | Fetch env vars from a REST endpoint instead of `window.ENV`. When set, `window.ENV` is ignored. |
-| `fetchStrategy` | `(endpoint: string) => Promise<Env>` | —             | Custom fetcher; overrides the native fetch. Owns its own dedup/caching.                         |
-| `children`   | `ReactNode`                           | —                | Required                                                                                        |
+| Prop            | Type                                  | Default          | Description                                                                                     |
+| --------------- | ------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------- |
+| `initialEnv`    | `Record<string, string \| undefined>` | `{}`             | Initial env for SSR hydration (Next.js). Optional for non-SSR setups.                           |
+| `prefix`        | `string \| null`                      | `'NEXT_PUBLIC_'` | Filter prefix for `initialEnv`. Set to `null` to pass all variables through.                    |
+| `endpoint`      | `string`                              | —                | Fetch env vars from a REST endpoint instead of `window.ENV`. When set, `window.ENV` is ignored. |
+| `fetchStrategy` | `(endpoint: string) => Promise<Env>`  | —                | Custom fetcher; overrides the native fetch. Owns its own dedup/caching.                         |
+| `children`      | `ReactNode`                           | —                | Required                                                                                        |
 
 ### `useEnv`
 
@@ -217,9 +217,81 @@ Returns the current environment variables as `Record<string, string | undefined>
 
 Creates a Next.js route handler that returns public environment variables as JSON. Requires Next.js.
 
-| Option   | Type     | Default     | Description                                           |
-| -------- | -------- | ----------- | ----------------------------------------------------- |
-| `maxAge` | `number` | `undefined` | Sets `Cache-Control: public, max-age=<value>` header. |
+| Option   | Type         | Default     | Description                                             |
+| -------- | ------------ | ----------- | ------------------------------------------------------- |
+| `maxAge` | `number`     | `undefined` | Sets `Cache-Control: public, max-age=<value>` header.   |
+| `scan`   | `ScanConfig` | `undefined` | Enable credential scanning (see below). Off by default. |
+
+## Credential scanning
+
+The public-env filter is **name-based** (`NEXT_PUBLIC_` prefix). That does not protect you
+from accidentally exposing a secret whose name happens to carry the public prefix
+(`NEXT_PUBLIC_DB_PASSWORD=…`) or from setting `prefix={null}`.
+
+As an **opt-in** second line of defense, envex can scan the values that are about to be shipped
+to the client **before** they are serialized into `window.ENV` (or the route-handler response).
+On a hit it throws an `EnvexCredentialLeakError` so the build/render fails instead of leaking the
+secret. Error messages and findings contain **only the variable name**, never the value.
+
+Scanning is **disabled by default** (enabling it is a non-breaking upgrade). Turn it on at any
+server-side emission point by passing `scan`:
+
+```tsx
+;<EnvScript scan /> // built-in engine, default settings
+export const GET = createEnvRouteHandler({ scan: true })
+const env = await getPublicEnv(true)
+```
+
+It is only meaningful server-side; `EnvexProvider` (client) never scans, since by then the value
+has already been shipped.
+
+### Engines
+
+Two engines, selectable via `scan.engine`:
+
+- **`'builtin'`** (default) — zero-dependency. Flags PEM private keys, known secret tokens
+  (`sk_live_…`, GitHub/Slack tokens, AWS access keys), credentials embedded in URLs
+  (`user:pass@host`), and high-entropy opaque tokens. Legitimately public tokens (`pk_live_…`,
+  Google `AIza…` keys, Sentry DSNs, `G-…`/`UA-` ids) are exempt from the entropy heuristic.
+- **`'secretlint'`** — delegates to [secretlint](https://github.com/secretlint/secretlint)'s
+  recommended preset for much broader provider coverage. Requires the optional peer dependencies
+  `@secretlint/core` and `@secretlint/secretlint-rule-preset-recommend`:
+
+  ```bash
+  pnpm add -D @secretlint/core @secretlint/secretlint-rule-preset-recommend
+  ```
+
+  ```tsx
+  export const GET = createEnvRouteHandler({ scan: { engine: 'secretlint' } })
+  ```
+
+### Configuring
+
+```tsx
+<EnvScript
+  scan={{
+    engine: 'builtin', // or 'secretlint'
+    allowlist: ['NEXT_PUBLIC_HIGH_ENTROPY_BUT_PUBLIC'],
+    patterns: [/mycorp_secret_[a-z0-9]+/], // built-in engine only
+    entropyThreshold: 4.5, // or `false` to disable; built-in engine only
+  }}
+/>
+```
+
+The `scan` option is accepted by `EnvScript`, `InlineEnvScript`, `createEnvRouteHandler({ scan })`,
+`getPublicEnv(scan)` and `getPublicEnvByName(name, scan)`. The primitives `scanForCredentials(env, options)`
+(sync, built-in) and `assertNoCredentialLeak(env, scan)` (async, engine-aware) are also exported for
+running the scan yourself.
+
+`ScanConfig` is `boolean | ScanOptions`: `true` enables with defaults, an object configures it,
+absent/`false` disables.
+
+| `ScanOptions`      | Type                        | Default     | Description                                                                 |
+| ------------------ | --------------------------- | ----------- | --------------------------------------------------------------------------- |
+| `engine`           | `'builtin' \| 'secretlint'` | `'builtin'` | Detection engine.                                                           |
+| `allowlist`        | `string[]`                  | `[]`        | Env variable names that are known safe and skip scanning.                   |
+| `patterns`         | `RegExp[]`                  | `[]`        | Additional secret patterns (built-in engine only).                          |
+| `entropyThreshold` | `number \| false`           | `4`         | Shannon-entropy threshold (bits/char); `false` disables it (built-in only). |
 
 ## Example
 

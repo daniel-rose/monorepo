@@ -21,7 +21,7 @@ export default async function RootLayout({
   return (
     <html lang='en'>
       <body>
-        <EnvScript />
+        <EnvScript scan />
         <EnvexProvider initialEnv={initialEnv}>
           <div data-testid='server-env'>BAR: {barEnv}</div>
           {children}

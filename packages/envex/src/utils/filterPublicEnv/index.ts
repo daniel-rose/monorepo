@@ -4,22 +4,11 @@ import type { Env } from '../../types.ts'
 const filterPublicEnv = (
   env: Record<string, string | undefined>,
   prefix: string | null = PUBLIC_ENV_PREFIX
-): Env => {
-  if (prefix === null) {
-    return { ...env }
-  }
-
-  const publicEnv: Env = {}
-
-  for (const name of Object.keys(env)) {
-    if (!name.startsWith(prefix)) {
-      continue
-    }
-
-    publicEnv[name] = env[name]
-  }
-
-  return publicEnv
-}
+): Env =>
+  prefix === null
+    ? { ...env }
+    : Object.fromEntries(
+        Object.entries(env).filter(([name]) => name.startsWith(prefix))
+      )
 
 export default filterPublicEnv

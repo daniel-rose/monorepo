@@ -11,8 +11,7 @@ function useEnv<
   TSchema extends StandardSchemaV1,
 >(): StandardSchemaV1.InferOutput<TSchema>
 function useEnv<TSchema extends StandardSchemaV1 | undefined = undefined>():
-  | Env
-  | StandardSchemaV1.InferOutput<NonNullable<TSchema>> {
+  Env | StandardSchemaV1.InferOutput<NonNullable<TSchema>> {
   const env = useContext(EnvexContext)
 
   if (env === undefined) {

@@ -124,6 +124,7 @@ test('Schema validates fetched env from endpoint.', async () => {
   const schema = makePassSchema(mockEnv)
 
   vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+    ok: true,
     json: () => Promise.resolve(mockEnv),
   } as Response)
 
@@ -156,6 +157,7 @@ test('Schema validation failure on endpoint surfaces EnvexValidationError.', asy
   const schema = makeFailSchema()
 
   vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+    ok: true,
     json: () => Promise.resolve(mockEnv),
   } as Response)
 

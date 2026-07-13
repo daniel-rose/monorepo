@@ -318,7 +318,7 @@ try {
 
 ### `EnvexProvider`
 
-| Prop            | Type                                  | Default          | Description                                                                                              |
+| Prop            | Type                                  | Default          | Description                                                                                             |
 | --------------- | ------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------- |
 | `initialEnv`    | `Record<string, string \| undefined>` | `{}`             | Initial env for SSR hydration (Next.js). Optional for non-SSR setups.                                   |
 | `prefix`        | `string \| null`                      | `'NEXT_PUBLIC_'` | Filter prefix for `initialEnv`. Set to `null` to pass all variables through.                            |
@@ -349,11 +349,11 @@ Creates a Next.js route handler that returns public environment variables as JSO
 
 ### `getEnv` / `getPublicEnv`
 
-| Option   | Type               | Default     | Description                                             |
-| -------- | ------------------ | ----------- | ------------------------------------------------------- |
-| `schema` | `StandardSchemaV1` | `undefined` | Validates the env and returns the schema's output type. |
+| Option   | Type               | Default     | Description                                                                                                                                                                                                                                                                                                                                |
+| -------- | ------------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `schema` | `StandardSchemaV1` | `undefined` | Validates the env and returns the schema's output type.                                                                                                                                                                                                                                                                                    |
 | `prefix` | `string \| null`   | `undefined` | **`getPublicEnv` only.** Filters returned keys to those starting with the given prefix. When `null` or `undefined`, no prefix filtering is applied and all public env keys are returned. Use this to restrict which variables are exposed — only keys matching the prefix are included, reducing the risk of leaking unintended variables. |
-| `scan`   | `ScanConfig`       | `undefined` | Enable credential scanning (see below). Off by default. |
+| `scan`   | `ScanConfig`       | `undefined` | **`getPublicEnv` only.** Enable credential scanning (see below). Off by default.                                                                                                                                                                                                                                                           |
 
 ### `EnvScript` / `InlineEnvScript`
 

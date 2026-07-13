@@ -1,4 +1,4 @@
-import { expect, test } from 'playwright/test'
+import { expect, test } from '@playwright/test'
 
 test('GET /api/env-schema returns schema-validated public env', async ({
   request,

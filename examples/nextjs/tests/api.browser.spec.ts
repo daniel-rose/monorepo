@@ -1,4 +1,4 @@
-import { expect, test } from 'playwright/test'
+import { expect, test } from '@playwright/test'
 
 test('GET /api/env returns only NEXT_PUBLIC_ variables', async ({
   request,

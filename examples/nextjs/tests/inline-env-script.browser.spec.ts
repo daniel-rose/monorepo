@@ -1,4 +1,4 @@
-import { expect, test } from 'playwright/test'
+import { expect, test } from '@playwright/test'
 
 test('InlineEnvScript injects NEXT_PUBLIC_ variables into window.ENV', async ({
   page,

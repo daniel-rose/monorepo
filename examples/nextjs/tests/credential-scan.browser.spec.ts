@@ -1,4 +1,4 @@
-import { expect, test } from 'playwright/test'
+import { expect, test } from '@playwright/test'
 
 // Credential scanning is opt-in. The example enables it end-to-end: the layout
 // uses <EnvScript scan /> (built-in engine) and the /api/env route uses the

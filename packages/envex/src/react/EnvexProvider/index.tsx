@@ -24,6 +24,13 @@ const EnvexProvider = (props: EnvexProviderPropsInterface) => {
       : {}
   )
   const [error, setError] = useState<Error | null>(null)
+  // Without a schema every value is exposed as-is, so the provider is ready
+  // immediately. With a schema, a seeded initialEnv is the server-validated
+  // output and is safe to expose; otherwise children must wait for client-side
+  // validation so schema consumers never see an unvalidated empty object.
+  const [isReady, setIsReady] = useState<boolean>(
+    !schema || Boolean(initialEnv)
+  )
 
   if (error) throw error
 
@@ -108,10 +115,12 @@ const EnvexProvider = (props: EnvexProviderPropsInterface) => {
 
     void Promise.resolve(schema ? validateEnv(schema, rawEnv) : rawEnv)
       .then(result => {
-        if (!isCancelled)
+        if (!isCancelled) {
           setEnv(
             schema ? (result as Env) : filterPublicEnv(result as Env, prefix)
           )
+          setIsReady(true)
+        }
       })
       .catch((err: unknown) => {
         if (!isCancelled) {
@@ -129,7 +138,11 @@ const EnvexProvider = (props: EnvexProviderPropsInterface) => {
     }
   }, [rawEnv, schema, prefix])
 
-  return <EnvexContext.Provider value={env}>{children}</EnvexContext.Provider>
+  return (
+    <EnvexContext.Provider value={env}>
+      {isReady ? children : null}
+    </EnvexContext.Provider>
+  )
 }
 
 export default EnvexProvider

@@ -1,3 +1,17 @@
+# @daniel-rose/envex [2.0.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/envex@1.8.0...@daniel-rose/envex@2.0.0) (2026-07-13)
+
+
+### Features
+
+* **envex:** add Standard Schema validation for environment variables ([#133](https://github.com/daniel-rose/monorepo/issues/133)) ([1f9cdc4](https://github.com/daniel-rose/monorepo/commit/1f9cdc40b4d79d0e64275e511ba9b1b95e48e5bc))
+
+
+### BREAKING CHANGES
+
+* **envex:** `getPublicEnv` now takes a single options object instead of a
+positional `scan` argument. Replace `getPublicEnv(scanConfig)` with
+`getPublicEnv({ scan: scanConfig })`.
+
 # @daniel-rose/envex [1.8.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/envex@1.7.0...@daniel-rose/envex@1.8.0) (2026-07-13)
 
 

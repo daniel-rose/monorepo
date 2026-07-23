@@ -349,11 +349,34 @@ Creates a Next.js route handler that returns public environment variables as JSO
 
 ### `getEnv` / `getPublicEnv`
 
-| Option   | Type               | Default     | Description                                                                                                                                                                                                                                                                                                                                |
-| -------- | ------------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `schema` | `StandardSchemaV1` | `undefined` | Validates the env and returns the schema's output type.                                                                                                                                                                                                                                                                                    |
-| `prefix` | `string \| null`   | `undefined` | **`getPublicEnv` only.** Filters returned keys to those starting with the given prefix. When `null` or `undefined`, no prefix filtering is applied and all public env keys are returned. Use this to restrict which variables are exposed — only keys matching the prefix are included, reducing the risk of leaking unintended variables. |
-| `scan`   | `ScanConfig`       | `undefined` | **`getPublicEnv` only.** Enable credential scanning (see below). Off by default.                                                                                                                                                                                                                                                           |
+| Option       | Type               | Default     | Description                                                                                                                                                                                                                                                                                                                                |
+| ------------ | ------------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `schema`     | `StandardSchemaV1` | `undefined` | Validates the env and returns the schema's output type.                                                                                                                                                                                                                                                                                    |
+| `prefix`     | `string \| null`   | `undefined` | **`getPublicEnv` only.** Filters returned keys to those starting with the given prefix. When `null` or `undefined`, no prefix filtering is applied and all public env keys are returned. Use this to restrict which variables are exposed — only keys matching the prefix are included, reducing the risk of leaking unintended variables. |
+| `scan`       | `ScanConfig`       | `undefined` | **`getPublicEnv` only.** Enable credential scanning (see below). Off by default.                                                                                                                                                                                                                                                           |
+| `connection` | `boolean`          | `true`      | Opt into Next.js dynamic rendering via `connection()` before reading `process.env`. Set to `false` to read the runtime env WITHOUT calling `connection()`.                                                                                                                                                                                 |
+
+### `getEnvByName(name)` / `getPublicEnvByName(name, options?)`
+
+By-name convenience readers. `getPublicEnvByName` accepts an options object as its second argument:
+
+| Option       | Type         | Default     | Description                                                                                                           |
+| ------------ | ------------ | ----------- | --------------------------------------------------------------------------------------------------------------------- |
+| `scan`       | `ScanConfig` | `undefined` | Enable credential scanning (see below). Off by default.                                                               |
+| `connection` | `boolean`    | `true`      | Opt into dynamic rendering via `connection()`. Set to `false` to read the runtime env WITHOUT calling `connection()`. |
+
+Passing `{ connection: false }` reads the **same runtime `process.env` value** (env stays dynamic — build-once, deploy-many); it only skips the dynamic-rendering opt-in. Use it where dynamic request APIs are forbidden — most notably streamed `generateMetadata`, which can run during the `after()` phase where `connection()`/`headers()`/`cookies()` throw `used <api>() inside after()`:
+
+```ts
+import { getPublicEnvByName } from '@daniel-rose/envex/server'
+
+export const generateMetadata = async (): Promise<Metadata> => {
+  const apiUrl = await getPublicEnvByName('NEXT_PUBLIC_API_URL', {
+    connection: false,
+  })
+  // ...
+}
+```
 
 ### `EnvScript` / `InlineEnvScript`
 
@@ -428,7 +451,7 @@ Two engines, selectable via `scan.engine`:
 ```
 
 The `scan` option is accepted by `EnvScript`, `InlineEnvScript`, `createEnvRouteHandler({ scan })`,
-`getPublicEnv({ scan })` and `getPublicEnvByName(name, scan)`. The primitives `scanForCredentials(env, options)`
+`getPublicEnv({ scan })` and `getPublicEnvByName(name, { scan })`. The primitives `scanForCredentials(env, options)`
 (sync, built-in) and `assertNoCredentialLeak(env, scan)` (async, engine-aware) are also exported for
 running the scan yourself.
 

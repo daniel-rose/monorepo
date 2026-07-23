@@ -8,4 +8,10 @@ export interface GetPublicEnvOptions<
   prefix?: string | null
   /** Enable credential scanning: `true` for defaults or a config object. Off by default. */
   scan?: ScanConfig
+  /**
+   * Opt into Next.js dynamic rendering via `connection()` (default `true`).
+   * Set to `false` to read the runtime env without calling `connection()`.
+   * See {@link GetEnvOptions.connection}.
+   */
+  connection?: boolean
 }

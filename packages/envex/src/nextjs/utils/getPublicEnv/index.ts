@@ -15,7 +15,7 @@ const getPublicEnv = async <
 ): Promise<
   TSchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<TSchema> : Env
 > => {
-  const env = await getEnv()
+  const env = await getEnv({ connection: options?.connection })
   const filtered = filterPublicEnv(env, options?.prefix)
 
   await assertNoCredentialLeak(filtered, options?.scan)

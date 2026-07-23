@@ -1,11 +1,16 @@
 import { getPublicEnv } from '../'
-import type { ScanConfig } from '../../../types.ts'
+import type { GetPublicEnvOptions } from '../getPublicEnv/types.ts'
+
+export type GetPublicEnvByNameOptions = Pick<
+  GetPublicEnvOptions,
+  'scan' | 'connection'
+>
 
 const getPublicEnvByName = async (
   name: string,
-  scan?: ScanConfig
+  options?: GetPublicEnvByNameOptions
 ): Promise<string | undefined> => {
-  const env = await getPublicEnv({ scan })
+  const env = await getPublicEnv(options)
 
   return env[name]
 }

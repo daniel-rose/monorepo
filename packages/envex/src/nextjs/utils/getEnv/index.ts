@@ -9,7 +9,13 @@ const getEnv = async <TSchema extends StandardSchemaV1 | undefined = undefined>(
 ): Promise<
   TSchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<TSchema> : Env
 > => {
-  await connection()
+  // `connection()` opts the route into dynamic rendering so `process.env` is
+  // read at request time rather than baked in at build. Callers that must not
+  // touch a dynamic request API (e.g. streamed generateMetadata) pass
+  // `connection: false`.
+  if (options?.connection !== false) {
+    await connection()
+  }
 
   if (options?.schema) {
     return validateEnv(options.schema, process.env) as never

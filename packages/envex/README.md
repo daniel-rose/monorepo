@@ -378,6 +378,10 @@ export const generateMetadata = async (): Promise<Metadata> => {
 }
 ```
 
+> **`connection: false` does NOT make the value static.** The read still happens at request time against the live `process.env` (via dynamic key access, so the value is never inlined at build) — the same "build once, deploy many" behavior as the default. `connection()` only controls whether the route opts into dynamic rendering, not which value is read. This is verified end to end by the example app: it is built **without** `NEXT_PUBLIC_FOO` and served with it set at runtime, and `examples/nextjs/tests/dynamic-metadata.browser.spec.ts` asserts the runtime value reaches `generateMetadata`.
+>
+> Because `connection: false` skips the dynamic-rendering opt-in, ensure the route is dynamic by other means (a dynamic request API in the page, or `export const dynamic = 'force-dynamic'`); otherwise a fully prerenderable route could resolve `generateMetadata` at build time.
+
 ### `EnvScript` / `InlineEnvScript`
 
 | Prop     | Type               | Default | Description                                                |

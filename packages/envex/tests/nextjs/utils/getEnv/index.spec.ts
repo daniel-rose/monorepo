@@ -31,3 +31,15 @@ test('skips connection() when connection is false', async () => {
 
   expect(connection).not.toHaveBeenCalled()
 })
+
+// Guards the "build once, deploy many" contract: the reader must reflect the
+// current process.env on every call, never a value frozen at import/build time.
+test('reads the current process.env on each call (no frozen snapshot)', async () => {
+  vi.stubGlobal('process', { env: { NEXT_PUBLIC_FOO: 'first' } })
+  const first = await getEnv({ connection: false })
+  expect(first['NEXT_PUBLIC_FOO']).toBe('first')
+
+  vi.stubGlobal('process', { env: { NEXT_PUBLIC_FOO: 'second' } })
+  const second = await getEnv({ connection: false })
+  expect(second['NEXT_PUBLIC_FOO']).toBe('second')
+})

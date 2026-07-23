@@ -1,3 +1,15 @@
+# @daniel-rose/envex [3.0.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/envex@2.0.0...@daniel-rose/envex@3.0.0) (2026-07-23)
+
+
+* feat!: add connection option to env readers for connection()-free reads ([#144](https://github.com/daniel-rose/monorepo/issues/144)) ([9fc661f](https://github.com/daniel-rose/monorepo/commit/9fc661f9634d1d04667921842c29aaebf77aef2c))
+
+
+### BREAKING CHANGES
+
+* getPublicEnvByName's second argument is now an options object
+{ scan?, connection? } instead of a positional scan config. Migrate
+getPublicEnvByName(name, scan) to getPublicEnvByName(name, { scan }).
+
 # @daniel-rose/envex [2.0.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/envex@1.8.0...@daniel-rose/envex@2.0.0) (2026-07-13)
 
 

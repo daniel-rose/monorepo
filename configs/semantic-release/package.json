@@ -19,10 +19,10 @@
   },
   "main": "dist/index.json",
   "dependencies": {
-    "@anolilab/semantic-release-pnpm": "^8.1.16",
-    "@semantic-release/changelog": "^6.0.3",
+    "@anolilab/semantic-release-pnpm": "^8.1.17",
+    "@semantic-release/changelog": "^7.0.0",
     "@semantic-release/commit-analyzer": "^13.0.1",
-    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/git": "^11.0.1",
     "@semantic-release/github": "^12.0.9",
     "@semantic-release/release-notes-generator": "^14.1.1"
   },

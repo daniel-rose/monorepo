@@ -1,3 +1,21 @@
+# @daniel-rose/prettier-config [2.0.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/prettier-config@1.3.0...@daniel-rose/prettier-config@2.0.0) (2026-07-28)
+
+
+* feat!: migrate envex to rolldown-plugin-dts (ESM-only) + dependency updates ([#142](https://github.com/daniel-rose/monorepo/issues/142)) ([4fa091f](https://github.com/daniel-rose/monorepo/commit/4fa091fada26db006eefdbab9737248c99495290))
+
+
+### BREAKING CHANGES
+
+* @daniel-rose/envex is now ESM-only. The CommonJS entry points
+(the require condition and *.cjs files) were removed because
+rolldown-plugin-dts cannot bundle declarations for the cjs format. Consumers
+must import the package via ESM.
+
+
+### Dependencies
+
+* **@daniel-rose/semantic-release-config:** upgraded to 2.0.0
+
 # @daniel-rose/prettier-config [1.3.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/prettier-config@1.2.0...@daniel-rose/prettier-config@1.3.0) (2026-07-13)
 
 

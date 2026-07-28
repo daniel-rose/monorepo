@@ -17,22 +17,22 @@
   },
   "dependencies": {
     "@daniel-rose/envex": "workspace:^",
-    "next": "^16.2.10",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
-    "zod": "^3.24.0"
+    "next": "^16.2.12",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@playwright/test": "^1.61.1",
-    "@secretlint/core": "^13.0.2",
-    "@secretlint/secretlint-rule-preset-recommend": "^13.0.2",
-    "@types/node": "^24.13.3",
+    "@playwright/test": "^1.62.0",
+    "@secretlint/core": "^13.0.4",
+    "@secretlint/secretlint-rule-preset-recommend": "^13.0.4",
+    "@types/node": "^26.1.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "eslint": "^9.39.5",
-    "eslint-config-next": "^16.2.10",
-    "playwright": "^1.61.1",
-    "prettier": "^3.9.5",
+    "eslint-config-next": "^16.2.12",
+    "playwright": "^1.62.0",
+    "prettier": "^3.9.6",
     "prettier-plugin-organize-imports": "^4.3.0",
     "typescript": "^5.9.3"
   }

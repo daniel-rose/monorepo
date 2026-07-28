@@ -1,6 +1,6 @@
 {
   "name": "@daniel-rose/envex",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "license": "MIT",
   "author": "Daniel Rose",
   "keywords": [
@@ -65,9 +65,9 @@
     }
   },
   "devDependencies": {
-    "@daniel-rose/eslint-config": "workspace:^",
-    "@daniel-rose/prettier-config": "workspace:^",
-    "@daniel-rose/semantic-release-config": "workspace:^",
+    "@daniel-rose/eslint-config": "^2.0.0",
+    "@daniel-rose/prettier-config": "^2.0.0",
+    "@daniel-rose/semantic-release-config": "^2.0.0",
     "@secretlint/core": "^13.0.4",
     "@secretlint/secretlint-rule-preset-recommend": "^13.0.4",
     "@types/node": "^26.1.1",

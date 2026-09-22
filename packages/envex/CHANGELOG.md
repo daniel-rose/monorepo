@@ -1,3 +1,14 @@
+# @daniel-rose/envex [5.0.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/envex@4.0.0...@daniel-rose/envex@5.0.0) (2026-09-22)
+
+
+* feat!: keep the secretlint peers out of every consumer bundle ([#145](https://github.com/daniel-rose/monorepo/issues/145)) ([131458d](https://github.com/daniel-rose/monorepo/commit/131458d821d10e3ea7ea961c9f54e4a3134657e2))
+
+
+### BREAKING CHANGES
+
+* `scanForCredentials` and `assertNoCredentialLeak` are no longer
+exported from `@daniel-rose/envex`. Import them from `@daniel-rose/envex/server`.
+
 # @daniel-rose/envex [4.0.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/envex@3.0.0...@daniel-rose/envex@4.0.0) (2026-07-28)
 
 

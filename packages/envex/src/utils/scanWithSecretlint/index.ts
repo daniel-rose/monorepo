@@ -16,11 +16,26 @@ const missingPeerDependencyError = (cause: unknown): Error =>
     { cause }
   )
 
+/**
+ * The `webpackIgnore` / `turbopackIgnore` hints keep the specifiers out of the
+ * consumer's module graph: both peers are optional, so a bundler that tries to
+ * resolve them reports `Module not found: Can't resolve '@secretlint/core'` in
+ * every build that does not install them — a warning about code the consumer
+ * deliberately opted out of. With the hints the call stays a plain runtime
+ * `import()`, which is what the `catch` below has always been written for.
+ *
+ * The comments have to survive into `dist/`, which is why the build keeps
+ * comments attached to their expression (see `vite.config.ts`).
+ */
 const loadSecretlint = async () => {
   try {
     const [core, preset] = await Promise.all([
-      import('@secretlint/core'),
-      import('@secretlint/secretlint-rule-preset-recommend'),
+      import(
+        /* webpackIgnore: true */ /* turbopackIgnore: true */ '@secretlint/core'
+      ),
+      import(
+        /* webpackIgnore: true */ /* turbopackIgnore: true */ '@secretlint/secretlint-rule-preset-recommend'
+      ),
     ])
 
     return { lintSource: core.lintSource, creator: preset.creator }

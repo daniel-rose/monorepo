@@ -20,12 +20,12 @@ pnpm add @daniel-rose/envex
 
 ## Exports
 
-| Export path                    | Requires Next.js | Description                                                                             |
-| ------------------------------ | ---------------- | --------------------------------------------------------------------------------------- |
-| `@daniel-rose/envex`           | No               | `EnvexProvider`, `useEnv` hook, `nativeFetchStrategy`, error classes, types             |
-| `@daniel-rose/envex/dev-tools` | No               | `EnvList` debug component                                                               |
-| `@daniel-rose/envex/script`    | Yes              | `EnvScript`, `InlineEnvScript` server components                                        |
-| `@daniel-rose/envex/server`    | Yes              | `createEnvRouteHandler`, `getEnv`, `getEnvByName`, `getPublicEnv`, `getPublicEnvByName` |
+| Export path                    | Requires Next.js | Description                                                                                                                             |
+| ------------------------------ | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `@daniel-rose/envex`           | No               | `EnvexProvider`, `useEnv` hook, `nativeFetchStrategy`, error classes, types                                                             |
+| `@daniel-rose/envex/dev-tools` | No               | `EnvList` debug component                                                                                                               |
+| `@daniel-rose/envex/script`    | Yes              | `EnvScript`, `InlineEnvScript` server components                                                                                        |
+| `@daniel-rose/envex/server`    | Yes              | `createEnvRouteHandler`, `getEnv`, `getEnvByName`, `getPublicEnv`, `getPublicEnvByName`, `scanForCredentials`, `assertNoCredentialLeak` |
 
 ## Usage with Next.js
 
@@ -349,12 +349,12 @@ Creates a Next.js route handler that returns public environment variables as JSO
 
 ### `getEnv` / `getPublicEnv`
 
-| Option       | Type               | Default     | Description                                                                                                                                                                                                                                                                                                                                |
-| ------------ | ------------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `schema`     | `StandardSchemaV1` | `undefined` | Validates the env and returns the schema's output type.                                                                                                                                                                                                                                                                                    |
+| Option       | Type               | Default     | Description                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------ | ------------------ | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `schema`     | `StandardSchemaV1` | `undefined` | Validates the env and returns the schema's output type.                                                                                                                                                                                                                                                                                                                                        |
 | `prefix`     | `string \| null`   | `undefined` | **`getPublicEnv` only.** Filters returned keys to those starting with the given prefix. Omitting it (`undefined`) applies the default `NEXT_PUBLIC_` filter; `null` disables filtering and returns **all** env keys — including private ones. Pass a custom string to narrow exposure further — only keys matching the prefix are included, reducing the risk of leaking unintended variables. |
-| `scan`       | `ScanConfig`       | `undefined` | **`getPublicEnv` only.** Enable credential scanning (see below). Off by default.                                                                                                                                                                                                                                                           |
-| `connection` | `boolean`          | `true`      | Opt into Next.js dynamic rendering via `connection()` before reading `process.env`. Set to `false` to read the runtime env WITHOUT calling `connection()`.                                                                                                                                                                                 |
+| `scan`       | `ScanConfig`       | `undefined` | **`getPublicEnv` only.** Enable credential scanning (see below). Off by default.                                                                                                                                                                                                                                                                                                               |
+| `connection` | `boolean`          | `true`      | Opt into Next.js dynamic rendering via `connection()` before reading `process.env`. Set to `false` to read the runtime env WITHOUT calling `connection()`.                                                                                                                                                                                                                                     |
 
 ### `getEnvByName(name)` / `getPublicEnvByName(name, options?)`
 
@@ -455,9 +455,20 @@ Two engines, selectable via `scan.engine`:
 ```
 
 The `scan` option is accepted by `EnvScript`, `InlineEnvScript`, `createEnvRouteHandler({ scan })`,
-`getPublicEnv({ scan })` and `getPublicEnvByName(name, { scan })`. The primitives `scanForCredentials(env, options)`
-(sync, built-in) and `assertNoCredentialLeak(env, scan)` (async, engine-aware) are also exported for
-running the scan yourself.
+`getPublicEnv({ scan })` and `getPublicEnvByName(name, { scan })`. To run the scan yourself, the
+primitives `scanForCredentials(env, options)` (sync, built-in) and `assertNoCredentialLeak(env, scan)`
+(async, engine-aware) are exported from `@daniel-rose/envex/server`:
+
+```tsx
+import {
+  assertNoCredentialLeak,
+  scanForCredentials,
+} from '@daniel-rose/envex/server'
+```
+
+They are server-only. Exported from the root entry, they pulled the optional `@secretlint/*` peers
+into every client bundle, where the scan can never run — bundlers had to resolve them and warned on
+each build when they were absent.
 
 `ScanConfig` is `boolean | ScanOptions`: `true` enables with defaults, an object configures it,
 absent/`false` disables.

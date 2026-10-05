@@ -63,9 +63,21 @@ jobs:
               continue
             fi
 
-            # Find the highest installed version across all package.json files (exclude build artifacts)
-            current_version=$(grep -r "\"$package\"" --include="package.json" . \
-              | grep -v node_modules | grep -v .next \
+            # Find the highest declared version across all package.json files (exclude build artifacts)
+            # and the pnpm catalog, where package.json only says "catalog:"
+            current_version=$(
+              {
+                grep -r "\"$package\"" --include="package.json" . \
+                  | grep -v -F '/node_modules/' | grep -v -F '/.next/'
+                # Only the top-level catalog block; values may be unquoted, so print them
+                # in package.json style
+                awk -v pkg="$package" -v q="'" \
+                  '/^[^ #]/ { in_catalog = ($0 == "catalog:"); next }
+                   !in_catalog { next }
+                   { key = $1; sub(/:$/, "", key); gsub(q, "", key); value = $2; gsub(q, "", value) }
+                   key == pkg { print "\"" value "\"" }' \
+                  pnpm-workspace.yaml
+              } \
               | sed -n 's/.*"\^*~*\([0-9][0-9.]*[0-9]\)".*/\1/p' \
               | sort -V | tail -1)
 

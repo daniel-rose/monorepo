@@ -68,25 +68,25 @@
     "@daniel-rose/eslint-config": "^2.0.0",
     "@daniel-rose/prettier-config": "^2.0.0",
     "@daniel-rose/semantic-release-config": "^2.0.0",
-    "@secretlint/core": "^13.0.4",
-    "@secretlint/secretlint-rule-preset-recommend": "^13.0.4",
-    "@types/node": "^26.1.1",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.4",
-    "@vitejs/plugin-react-swc": "^4.3.2",
-    "@vitest/browser": "^4.1.10",
-    "@vitest/browser-playwright": "^4.1.10",
-    "@vitest/coverage-v8": "^4.1.10",
-    "eslint": "^9.39.5",
-    "playwright": "^1.62.0",
-    "prettier": "^3.9.6",
-    "rolldown-plugin-dts": "^0.27.14",
-    "semantic-release": "^25.0.8",
-    "typescript": "^5.9.3",
-    "vite": "^8.1.5",
-    "vitest": "^4.1.10",
-    "vitest-browser-react": "^2.2.0"
+    "@secretlint/core": "catalog:",
+    "@secretlint/secretlint-rule-preset-recommend": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "@vitejs/plugin-react-swc": "catalog:",
+    "@vitest/browser": "catalog:",
+    "@vitest/browser-playwright": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "eslint": "catalog:",
+    "playwright": "catalog:",
+    "prettier": "catalog:",
+    "rolldown-plugin-dts": "catalog:",
+    "semantic-release": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:",
+    "vitest-browser-react": "catalog:"
   },
   "repository": {
     "type": "git",
@@ -98,6 +98,6 @@
   },
   "homepage": "https://github.com/daniel-rose/monorepo/blob/main/packages/envex/README.md",
   "dependencies": {
-    "@standard-schema/spec": "^1.1.0"
+    "@standard-schema/spec": "catalog:"
   }
 }

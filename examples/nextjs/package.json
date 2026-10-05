@@ -17,23 +17,23 @@
   },
   "dependencies": {
     "@daniel-rose/envex": "workspace:^",
-    "next": "^16.2.12",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "zod": "^4.4.3"
+    "next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
-    "@playwright/test": "^1.62.0",
-    "@secretlint/core": "^13.0.4",
-    "@secretlint/secretlint-rule-preset-recommend": "^13.0.4",
-    "@types/node": "^26.1.1",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
-    "eslint": "^9.39.5",
-    "eslint-config-next": "^16.2.12",
-    "playwright": "^1.62.0",
-    "prettier": "^3.9.6",
-    "prettier-plugin-organize-imports": "^4.3.0",
-    "typescript": "^5.9.3"
+    "@playwright/test": "catalog:",
+    "@secretlint/core": "catalog:",
+    "@secretlint/secretlint-rule-preset-recommend": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "eslint": "catalog:",
+    "eslint-config-next": "catalog:",
+    "playwright": "catalog:",
+    "prettier": "catalog:",
+    "prettier-plugin-organize-imports": "catalog:",
+    "typescript": "catalog:"
   }
 }

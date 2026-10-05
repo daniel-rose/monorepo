@@ -29,10 +29,10 @@
     }
   },
   "dependencies": {
-    "@eslint/js": "^9.39.5",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.6",
-    "typescript-eslint": "^8.65.0"
+    "@eslint/js": "catalog:",
+    "eslint-config-prettier": "catalog:",
+    "eslint-plugin-prettier": "catalog:",
+    "typescript-eslint": "catalog:"
   },
   "peerDependencies": {
     "eslint": "^9",
@@ -50,11 +50,11 @@
   "devDependencies": {
     "@daniel-rose/prettier-config": "^2.0.0",
     "@daniel-rose/semantic-release-config": "^2.0.0",
-    "eslint": "^9.39.5",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.3",
-    "prettier": "^3.9.6",
-    "semantic-release": "^25.0.8"
+    "eslint": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
+    "eslint-plugin-react-refresh": "catalog:",
+    "prettier": "catalog:",
+    "semantic-release": "catalog:"
   },
   "repository": {
     "type": "git",

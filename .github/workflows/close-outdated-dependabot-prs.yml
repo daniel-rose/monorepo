@@ -69,9 +69,12 @@ jobs:
               {
                 grep -r "\"$package\"" --include="package.json" . \
                   | grep -v node_modules | grep -v .next
-                # Catalog values may be unquoted; print them in package.json style
+                # Only the top-level catalog block; values may be unquoted, so print them
+                # in package.json style
                 awk -v pkg="$package" -v q="'" \
-                  '{ key = $1; sub(/:$/, "", key); gsub(q, "", key); value = $2; gsub(q, "", value) }
+                  '/^[^ #]/ { in_catalog = ($0 == "catalog:"); next }
+                   !in_catalog { next }
+                   { key = $1; sub(/:$/, "", key); gsub(q, "", key); value = $2; gsub(q, "", value) }
                    key == pkg { print "\"" value "\"" }' \
                   pnpm-workspace.yaml
               } \

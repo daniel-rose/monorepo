@@ -18,10 +18,15 @@ jobs:
           node-version: "lts/*"
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@v6.1.0
 
       - name: Install dependencies
         run: pnpm install
+
+      # Dependabot's dependency graph cannot read pnpm 12 lockfiles yet
+      # (dependabot/dependabot-core#15904), so GitHub raises no security alerts.
+      - name: Audit production dependencies
+        run: pnpm audit --prod --audit-level high
 
       - name: Build
         run: pnpm --filter "./packages/*" --filter "./configs/*" --filter "./examples/*" build

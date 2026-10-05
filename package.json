@@ -5,7 +5,7 @@
   "keywords": [],
   "author": "Daniel Rose",
   "license": "MIT",
-  "packageManager": "pnpm@11.7.0",
+  "packageManager": "pnpm@12.9.1",
   "devDependencies": {
     "@anolilab/multi-semantic-release": "^4.4.6",
     "@commitlint/cli": "^21.2.1",

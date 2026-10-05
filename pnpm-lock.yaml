@@ -300,6 +300,8 @@ overrides:
   '@daniel-rose/prettier-config': workspace:^
   '@daniel-rose/semantic-release-config': workspace:^
 
+packageExtensionsChecksum: sha256-j32OWFKtvO0GhbvtxLpz3UfED9dkpHkqe8IJfcO0UeU=
+
 importers:
 
   .:
@@ -1698,6 +1700,10 @@ packages:
     resolution: {integrity: sha512-M9cTzZNtTbOl975YAgUzzzwg9xOMqqC2Y2Jy1uFDQufK0sBNgbFnvR0o14jIfNDxACXyhEN3DSuFa4W7U7Hf2g==}
     engines: {node: ^22.14.0 || >=24.10.0}
     os: [darwin, linux, win32]
+
+  '@visulima/yaml@1.0.0':
+    resolution: {integrity: sha512-06obI/5zlKRjScekXqHTtF06S5peqHE9J3AmEthJ5b40a4FuJAysbOJ9EVyznTpOVmy3IvL8cZu3QiNpgF/cbg==}
+    engines: {node: ^22.14.0 || >=24.10.0}
 
   '@vitejs/plugin-react-swc@4.3.3':
     resolution: {integrity: sha512-bti8ZAcvz4Lh6/e4Uk2k3aa1TiUXbbMsahuqOHvd3MveFTkKDZOA6wQVkpj7J/+tepX/wGfe+lsGh/t24HTXMQ==}
@@ -4550,7 +4556,6 @@ snapshots:
       registry-auth-token: 5.1.1
       semver: 7.8.5
     transitivePeerDependencies:
-      - '@visulima/yaml'
       - json5
       - jsonc-parser
       - smol-toml
@@ -5598,23 +5603,24 @@ snapshots:
       json5: 2.2.3
       yaml: 2.9.1
 
-  '@visulima/fs@6.0.18(ini@7.0.0)(json5@2.2.3)':
+  '@visulima/fs@6.0.18(@visulima/yaml@1.0.0)(ini@7.0.0)(json5@2.2.3)':
     dependencies:
       '@visulima/path': 4.0.0
     optionalDependencies:
+      '@visulima/yaml': 1.0.0
       ini: 7.0.0
       json5: 2.2.3
 
   '@visulima/package@5.0.31(ini@7.0.0)':
     dependencies:
       '@antfu/install-pkg': 2.1.0
-      '@visulima/fs': 6.0.18(ini@7.0.0)(json5@2.2.3)
+      '@visulima/fs': 6.0.18(@visulima/yaml@1.0.0)(ini@7.0.0)(json5@2.2.3)
       '@visulima/path': 4.0.0
+      '@visulima/yaml': 1.0.0
       json5: 2.2.3
       normalize-package-data: 9.0.0
       yaml: 2.9.0
     transitivePeerDependencies:
-      - '@visulima/yaml'
       - ini
       - jsonc-parser
       - smol-toml
@@ -5622,6 +5628,8 @@ snapshots:
   '@visulima/path@3.1.0': {}
 
   '@visulima/path@4.0.0': {}
+
+  '@visulima/yaml@1.0.0': {}
 
   '@vitejs/plugin-react-swc@4.3.3(@swc/helpers@0.5.23)(vite@8.3.2(@types/node@26.6.4)(jiti@2.6.1)(yaml@2.9.0))':
     dependencies:

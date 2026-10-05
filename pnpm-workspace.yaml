@@ -56,6 +56,14 @@ auditConfig:
     # braces <=3.0.3 (no patched release): reached only through micromatch in the
     # semantic-release plugins, which match release-config patterns, not user input
     - GHSA-vfj7-8cjw-p6xm
+packageExtensions:
+  # @visulima/package reads pnpm-workspace.yaml through @visulima/fs readYaml, which
+  # imports @visulima/yaml, declared only as an optional peer of @visulima/fs and so
+  # never installed. Without it multi-semantic-release fails with ERR_MODULE_NOT_FOUND
+  # (via @anolilab/semantic-release-pnpm).
+  '@visulima/package@5':
+    dependencies:
+      '@visulima/yaml': 1.0.0
 overrides:
   '@daniel-rose/envex': 'workspace:^'
   '@daniel-rose/eslint-config': 'workspace:^'

@@ -68,7 +68,7 @@ jobs:
             current_version=$(
               {
                 grep -r "\"$package\"" --include="package.json" . \
-                  | grep -v node_modules | grep -v .next
+                  | grep -v -F '/node_modules/' | grep -v -F '/.next/'
                 # Only the top-level catalog block; values may be unquoted, so print them
                 # in package.json style
                 awk -v pkg="$package" -v q="'" \

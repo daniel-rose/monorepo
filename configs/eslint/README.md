@@ -5,7 +5,7 @@
 [![npm version](https://img.shields.io/npm/v/@daniel-rose/eslint-config.svg)](https://www.npmjs.com/package/@daniel-rose/eslint-config)
 [![License](https://img.shields.io/npm/l/@daniel-rose/eslint-config.svg)](https://github.com/daniel-rose/envex/blob/main/LICENSE)
 
-Opinionated ESLint 9 flat config with TypeScript, Prettier integration, and an optional React preset.
+Opinionated ESLint 10 flat config with TypeScript, Prettier integration, and an optional React preset.
 
 ## Installation
 
@@ -20,8 +20,10 @@ yarn add @daniel-rose/eslint-config
 pnpm add @daniel-rose/eslint-config
 ```
 
-Peer dependencies: `eslint ^9`
-Optional peers (for React): `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh`
+Peer dependencies: `eslint ^10`
+Optional peers (for React): `eslint-plugin-react-hooks` (`^7.1.0`), `eslint-plugin-react-refresh`
+
+Still on ESLint 9? Stay on `@daniel-rose/eslint-config@2`.
 
 ## Usage
 

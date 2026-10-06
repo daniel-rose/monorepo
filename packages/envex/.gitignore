@@ -12,8 +12,8 @@ dist
 dist-ssr
 *.local
 
-# Test artifacts
-.vitest-attachments
+# Test artifacts (Vitest 5 writes attachments, failure screenshots and reports here)
+.vitest
 
 # Editor directories and files
 .vscode/*

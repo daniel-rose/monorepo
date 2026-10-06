@@ -194,8 +194,12 @@ test('Multiple providers with same endpoint fire only one fetch.', async () => {
 
   const { getByText } = await render(
     <>
-      <EnvexProvider endpoint='/api/env'>Provider A</EnvexProvider>
-      <EnvexProvider endpoint='/api/env'>Provider B</EnvexProvider>
+      <EnvexProvider endpoint='/api/env'>
+        <span>Provider A</span>
+      </EnvexProvider>
+      <EnvexProvider endpoint='/api/env'>
+        <span>Provider B</span>
+      </EnvexProvider>
     </>
   )
 
@@ -228,10 +232,10 @@ test('Injected strategy owns dedup: two providers call the strategy per instance
   const { getByText } = await render(
     <>
       <EnvexProvider endpoint='/api/env' fetchStrategy={fetchStrategy}>
-        Provider A
+        <span>Provider A</span>
       </EnvexProvider>
       <EnvexProvider endpoint='/api/env' fetchStrategy={fetchStrategy}>
-        Provider B
+        <span>Provider B</span>
       </EnvexProvider>
     </>
   )

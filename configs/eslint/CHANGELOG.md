@@ -1,3 +1,15 @@
+# @daniel-rose/eslint-config [3.0.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/eslint-config@2.0.0...@daniel-rose/eslint-config@3.0.0) (2026-10-06)
+
+
+* feat(eslint-config)!: require eslint 10 ([#149](https://github.com/daniel-rose/monorepo/issues/149)) ([e6da3b3](https://github.com/daniel-rose/monorepo/commit/e6da3b351bc4211bd2967cee9615cdd7cef5a8e0))
+
+
+### BREAKING CHANGES
+
+* @daniel-rose/eslint-config requires eslint ^10 and
+eslint-plugin-react-hooks ^7.1.0 when the React preset is used. Projects
+on ESLint 9 stay on @daniel-rose/eslint-config@2.
+
 # @daniel-rose/eslint-config [2.0.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/eslint-config@1.3.0...@daniel-rose/eslint-config@2.0.0) (2026-07-28)
 
 

@@ -167,18 +167,12 @@ catalogs:
     '@anolilab/multi-semantic-release':
       specifier: ^4.4.23
       version: 4.4.23
-    '@anolilab/semantic-release-pnpm':
-      specifier: ^8.1.32
-      version: 8.1.32
     '@commitlint/cli':
       specifier: ^21.2.3
       version: 21.2.3
     '@commitlint/config-conventional':
       specifier: ^21.2.3
       version: 21.2.3
-    '@eslint/js':
-      specifier: ^10.0.1
-      version: 10.0.1
     '@playwright/test':
       specifier: ^1.63.0
       version: 1.63.0
@@ -188,24 +182,6 @@ catalogs:
     '@secretlint/secretlint-rule-preset-recommend':
       specifier: ^13.0.7
       version: 13.0.7
-    '@semantic-release/changelog':
-      specifier: ^7.0.0
-      version: 7.0.0
-    '@semantic-release/commit-analyzer':
-      specifier: ^13.0.1
-      version: 13.0.1
-    '@semantic-release/git':
-      specifier: ^11.0.1
-      version: 11.0.1
-    '@semantic-release/github':
-      specifier: ^12.0.10
-      version: 12.0.10
-    '@semantic-release/release-notes-generator':
-      specifier: ^14.1.1
-      version: 14.1.1
-    '@standard-schema/spec':
-      specifier: ^1.1.0
-      version: 1.1.0
     '@types/node':
       specifier: ^26.6.4
       version: 26.6.4
@@ -236,12 +212,6 @@ catalogs:
     eslint-config-next:
       specifier: ^16.3.8
       version: 16.3.8
-    eslint-config-prettier:
-      specifier: ^10.1.8
-      version: 10.1.8
-    eslint-plugin-prettier:
-      specifier: ^5.5.6
-      version: 5.5.6
     eslint-plugin-react-hooks:
       specifier: ^7.1.1
       version: 7.1.1
@@ -260,9 +230,6 @@ catalogs:
     prettier:
       specifier: ^3.9.9
       version: 3.9.9
-    prettier-plugin-organize-imports:
-      specifier: ^4.3.0
-      version: 4.3.0
     react:
       specifier: ^19.3.0
       version: 19.3.0
@@ -278,9 +245,6 @@ catalogs:
     typescript:
       specifier: ^5.9.3
       version: 5.9.3
-    typescript-eslint:
-      specifier: ^8.71.0
-      version: 8.71.0
     vite:
       specifier: ^8.3.2
       version: 8.3.2
@@ -293,6 +257,43 @@ catalogs:
     zod:
       specifier: ^4.6.5
       version: 4.6.5
+  prod:
+    '@anolilab/semantic-release-pnpm':
+      specifier: ^8.1.32
+      version: 8.1.32
+    '@eslint/js':
+      specifier: ^10.0.1
+      version: 10.0.1
+    '@semantic-release/changelog':
+      specifier: ^7.0.0
+      version: 7.0.0
+    '@semantic-release/commit-analyzer':
+      specifier: ^13.0.1
+      version: 13.0.1
+    '@semantic-release/git':
+      specifier: ^11.0.1
+      version: 11.0.1
+    '@semantic-release/github':
+      specifier: ^12.0.10
+      version: 12.0.10
+    '@semantic-release/release-notes-generator':
+      specifier: ^14.1.1
+      version: 14.1.1
+    '@standard-schema/spec':
+      specifier: ^1.1.0
+      version: 1.1.0
+    eslint-config-prettier:
+      specifier: ^10.1.8
+      version: 10.1.8
+    eslint-plugin-prettier:
+      specifier: ^5.5.6
+      version: 5.5.6
+    prettier-plugin-organize-imports:
+      specifier: ^4.3.0
+      version: 4.3.0
+    typescript-eslint:
+      specifier: ^8.71.0
+      version: 8.71.0
 
 overrides:
   '@daniel-rose/envex': workspace:^
@@ -325,16 +326,16 @@ importers:
   configs/eslint:
     dependencies:
       '@eslint/js':
-        specifier: 'catalog:'
+        specifier: catalog:prod
         version: 10.0.1(eslint@10.12.0(jiti@2.6.1)(supports-color@7.2.0))
       eslint-config-prettier:
-        specifier: 'catalog:'
+        specifier: catalog:prod
         version: 10.1.8(eslint@10.12.0(jiti@2.6.1)(supports-color@7.2.0))
       eslint-plugin-prettier:
-        specifier: 'catalog:'
+        specifier: catalog:prod
         version: 5.5.6(eslint-config-prettier@10.1.8(eslint@10.12.0(jiti@2.6.1)(supports-color@7.2.0)))(eslint@10.12.0(jiti@2.6.1)(supports-color@7.2.0))(prettier@3.9.9)
       typescript-eslint:
-        specifier: 'catalog:'
+        specifier: catalog:prod
         version: 8.71.0(eslint@10.12.0(jiti@2.6.1)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.9.3)
     devDependencies:
       '@daniel-rose/prettier-config':
@@ -362,7 +363,7 @@ importers:
   configs/prettier:
     dependencies:
       prettier-plugin-organize-imports:
-        specifier: 'catalog:'
+        specifier: catalog:prod
         version: 4.3.0(prettier@3.9.9)(typescript@5.9.3)
     devDependencies:
       '@daniel-rose/semantic-release-config':
@@ -378,22 +379,22 @@ importers:
   configs/semantic-release:
     dependencies:
       '@anolilab/semantic-release-pnpm':
-        specifier: 'catalog:'
+        specifier: catalog:prod
         version: 8.1.32(json5@2.2.3)(supports-color@7.2.0)(yaml@2.9.0)
       '@semantic-release/changelog':
-        specifier: 'catalog:'
+        specifier: catalog:prod
         version: 7.0.0(semantic-release@25.0.9(supports-color@7.2.0)(typescript@5.9.3))
       '@semantic-release/commit-analyzer':
-        specifier: 'catalog:'
+        specifier: catalog:prod
         version: 13.0.1(semantic-release@25.0.9(supports-color@7.2.0)(typescript@5.9.3))(supports-color@7.2.0)
       '@semantic-release/git':
-        specifier: 'catalog:'
+        specifier: catalog:prod
         version: 11.0.1(semantic-release@25.0.9(supports-color@7.2.0)(typescript@5.9.3))(supports-color@7.2.0)
       '@semantic-release/github':
-        specifier: 'catalog:'
+        specifier: catalog:prod
         version: 12.0.10(semantic-release@25.0.9(supports-color@7.2.0)(typescript@5.9.3))(supports-color@7.2.0)
       '@semantic-release/release-notes-generator':
-        specifier: 'catalog:'
+        specifier: catalog:prod
         version: 14.1.1(semantic-release@25.0.9(supports-color@7.2.0)(typescript@5.9.3))(supports-color@7.2.0)
     devDependencies:
       semantic-release:
@@ -449,7 +450,7 @@ importers:
         specifier: 'catalog:'
         version: 3.9.9
       prettier-plugin-organize-imports:
-        specifier: 'catalog:'
+        specifier: catalog:prod
         version: 4.3.0(prettier@3.9.9)(typescript@5.9.3)
       typescript:
         specifier: 'catalog:'
@@ -458,7 +459,7 @@ importers:
   packages/envex:
     dependencies:
       '@standard-schema/spec':
-        specifier: 'catalog:'
+        specifier: catalog:prod
         version: 1.1.0
       next:
         specifier: ^15 || ^16

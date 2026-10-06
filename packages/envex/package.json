@@ -98,6 +98,6 @@
   },
   "homepage": "https://github.com/daniel-rose/monorepo/blob/main/packages/envex/README.md",
   "dependencies": {
-    "@standard-schema/spec": "catalog:"
+    "@standard-schema/spec": "catalog:prod"
   }
 }

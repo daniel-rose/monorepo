@@ -2,25 +2,21 @@ packages:
   - 'examples/*'
   - 'packages/*'
   - 'configs/*'
-# Every external dependency and devDependency resolves through this catalog.
-# Not in here: peerDependencies (kept as wide literal ranges for consumers) and
+# External dependencies resolve through two catalogs:
+# - catalog (default): tooling — devDependencies and the example app.
+# - catalogs.prod: runtime `dependencies` of the published packages. A range change
+#   here makes multi-semantic-release release the packages that reference it
+#   (`catalog:prod`), with the release type taken from the semver distance.
+# Not in either: peerDependencies (kept as wide literal ranges for consumers) and
 # the internal @daniel-rose/* packages, whose ranges multi-semantic-release
 # rewrites on release (--deps.bump=override).
 catalog:
   '@anolilab/multi-semantic-release': ^4.4.23
-  '@anolilab/semantic-release-pnpm': ^8.1.32
   '@commitlint/cli': ^21.2.3
   '@commitlint/config-conventional': ^21.2.3
-  '@eslint/js': ^10.0.1
   '@playwright/test': ^1.63.0
   '@secretlint/core': ^13.0.7
   '@secretlint/secretlint-rule-preset-recommend': ^13.0.7
-  '@semantic-release/changelog': ^7.0.0
-  '@semantic-release/commit-analyzer': ^13.0.1
-  '@semantic-release/git': ^11.0.1
-  '@semantic-release/github': ^12.0.10
-  '@semantic-release/release-notes-generator': ^14.1.1
-  '@standard-schema/spec': ^1.1.0
   '@types/node': ^26.6.4
   '@types/react': ^19.3.0
   '@types/react-dom': ^19.3.0
@@ -31,25 +27,35 @@ catalog:
   '@vitest/coverage-v8': ^5.0.3
   eslint: ^10.12.0
   eslint-config-next: ^16.3.8
-  eslint-config-prettier: ^10.1.8
-  eslint-plugin-prettier: ^5.5.6
   eslint-plugin-react-hooks: ^7.1.1
   eslint-plugin-react-refresh: ^0.5.7
   husky: ^9.1.7
   next: ^16.3.8
   playwright: ^1.63.0
   prettier: ^3.9.9
-  prettier-plugin-organize-imports: ^4.3.0
   react: ^19.3.0
   react-dom: ^19.3.0
   rolldown-plugin-dts: ^0.28.6
   semantic-release: ^25.0.9
   typescript: ^5.9.3
-  typescript-eslint: ^8.71.0
   vite: ^8.3.2
   vitest: ^5.0.3
   vitest-browser-react: ^2.3.0
   zod: ^4.6.5
+catalogs:
+  prod:
+    '@anolilab/semantic-release-pnpm': ^8.1.32
+    '@eslint/js': ^10.0.1
+    '@semantic-release/changelog': ^7.0.0
+    '@semantic-release/commit-analyzer': ^13.0.1
+    '@semantic-release/git': ^11.0.1
+    '@semantic-release/github': ^12.0.10
+    '@semantic-release/release-notes-generator': ^14.1.1
+    '@standard-schema/spec': ^1.1.0
+    eslint-config-prettier: ^10.1.8
+    eslint-plugin-prettier: ^5.5.6
+    prettier-plugin-organize-imports: ^4.3.0
+    typescript-eslint: ^8.71.0
 catalogMode: strict
 auditConfig:
   ignoreGhsas:

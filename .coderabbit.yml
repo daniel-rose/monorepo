@@ -85,9 +85,11 @@ reviews:
     - path: "**/package.json"
       instructions: |
         pnpm v12 monorepo. Verify workspace protocol (`workspace:^`) for internal dependencies.
-        External dependencies and devDependencies must use `catalog:` (versions live in the
-        `catalog` of pnpm-workspace.yaml, `catalogMode: strict`). peerDependencies keep literal
-        ranges, and internal `@daniel-rose/*` packages stay out of the catalog.
+        External dependencies use pnpm catalogs (`catalogMode: strict`): runtime `dependencies`
+        of the published packages use `catalog:prod` (`catalogs.prod` in pnpm-workspace.yaml;
+        a range change there releases the referencing package), devDependencies and the example
+        app use `catalog:`. peerDependencies keep literal ranges, and internal `@daniel-rose/*`
+        packages stay out of the catalogs.
         Peer dependencies for envex: react ^19, react-dom ^19, next ^15||^16 (optional).
 
   tools:

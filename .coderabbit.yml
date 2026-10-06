@@ -101,8 +101,6 @@ reviews:
       enabled: true
     ast-grep:
       enabled: true
-      rule_dirs:
-        - .coderabbit/rules
       essential_rules: true
     biome:
       enabled: false

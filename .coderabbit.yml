@@ -71,7 +71,7 @@ reviews:
       instructions: |
         Shared config packages (ESLint, Prettier, semantic-release).
         Changes here affect all packages in the monorepo.
-        - ESLint: use Flat Config format (v9)
+        - ESLint: use Flat Config format (v10)
         - Prettier: no semicolons, single quotes, trailing commas (ES5), 2-space indent
 
     - path: ".github/workflows/**"

@@ -21,7 +21,7 @@
   },
   "main": "dist/index.js",
   "dependencies": {
-    "prettier-plugin-organize-imports": "catalog:"
+    "prettier-plugin-organize-imports": "catalog:prod"
   },
   "devDependencies": {
     "@daniel-rose/semantic-release-config": "^2.0.0",

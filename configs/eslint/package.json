@@ -29,10 +29,10 @@
     }
   },
   "dependencies": {
-    "@eslint/js": "catalog:",
-    "eslint-config-prettier": "catalog:",
-    "eslint-plugin-prettier": "catalog:",
-    "typescript-eslint": "catalog:"
+    "@eslint/js": "catalog:prod",
+    "eslint-config-prettier": "catalog:prod",
+    "eslint-plugin-prettier": "catalog:prod",
+    "typescript-eslint": "catalog:prod"
   },
   "peerDependencies": {
     "eslint": "^10",

@@ -33,7 +33,7 @@
     "eslint-config-next": "catalog:",
     "playwright": "catalog:",
     "prettier": "catalog:",
-    "prettier-plugin-organize-imports": "catalog:",
+    "prettier-plugin-organize-imports": "catalog:prod",
     "typescript": "catalog:"
   }
 }

@@ -19,12 +19,12 @@
   },
   "main": "dist/index.json",
   "dependencies": {
-    "@anolilab/semantic-release-pnpm": "catalog:",
-    "@semantic-release/changelog": "catalog:",
-    "@semantic-release/commit-analyzer": "catalog:",
-    "@semantic-release/git": "catalog:",
-    "@semantic-release/github": "catalog:",
-    "@semantic-release/release-notes-generator": "catalog:"
+    "@anolilab/semantic-release-pnpm": "catalog:prod",
+    "@semantic-release/changelog": "catalog:prod",
+    "@semantic-release/commit-analyzer": "catalog:prod",
+    "@semantic-release/git": "catalog:prod",
+    "@semantic-release/github": "catalog:prod",
+    "@semantic-release/release-notes-generator": "catalog:prod"
   },
   "devDependencies": {
     "semantic-release": "catalog:"

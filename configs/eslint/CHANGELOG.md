@@ -1,3 +1,15 @@
+# @daniel-rose/eslint-config [4.0.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/eslint-config@3.0.0...@daniel-rose/eslint-config@4.0.0) (2026-10-07)
+
+
+* feat(eslint-config)!: add accessibility rules via eslint-plugin-jsx-a11y-x ([#155](https://github.com/daniel-rose/monorepo/issues/155)) ([6802c6b](https://github.com/daniel-rose/monorepo/commit/6802c6b4b9d9cd7a6d09cb8bd88f1e2b79ed04f7))
+
+
+### BREAKING CHANGES
+
+* the React preset now requires the optional peer
+eslint-plugin-jsx-a11y-x (^0.2.0) and enables its recommended rules for
+.tsx files.
+
 # @daniel-rose/eslint-config [3.0.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/eslint-config@2.0.0...@daniel-rose/eslint-config@3.0.0) (2026-10-06)
 
 

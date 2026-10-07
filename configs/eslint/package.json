@@ -36,10 +36,14 @@
   },
   "peerDependencies": {
     "eslint": "^10",
+    "eslint-plugin-jsx-a11y-x": "^0.2.0",
     "eslint-plugin-react-hooks": "^7.1.0",
     "eslint-plugin-react-refresh": "^0.5.0"
   },
   "peerDependenciesMeta": {
+    "eslint-plugin-jsx-a11y-x": {
+      "optional": true
+    },
     "eslint-plugin-react-hooks": {
       "optional": true
     },
@@ -51,6 +55,7 @@
     "@daniel-rose/prettier-config": "^2.0.0",
     "@daniel-rose/semantic-release-config": "^2.0.0",
     "eslint": "catalog:",
+    "eslint-plugin-jsx-a11y-x": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
     "eslint-plugin-react-refresh": "catalog:",
     "prettier": "catalog:",

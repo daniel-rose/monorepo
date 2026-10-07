@@ -21,7 +21,7 @@ pnpm add @daniel-rose/eslint-config
 ```
 
 Peer dependencies: `eslint ^10`
-Optional peers (for React): `eslint-plugin-react-hooks` (`^7.1.0`), `eslint-plugin-react-refresh`
+Optional peers (for React): `eslint-plugin-react-hooks` (`^7.1.0`), `eslint-plugin-react-refresh`, `eslint-plugin-jsx-a11y-x` (`^0.2.0`)
 
 Still on ESLint 9? Stay on `@daniel-rose/eslint-config@2`.
 
@@ -50,6 +50,7 @@ export default [...reactConfig]
 - `no-console` — only `warn` and `error` are allowed
 - `@typescript-eslint/consistent-type-imports` — enforces `type` imports
 - Prettier integration via `eslint-plugin-prettier`
+- React preset: accessibility checks via the `recommended` rules of `eslint-plugin-jsx-a11y-x`
 
 ## License
 

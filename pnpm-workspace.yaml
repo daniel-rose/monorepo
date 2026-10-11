@@ -39,7 +39,7 @@ catalog:
   rolldown-plugin-dts: ^0.28.6
   semantic-release: ^25.0.9
   typescript: ^5.9.3
-  vite: ^8.3.2
+  vite: ^8.3.4
   vitest: ^5.0.3
   vitest-browser-react: ^2.3.0
   zod: ^4.6.5

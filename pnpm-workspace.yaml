@@ -74,9 +74,9 @@ packageExtensions:
 peerDependencyRules:
   allowedVersions:
     # Pulled in by eslint-config-next (examples/nextjs); their peer ranges stop at
-    # eslint 9. They lint the example cleanly on eslint 10 once settings.react.version
-    # is set explicitly (see examples/nextjs/eslint.config.mjs). Drop each entry once
-    # the plugin declares eslint 10 support.
+    # eslint 9. eslint-config-next >= 16.4 wraps their rules for eslint 10, so they
+    # lint the example cleanly. Drop each entry once the plugin declares eslint 10
+    # support.
     eslint-plugin-import>eslint: '10'
     eslint-plugin-jsx-a11y>eslint: '10'
     eslint-plugin-react>eslint: '10'

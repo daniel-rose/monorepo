@@ -1,3 +1,11 @@
+## @daniel-rose/eslint-config [4.0.1](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/eslint-config@4.0.0...@daniel-rose/eslint-config@4.0.1) (2026-10-15)
+
+
+### Dependencies
+
+* **eslint-plugin-prettier:** ^5.5.6 → ^5.5.7
+* **typescript-eslint:** ^8.71.0 → ^8.71.2
+
 # @daniel-rose/eslint-config [4.0.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/eslint-config@3.0.0...@daniel-rose/eslint-config@4.0.0) (2026-10-07)
 
 

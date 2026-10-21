@@ -45,12 +45,71 @@ import { reactConfig } from '@daniel-rose/eslint-config/react'
 export default [...reactConfig]
 ```
 
+### Default exports only (opt-in)
+
+Append `defaultExportConfig` after `baseConfig` or `reactConfig`:
+
+```js
+// eslint.config.js
+import { defaultExportConfig } from '@daniel-rose/eslint-config'
+import { reactConfig } from '@daniel-rose/eslint-config/react'
+
+export default [...reactConfig, ...defaultExportConfig]
+```
+
+Each module then has a single, named default export (`const name = …` followed by `export default name`). Allowed besides that:
+
+- re-exports (`export { default as name } from './name'`, `export * from './name'`), so barrel files need no configuration
+- any export in `types.ts`, including `as const` objects next to their union type
+- everything in `.d.ts` files
+
+Exported types belong in `types.ts`. Anonymous default exports (`export default () => …`) and TypeScript-only export forms (`export =`, `export import`) are reported. Expressions such as `export default defineConfig({ … })` are fine.
+
+Don't apply it to files whose framework requires named exports — Next.js App Router files (`page`, `layout`, `route`, …) and `'use server'` modules. In React files, `react-refresh/only-export-components` still warns about `export *` on its own.
+
 ### Included Rules
 
 - `no-console` — only `warn` and `error` are allowed
 - `@typescript-eslint/consistent-type-imports` — enforces `type` imports
+- `no-restricted-syntax` — arrow functions only: no function declarations, function expressions, overloads or object method shorthand. Class members and getters/setters stay allowed; `.d.ts` files are exempt.
 - Prettier integration via `eslint-plugin-prettier`
 - React preset: accessibility checks via the `recommended` rules of `eslint-plugin-jsx-a11y-x`
+
+### Customizing `no-restricted-syntax`
+
+ESLint replaces the whole selector list when a later config block sets `no-restricted-syntax` with selectors. To add your own selectors, or to turn off the default-export rules for some files, spread the exported lists again:
+
+```js
+import {
+  arrowFunctionRestrictions,
+  defaultExportConfig,
+} from '@daniel-rose/eslint-config'
+import { reactConfig } from '@daniel-rose/eslint-config/react'
+
+export default [
+  ...reactConfig,
+  ...defaultExportConfig,
+  {
+    files: ['src/app/**'],
+    rules: {
+      'no-restricted-syntax': ['error', ...arrowFunctionRestrictions],
+    },
+  },
+]
+```
+
+## Migrating to 5.0.0
+
+`baseConfig` and `reactConfig` now require arrow functions. Rewrite `function` declarations and expressions as `const name = (…) => …`, object method shorthand as `name: (…) => …`, and type overloaded functions with a callable interface:
+
+```ts
+interface Parse {
+  (value: string): string
+  (value: number): number
+}
+
+const parse: Parse = (value: string | number) => value as never
+```
 
 ## License
 

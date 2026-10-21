@@ -9,10 +9,12 @@
   ],
   "type": "module",
   "scripts": {
-    "build": "mkdir -p ./dist && cp index.js base.js react.js ./dist/",
+    "build": "mkdir -p ./dist && cp index.js base.js react.js restrictions.js ./dist/",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test:unit": "vitest",
+    "test:unit:ci": "vitest run"
   },
   "files": [
     "dist"
@@ -54,12 +56,15 @@
   "devDependencies": {
     "@daniel-rose/prettier-config": "^2.0.0",
     "@daniel-rose/semantic-release-config": "^2.0.0",
+    "@types/react": "catalog:",
     "eslint": "catalog:",
     "eslint-plugin-jsx-a11y-x": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
     "eslint-plugin-react-refresh": "catalog:",
     "prettier": "catalog:",
-    "semantic-release": "catalog:"
+    "semantic-release": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "repository": {
     "type": "git",

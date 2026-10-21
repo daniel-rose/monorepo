@@ -1,4 +1,4 @@
-import { PUBLIC_ENV_PREFIX } from '../../constants.ts'
+import { PUBLIC_ENV_PREFIX } from '../../constants'
 import type { Env } from '../../types.ts'
 
 const filterPublicEnv = (

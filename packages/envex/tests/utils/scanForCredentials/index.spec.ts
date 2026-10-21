@@ -1,10 +1,8 @@
 import { expect, test } from 'vitest'
-import { EnvexCredentialLeakError } from '../../../src/errors.ts'
+import { EnvexCredentialLeakError } from '../../../src/errors'
 import { CredentialReason } from '../../../src/types.ts'
-import {
-  assertNoCredentialLeak,
-  scanForCredentials,
-} from '../../../src/utils/scanForCredentials'
+import assertNoCredentialLeak from '../../../src/utils/assertNoCredentialLeak'
+import scanForCredentials from '../../../src/utils/scanForCredentials'
 
 const PRIVATE_KEY =
   '-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA...\n-----END RSA PRIVATE KEY-----'
@@ -122,8 +120,8 @@ test('entropyThreshold=false disables only the entropy heuristic', () => {
 
 test('custom patterns extend detection', () => {
   const findings = scanForCredentials(
-    { NEXT_PUBLIC_INTERNAL: 'oeg-internal-token-value' },
-    { patterns: [/oeg-internal-token/] }
+    { NEXT_PUBLIC_INTERNAL: 'acme-internal-token-value' },
+    { patterns: [/acme-internal-token/] }
   )
 
   expect(findings).toEqual([

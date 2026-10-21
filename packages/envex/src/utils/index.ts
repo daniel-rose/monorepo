@@ -1,6 +1,4 @@
+export { default as assertNoCredentialLeak } from './assertNoCredentialLeak'
 export { default as filterPublicEnv } from './filterPublicEnv'
-export {
-  assertNoCredentialLeak,
-  scanForCredentials,
-} from './scanForCredentials'
-export { validateEnv } from './validateEnv'
+export { default as scanForCredentials } from './scanForCredentials'
+export { default as validateEnv } from './validateEnv'

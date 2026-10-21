@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { EnvexWindowEnvIsMissingError } from '../../errors.ts'
+import { EnvexWindowEnvIsMissingError } from '../../errors'
 import type { Env } from '../../types.ts'
 import { filterPublicEnv, validateEnv } from '../../utils'
 import { EnvexContext } from './contexts'

@@ -1,0 +1,3 @@
+const PUBLIC_ENV_PREFIX = 'NEXT_PUBLIC_'
+
+export default PUBLIC_ENV_PREFIX

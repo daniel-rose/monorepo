@@ -1,4 +1,4 @@
-import { SECRETLINT_PRESET_ID } from '../../constants.ts'
+import { SECRETLINT_PRESET_ID } from '../../constants'
 import {
   CredentialReason,
   type CredentialFinding,
@@ -50,7 +50,7 @@ const loadSecretlint = async () => {
  * Only key + reason are returned — never the value, which secretlint echoes into
  * its own messages.
  */
-export const scanWithSecretlint = async (
+const scanWithSecretlint = async (
   env: Env,
   options: ScanOptions = {}
 ): Promise<CredentialFinding[]> => {
@@ -89,3 +89,5 @@ export const scanWithSecretlint = async (
     (finding): finding is CredentialFinding => finding !== null
   )
 }
+
+export default scanWithSecretlint

@@ -120,8 +120,8 @@ test('entropyThreshold=false disables only the entropy heuristic', () => {
 
 test('custom patterns extend detection', () => {
   const findings = scanForCredentials(
-    { NEXT_PUBLIC_INTERNAL: 'oeg-internal-token-value' },
-    { patterns: [/oeg-internal-token/] }
+    { NEXT_PUBLIC_INTERNAL: 'acme-internal-token-value' },
+    { patterns: [/acme-internal-token/] }
   )
 
   expect(findings).toEqual([

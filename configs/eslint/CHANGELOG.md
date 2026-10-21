@@ -1,3 +1,16 @@
+# @daniel-rose/eslint-config [5.0.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/eslint-config@4.0.1...@daniel-rose/eslint-config@5.0.0) (2026-10-21)
+
+
+* feat(eslint-config)!: require arrow functions, add opt-in default exports ([#176](https://github.com/daniel-rose/monorepo/issues/176)) ([02c3da9](https://github.com/daniel-rose/monorepo/commit/02c3da97e7f725d2c92121b8c3305e7613ddb3b7))
+
+
+### BREAKING CHANGES
+
+* baseConfig and reactConfig now require arrow functions.
+Rewrite function declarations and expressions as arrow functions, object
+method shorthand as arrow function properties, and type overloaded
+functions with a callable interface. See the README for details.
+
 ## @daniel-rose/eslint-config [4.0.1](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/eslint-config@4.0.0...@daniel-rose/eslint-config@4.0.1) (2026-10-15)
 
 

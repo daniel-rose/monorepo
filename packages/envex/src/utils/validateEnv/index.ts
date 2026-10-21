@@ -1,7 +1,7 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec'
-import { EnvexValidationError } from '../../errors.ts'
+import { EnvexValidationError } from '../../errors'
 
-export const validateEnv = async <TSchema extends StandardSchemaV1>(
+const validateEnv = async <TSchema extends StandardSchemaV1>(
   schema: TSchema,
   env: unknown
 ): Promise<StandardSchemaV1.InferOutput<TSchema>> => {
@@ -17,3 +17,5 @@ export const validateEnv = async <TSchema extends StandardSchemaV1>(
 
   return result.value
 }
+
+export default validateEnv

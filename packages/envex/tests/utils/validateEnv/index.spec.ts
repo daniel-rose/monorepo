@@ -1,7 +1,7 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec'
 import { expect, test } from 'vitest'
 import { EnvexValidationError } from '../../../src/errors'
-import { validateEnv } from '../../../src/utils/validateEnv'
+import validateEnv from '../../../src/utils/validateEnv'
 
 const makePassSchema = <TOut>(
   transform: (v: unknown) => TOut

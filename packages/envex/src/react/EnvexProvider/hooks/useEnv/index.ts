@@ -1,17 +1,11 @@
 'use client'
 
-import type { StandardSchemaV1 } from '@standard-schema/spec'
 import { useContext } from 'react'
-import { EnvexProviderIsMissingError } from '../../../../errors.ts'
-import type { Env } from '../../../../types.ts'
+import { EnvexProviderIsMissingError } from '../../../../errors'
 import { EnvexContext } from '../../contexts'
+import type { UseEnv } from './types.ts'
 
-function useEnv(): Env
-function useEnv<
-  TSchema extends StandardSchemaV1,
->(): StandardSchemaV1.InferOutput<TSchema>
-function useEnv<TSchema extends StandardSchemaV1 | undefined = undefined>():
-  Env | StandardSchemaV1.InferOutput<NonNullable<TSchema>> {
+const useEnv: UseEnv = () => {
   const env = useContext(EnvexContext)
 
   if (env === undefined) {
@@ -20,7 +14,7 @@ function useEnv<TSchema extends StandardSchemaV1 | undefined = undefined>():
     )
   }
 
-  return env
+  return env as never
 }
 
 export default useEnv

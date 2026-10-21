@@ -1,10 +1,5 @@
 import { getPublicEnv } from '../'
-import type { GetPublicEnvOptions } from '../getPublicEnv/types.ts'
-
-export type GetPublicEnvByNameOptions = Pick<
-  GetPublicEnvOptions,
-  'scan' | 'connection'
->
+import type { GetPublicEnvByNameOptions } from './types.ts'
 
 const getPublicEnvByName = async (
   name: string,

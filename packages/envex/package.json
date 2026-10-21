@@ -65,7 +65,7 @@
     }
   },
   "devDependencies": {
-    "@daniel-rose/eslint-config": "^2.0.0",
+    "@daniel-rose/eslint-config": "^5.0.0",
     "@daniel-rose/prettier-config": "^2.0.0",
     "@daniel-rose/semantic-release-config": "^2.0.0",
     "@secretlint/core": "catalog:",

@@ -5,6 +5,7 @@ import { CLI_MESSAGE, EXIT_CODE } from '../constants'
 import readPackageVersion from '../context/readPackageVersion'
 import type { Context } from '../context/types'
 import config from './commands/config'
+import hook from './commands/hook'
 import list from './commands/list'
 import resolve from './commands/resolve'
 import status from './commands/status'
@@ -35,6 +36,12 @@ const registerCommands = (
     .command('config')
     .description('print the config file path')
     .action(async () => setExitCode(await config(ctx)))
+
+  program
+    .command('hook')
+    .description('print the shell hook (zsh, bash, fish, pwsh, powershell)')
+    .argument('<shell>', 'shell to print the hook for')
+    .action(async (shell: string) => setExitCode(await hook(ctx, shell)))
 
   // Used by the shell hooks: everything after the first `--` belongs to
   // claude, including `-h` and `-v`, so commander must not interpret it.

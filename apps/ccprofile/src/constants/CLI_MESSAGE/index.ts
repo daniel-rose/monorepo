@@ -7,6 +7,8 @@ const CLI_MESSAGE = {
     `ccprofile: invalid CCPROFILE_ARGV (${reason})`,
   argvNotJson: 'not valid JSON',
   argvNotStringArray: 'not an array of strings',
+  unknownShell: (name: string, valid: readonly string[]) =>
+    `ccprofile: unknown shell "${name}" (valid: ${valid.join(', ')})`,
 } as const
 
 export default CLI_MESSAGE

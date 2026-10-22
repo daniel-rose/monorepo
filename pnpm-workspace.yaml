@@ -24,7 +24,7 @@ catalog:
   '@vitejs/plugin-react': ^6.1.2
   '@vitejs/plugin-react-swc': ^4.3.3
   '@vitest/browser': ^5.0.4
-  '@vitest/browser-playwright': ^5.0.4
+  '@vitest/browser-playwright': ^5.0.5
   '@vitest/coverage-v8': ^5.0.4
   commander: ^15.0.0
   eslint: ^10.12.0

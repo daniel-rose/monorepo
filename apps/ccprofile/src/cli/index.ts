@@ -1,43 +1,92 @@
 import { Command, CommanderError } from 'commander'
 
 import type { ExitCode } from '../constants'
-import { EXIT_CODE } from '../constants'
+import { CLI_MESSAGE, EXIT_CODE } from '../constants'
 import readPackageVersion from '../context/readPackageVersion'
 import type { Context } from '../context/types'
+import config from './commands/config'
+import list from './commands/list'
+import resolve from './commands/resolve'
+import status from './commands/status'
 
 const COMMANDER_SUCCESS_CODES: readonly string[] = [
   'commander.helpDisplayed',
   'commander.version',
 ]
 
-// No subcommands are registered yet, so commander itself would report "too many
-// arguments"; subcommands registered later get commander's own message.
-const createProgram = (ctx: Context): Command => {
+type SetExitCode = (code: ExitCode) => void
+
+const registerCommands = (
+  program: Command,
+  ctx: Context,
+  setExitCode: SetExitCode
+): void => {
+  program
+    .command('status')
+    .description('show which profile claude would use here and why')
+    .action(async () => setExitCode(await status(ctx)))
+
+  program
+    .command('list')
+    .description('list the configured profiles')
+    .action(async () => setExitCode(await list(ctx)))
+
+  program
+    .command('config')
+    .description('print the config file path')
+    .action(async () => setExitCode(await config(ctx)))
+
+  // Used by the shell hooks: everything after the first `--` belongs to
+  // claude, including `-h` and `-v`, so commander must not interpret it.
+  program
+    .command('resolve')
+    .description('print the profile for claude arguments (used by the hooks)')
+    .argument('[args...]', 'claude arguments, after --')
+    .helpOption(false)
+    .allowUnknownOption()
+    .passThroughOptions()
+    .action(async (args: string[]) => setExitCode(await resolve(ctx, args)))
+}
+
+// Without a subcommand the root action runs `status`. It is not commander's
+// `isDefault`, so a mistyped command still fails; excess arguments are allowed
+// only so that this action can report them as "unknown command" instead of
+// commander's "too many arguments".
+const createProgram = (ctx: Context, setExitCode: SetExitCode): Command => {
   const program = new Command()
     .name('ccprofile')
     .version(readPackageVersion(), '-v, --version')
+    .enablePositionalOptions()
+    .allowExcessArguments()
     .exitOverride()
     .configureOutput({
       writeOut: text => void ctx.stdout.write(text),
       writeErr: text => void ctx.stderr.write(text),
     })
+    .action(async () => {
+      const [unknown] = program.args
+      if (unknown !== undefined) {
+        program.error(CLI_MESSAGE.unknownCommand(unknown), {
+          code: 'commander.unknownCommand',
+        })
+      }
+      setExitCode(await status(ctx))
+    })
 
-  return program.argument('[command]').action((command?: string) => {
-    if (command !== undefined) {
-      program.error(`error: unknown command '${command}'`, {
-        code: 'commander.unknownCommand',
-      })
-    }
-  })
+  registerCommands(program, ctx, setExitCode)
+  return program
 }
 
 const run = async (
   argv: readonly string[],
   ctx: Context
 ): Promise<ExitCode> => {
+  let exitCode: ExitCode = EXIT_CODE.ok
   try {
-    await createProgram(ctx).parseAsync([...argv], { from: 'user' })
-    return EXIT_CODE.ok
+    await createProgram(ctx, code => {
+      exitCode = code
+    }).parseAsync([...argv], { from: 'user' })
+    return exitCode
   } catch (error) {
     if (error instanceof CommanderError) {
       return COMMANDER_SUCCESS_CODES.includes(error.code)

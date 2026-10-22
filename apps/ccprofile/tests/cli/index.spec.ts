@@ -24,6 +24,9 @@ describe('run', () => {
 
     expect(code).toBe(0)
     expect(ctx.out()).toContain('Usage: ccprofile')
+    expect(ctx.out()).toContain('Usage: ccprofile [options] [command]\n')
+    expect(ctx.out()).toContain('resolve')
+    expect(ctx.err()).toBe('')
   })
 
   it('exits 1 for an unknown command', async () => {

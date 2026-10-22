@@ -1,17 +1,20 @@
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-import { defineConfig, type Plugin } from 'vite'
+import { defineConfig, type Plugin, runnerImport } from 'vite'
 import { z } from 'zod'
 
-import configSchema from './src/config/schema'
-
 const SCHEMA_FILE_NAME = 'schema.json'
+const SCHEMA_MODULE = fileURLToPath(
+  new URL('./src/config/schema/index.ts', import.meta.url)
+)
 const JSON_INDENT = 2
 
 // The zod schema is the single source; schema.json (published, referenced by
-// `$schema` in configs) is generated from it. `io: 'input'` keeps defaulted
-// keys optional.
+// `$schema` in configs) is generated from it. The module is loaded through
+// Vite's module runner so this config statically imports nothing from src/.
+// `io: 'input'` keeps defaulted keys optional.
 const emitSchema = (): Plugin => {
   let root = process.cwd()
 
@@ -20,8 +23,12 @@ const emitSchema = (): Plugin => {
     configResolved: config => {
       root = config.root
     },
-    closeBundle: () => {
-      const jsonSchema = z.toJSONSchema(configSchema, { io: 'input' })
+    closeBundle: async () => {
+      const { module } = await runnerImport<{ default: z.ZodType }>(
+        SCHEMA_MODULE,
+        { configFile: false, logLevel: 'silent' }
+      )
+      const jsonSchema = z.toJSONSchema(module.default, { io: 'input' })
       writeFileSync(
         join(root, SCHEMA_FILE_NAME),
         `${JSON.stringify(jsonSchema, null, JSON_INDENT)}\n`

@@ -9,6 +9,7 @@ import hook from './commands/hook'
 import init from './commands/init'
 import list from './commands/list'
 import resolve from './commands/resolve'
+import setup from './commands/setup'
 import status from './commands/status'
 
 const COMMANDER_SUCCESS_CODES: readonly string[] = [
@@ -50,6 +51,25 @@ const registerCommands = (
     .option('--example', 'write the example config without asking')
     .action(async (options: { example?: boolean }) =>
       setExitCode(await init(ctx, options))
+    )
+
+  program
+    .command('setup')
+    .description('install the shell hook and wire it into your shell startup')
+    .argument(
+      '[shell]',
+      'zsh, bash, fish, pwsh or powershell (default: $SHELL)'
+    )
+    .option('--yes', 'apply without asking')
+    .option(
+      '--remove',
+      'remove the hook and its startup entry (keeps the config)'
+    )
+    .action(
+      async (
+        shell: string | undefined,
+        options: { yes?: boolean; remove?: boolean }
+      ) => setExitCode(await setup(ctx, shell, options))
     )
 
   // Used by the shell hooks: everything after the first `--` belongs to

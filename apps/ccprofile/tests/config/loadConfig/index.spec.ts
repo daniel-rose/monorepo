@@ -238,6 +238,16 @@ describe('loadConfig', () => {
       expect(issues[0]).not.toContain('    at ')
     })
 
+    it('keeps an invalid JSON issue on one line', async () => {
+      const result = await load('{\n  "a": x\n}')
+
+      expect(result).toMatchObject({
+        status: 'invalid',
+        issues: [expect.stringMatching(/^config\.json: invalid JSON \(/)],
+      })
+      expect((result as { issues: string[] }).issues[0]).not.toMatch(/\s{2}|\n/)
+    })
+
     it('reports a trailing comma as invalid JSON', async () => {
       const result = await load('{"profiles": [],}')
 

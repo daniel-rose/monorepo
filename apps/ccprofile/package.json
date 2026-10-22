@@ -19,7 +19,7 @@
     "node": ">=24"
   },
   "scripts": {
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && VITE_CONFIG_NATIVE_IGNORE_WARNING=true vite build --configLoader bundle",
     "lint": "eslint .",
     "format": "prettier . --write",
     "format:check": "prettier . --check",

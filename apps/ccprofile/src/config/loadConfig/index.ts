@@ -41,7 +41,9 @@ const loadConfig = async (ctx: Context): Promise<LoadConfigResult> => {
       raw.startsWith(byteOrderMark) ? raw.slice(byteOrderMark.length) : raw
     )
   } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error)
+    const message = error instanceof Error ? error.message : String(error)
+    // V8 may embed a multi-line file snippet; keep the issue on one line.
+    const reason = message.replace(/\s+/g, ' ').trim()
     return invalid(`${name}: invalid JSON (${reason})`)
   }
 

@@ -1,6 +1,8 @@
 // Not a hostful remote: helper protocols (`codecommit::…`), relative or
 // absolute paths, UNC and drive-letter paths, `file:` URLs.
-const NON_HOST_PATTERN = /^(?:[A-Za-z][\w+.-]*::|[/.\\]|[A-Za-z]:[/\\]|file:)/
+const NON_HOST_PATTERN = /^(?:[A-Za-z][\w+.-]*::|[/.\\]|[A-Za-z]:[/\\]|file:)/i
+// Host of a bare `host/path` entry: no port or scheme colon, no whitespace.
+const BARE_HOST_PATTERN = /^[^\s:]+$/
 // `scheme://[user@]host[:port][/path]`
 const URL_PATTERN =
   /^[A-Za-z][A-Za-z0-9+.-]*:\/\/(?:[^@/]*@)?(\[[^\]]+\]|[^/:@]+)(?::\d+)?(?:\/(.*))?$/
@@ -35,7 +37,7 @@ const normalizeRemote = (url: string): string | null => {
   if (scpMatch) return join(scpMatch[1], scpMatch[2])
 
   const [host, ...rest] = value.split('/')
-  return join(host, rest.join('/'))
+  return BARE_HOST_PATTERN.test(host) ? join(host, rest.join('/')) : null
 }
 
 export default normalizeRemote

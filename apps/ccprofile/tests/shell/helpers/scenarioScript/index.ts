@@ -26,6 +26,7 @@ const POSIX_SCRIPT: Readonly<Record<Scenario, readonly string[]>> = {
     "printf '>>\\n'",
     'exit $code',
   ],
+  [SCENARIO.strict]: [`. "$${HOOK}"`, 'set -u', 'claude'],
   [SCENARIO.twoDirs]: [
     `. "$${HOOK}"`,
     'cd "$1" && claude',
@@ -57,6 +58,7 @@ const FISH_SCRIPT: Readonly<Record<Scenario, readonly string[]>> = {
     "printf '>>\\n'",
     'exit $code',
   ],
+  [SCENARIO.strict]: [`source $${HOOK}`, 'claude'],
   [SCENARIO.twoDirs]: [
     `source $${HOOK}`,
     'cd $argv[1]; and claude',
@@ -88,6 +90,11 @@ const POWERSHELL_SCRIPT: Readonly<Record<Scenario, readonly string[]>> = {
   ],
   // Unread stdin is not checked here: PowerShell owns its stdin.
   [SCENARIO.stdinRest]: ['claude @a', 'exit $LASTEXITCODE'],
+  [SCENARIO.strict]: [
+    'Set-StrictMode -Version Latest',
+    'claude',
+    'exit $LASTEXITCODE',
+  ],
   [SCENARIO.twoDirs]: [
     'function Show-Env([string]$Name) {',
     '    $value = [Environment]::GetEnvironmentVariable($Name)',

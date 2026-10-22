@@ -31,6 +31,24 @@ const sessionCases: readonly HookCase[] = [
     },
   },
   {
+    // bash: ${1+"$@"} keeps old bash versions quiet under `set -u`.
+    title: 'works without arguments in strict mode (set -u, Set-StrictMode)',
+    test: async t => {
+      t.writeConfig()
+
+      const result = await t.run([], {
+        cwd: t.dirs.private,
+        scenario: SCENARIO.strict,
+      })
+
+      expect(result.stderr).not.toContain('unbound variable')
+      expect(result.exitCode).toBe(0)
+      expect(t.invocations()).toEqual([
+        invocation('private', t.privateConfigDir),
+      ])
+    },
+  },
+  {
     title: 'resolves per call and leaves the session untouched',
     test: async t => {
       t.writeConfig()

@@ -38,24 +38,41 @@ const noop = (): void => undefined
 const encodeBase64 = (value: string): string =>
   Buffer.from(value, 'utf8').toString('base64')
 
-// The driver rebuilds the arguments from base64, so neither the command line
-// nor the file encoding can alter them, then loads the hook.
-const writePowerShellDriver = (args: string[], scenario: Scenario) => {
-  const dir = mkdtempSync(join(tmpdir(), 'ccprofile-driver-'))
-  const file = join(dir, 'driver.ps1')
-  const lines = [
-    '$argList = [System.Collections.Generic.List[string]]::new()',
-    ...args.map(
-      arg =>
-        `$argList.Add([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${encodeBase64(arg)}')))`
-    ),
-    '$a = $argList.ToArray()',
-    `. $env:${TEST_ENV.hook}`,
-    scenarioScript(SHELL.pwsh, scenario),
-  ]
-  writeFileSync(file, `${UTF8_BOM}${lines.join('\n')}\n`)
+const quotePosix = (value: string): string =>
+  `'${value.replaceAll("'", `'\\''`)}'`
+
+// A throwaway script file; `cleanup` removes it with its directory.
+const writeScript = (name: string, content: string) => {
+  const dir = mkdtempSync(join(tmpdir(), 'ccprofile-script-'))
+  const file = join(dir, name)
+  writeFileSync(file, content)
   return { file, cleanup: () => rmSync(dir, { recursive: true, force: true }) }
 }
+
+// The driver rebuilds the arguments from base64, so neither the command line
+// nor the file encoding can alter them, then loads the hook.
+const writePowerShellDriver = (args: string[], scenario: Scenario) =>
+  writeScript(
+    'driver.ps1',
+    `${UTF8_BOM}${[
+      '$argList = [System.Collections.Generic.List[string]]::new()',
+      ...args.map(
+        arg =>
+          `$argList.Add([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${encodeBase64(arg)}')))`
+      ),
+      '$a = $argList.ToArray()',
+      `. $env:${TEST_ENV.hook}`,
+      scenarioScript(SHELL.pwsh, scenario),
+    ].join('\n')}\n`
+  )
+
+// bash gets its arguments from `set --` inside the script: on Windows the
+// msys runtime would otherwise re-parse (and glob) the command line.
+const writeBashScript = (args: string[], scenario: Scenario) =>
+  writeScript(
+    'script.bash',
+    `set --${args.map(arg => ` ${quotePosix(arg)}`).join('')}\n${scenarioScript(SHELL.bash, scenario)}\n`
+  )
 
 const createInvocation = (
   shell: Shell,
@@ -63,34 +80,38 @@ const createInvocation = (
   scenario: Scenario
 ): Invocation => {
   const file = findShellBinary(shell)
-  const script = scenarioScript(shell, scenario)
 
   switch (shell) {
     case SHELL.zsh:
       return {
         file,
-        args: ['-f', '-c', script, NAME_FOR_DOLLAR_ZERO, ...args],
-        cleanup: noop,
-      }
-    case SHELL.bash:
-      return {
-        file,
         args: [
-          '--norc',
-          '--noprofile',
+          '-f',
           '-c',
-          script,
+          scenarioScript(shell, scenario),
           NAME_FOR_DOLLAR_ZERO,
           ...args,
         ],
         cleanup: noop,
       }
-    case SHELL.fish:
+    case SHELL.bash: {
+      const script = writeBashScript(args, scenario)
       return {
         file,
-        args: ['--no-config', '-c', script, ...args],
-        cleanup: noop,
+        args: ['--norc', '--noprofile', toShellPath(shell, script.file)],
+        cleanup: script.cleanup,
       }
+    }
+    case SHELL.fish: {
+      // fish stops option parsing at the script file, so `-p` after it
+      // reaches $argv instead of being read as fish's --profile.
+      const script = writeScript('script.fish', scenarioScript(shell, scenario))
+      return {
+        file,
+        args: ['--no-config', script.file, ...args],
+        cleanup: script.cleanup,
+      }
+    }
     case SHELL.pwsh:
     case SHELL.powershell: {
       const driver = writePowerShellDriver(args, scenario)

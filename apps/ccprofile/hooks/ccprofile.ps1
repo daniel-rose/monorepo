@@ -23,16 +23,23 @@ function claude {
     # call. Fresh strings keep PowerShell's extra properties out of the JSON.
     $argv = @(foreach ($arg in $args) { [string]::new(([string]$arg).ToCharArray()) })
     $previousArgv = $env:CCPROFILE_ARGV
-    $previousEncoding = [Console]::OutputEncoding
+    $previousEncoding = $null
     try {
         $env:CCPROFILE_ARGV = ConvertTo-Json -InputObject @($argv) -Compress
         # resolve prints UTF-8; decode it as such (non-ASCII profile paths).
-        [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+        # Hosts without a console (ISE, remoting) cannot switch and keep
+        # their encoding.
+        try {
+            $previousEncoding = [Console]::OutputEncoding
+            [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+        } catch { }
         $out = & $ccprofile resolve --
         $code = $LASTEXITCODE
     } finally {
         $env:CCPROFILE_ARGV = $previousArgv
-        [Console]::OutputEncoding = $previousEncoding
+        if ($null -ne $previousEncoding) {
+            try { [Console]::OutputEncoding = $previousEncoding } catch { }
+        }
     }
     if ($code -ne 0) {
         $global:LASTEXITCODE = $code

@@ -18,6 +18,7 @@ jobs:
   shell-hooks:
     name: Shell hooks (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -60,5 +61,6 @@ jobs:
           CCPROFILE_TEST_SHELLS: ${{ matrix.shells }}
 
       - name: Benchmark resolve
+        if: hashFiles('apps/ccprofile/tests/bench/resolve.mjs') != ''
         run: pnpm --filter ./apps/ccprofile bench
         continue-on-error: true

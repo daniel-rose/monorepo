@@ -19,6 +19,7 @@ import { SHELL } from '../../../src/constants'
 import findPackageRoot from '../../../src/context/findPackageRoot'
 import FAKE_VARIANT from '../constants/FAKE_VARIANT'
 import requestedShells from '../helpers/requestedShells'
+import windowsBaseEnv from '../helpers/windowsBaseEnv'
 import type { FakeVariant } from '../types'
 
 const IS_WINDOWS = process.platform === 'win32'
@@ -118,11 +119,20 @@ const createCmdFake = (dir: string): void => {
   )
 }
 
+// Windows PowerShell 5.1 with the curated env: the inherited PSModulePath of
+// a PowerShell 7 parent would make it load 7's modules and fail Add-Type.
 const createExeFake = (dir: string): void => {
   const source = fixture('FakeClaude.cs')
   const target = join(dir, 'claude.exe')
+  const env = windowsBaseEnv()
   execFileSync(
-    'powershell.exe',
+    join(
+      process.env.SystemRoot ?? 'C:\\Windows',
+      'System32',
+      'WindowsPowerShell',
+      'v1.0',
+      'powershell.exe'
+    ),
     [
       '-NoLogo',
       '-NoProfile',
@@ -130,7 +140,7 @@ const createExeFake = (dir: string): void => {
       '-Command',
       `Add-Type -TypeDefinition ([IO.File]::ReadAllText('${source}')) -OutputAssembly '${target}' -OutputType ConsoleApplication`,
     ],
-    { stdio: 'inherit' }
+    { stdio: 'inherit', env, windowsHide: true }
   )
 }
 

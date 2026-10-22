@@ -1,0 +1,6 @@
+export { default as isSegmentPrefix } from './isSegmentPrefix'
+export { default as matchPath } from './matchPath'
+export { default as matchRemote } from './matchRemote'
+export { default as normalizeRemote } from './normalizeRemote'
+export { default as readOriginUrl } from './readOriginUrl'
+export type { SegmentPrefixOptions } from './types'

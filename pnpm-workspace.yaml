@@ -2,6 +2,7 @@ packages:
   - 'examples/*'
   - 'packages/*'
   - 'configs/*'
+  - 'apps/*'
 # External dependencies resolve through two catalogs:
 # - catalog (default): tooling — devDependencies and the example app.
 # - catalogs.prod: runtime `dependencies` of the published packages. A range change
@@ -25,6 +26,7 @@ catalog:
   '@vitest/browser': ^5.0.4
   '@vitest/browser-playwright': ^5.0.4
   '@vitest/coverage-v8': ^5.0.4
+  commander: ^15.0.0
   eslint: ^10.12.0
   eslint-config-next: ^16.4.0
   eslint-plugin-jsx-a11y-x: ^0.2.0

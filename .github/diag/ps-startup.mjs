@@ -1,51 +1,44 @@
-// Temporary diagnostic: the smallest set of host environment variables that,
-// added to the curated environment, makes Windows PowerShell 5.1 run a cmdlet
-// in 0.3 s instead of 25 s (delta debugging).
+// Temporary diagnostic: which PSModulePath entries make Windows PowerShell 5.1
+// run a cmdlet in 0.3 s instead of 25 s in the curated environment?
 import { spawn } from 'node:child_process'
 
 const root = process.env.SystemRoot ?? 'C:\\Windows'
 const ps = `${root}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe`
-const CMD = 'ConvertTo-Json -InputObject @("a") -Compress'
+const CMD = 'ConvertTo-Json -InputObject @("a") -Compress; $PSVersionTable.PSVersion.ToString(); $env:PSModulePath'
 const SLOW_MS = 8000
 const KEEP = ['SystemRoot', 'SystemDrive', 'windir', 'ComSpec', 'PATHEXT', 'TEMP', 'TMP', 'ProgramData', 'ProgramFiles', 'ProgramFiles(x86)', 'ProgramW6432', 'NUMBER_OF_PROCESSORS', 'PROCESSOR_ARCHITECTURE', 'OS', 'USERNAME', 'COMPUTERNAME']
 const PATH = [`${root}\\System32`, root, `${root}\\System32\\Wbem`, `${root}\\System32\\WindowsPowerShell\\v1.0`].join(';')
+const curated = { PATH }
+for (const k of KEEP) if (process.env[k] !== undefined) curated[k] = process.env[k]
 
-const time = env =>
+const run = entries =>
   new Promise(resolve => {
     const t = Date.now()
+    const env = { ...curated }
+    if (entries !== null) env.PSModulePath = entries.join(';')
     const child = spawn(ps, ['-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', CMD], { env, windowsHide: true })
-    child.stdout.resume()
+    let out = ''
+    child.stdout.on('data', c => (out += c))
     child.stderr.resume()
     const timer = setTimeout(() => child.kill(), 60000)
-    child.on('close', () => {
+    child.on('close', code => {
       clearTimeout(timer)
-      resolve(Date.now() - t)
+      resolve({ ms: Date.now() - t, out: out.trim().replaceAll('\r\n', ' / ').slice(0, 300), code })
     })
     child.stdin.end('')
   })
 
-const curated = { PATH }
-for (const k of KEEP) if (process.env[k] !== undefined) curated[k] = process.env[k]
-const keyOf = k => k.toLowerCase()
-const keptKeys = new Set(KEEP.map(keyOf))
-let missing = Object.keys(process.env).filter(k => !keptKeys.has(keyOf(k)) && keyOf(k) !== 'path')
-const build = keys => {
-  const env = { ...curated }
-  for (const k of keys) env[k] = process.env[k]
-  return env
-}
-
-console.log(`DIAG curated alone: ${await time(curated)} ms`)
-console.log(`DIAG curated + all ${missing.length} other host vars: ${await time(build(missing))} ms`)
-for (let size = Math.ceil(missing.length / 2); size >= 1; size = size === 1 ? 0 : Math.ceil(size / 2)) {
-  for (let i = 0; i < missing.length; ) {
-    const trial = [...missing.slice(0, i), ...missing.slice(i + size)]
-    if ((await time(build(trial))) < SLOW_MS) {
-      missing = trial
-    } else {
-      i += size
-    }
+let entries = (process.env.PSModulePath ?? '').split(';').filter(Boolean)
+entries.forEach((e, i) => console.log(`DIAG entry ${i}: ${e}`))
+console.log('DIAG unset', JSON.stringify(await run(null)))
+console.log('DIAG empty', JSON.stringify(await run([])))
+console.log('DIAG all', JSON.stringify(await run(entries)))
+for (let size = Math.ceil(entries.length / 2); size >= 1; size = size === 1 ? 0 : Math.ceil(size / 2)) {
+  for (let i = 0; i < entries.length; ) {
+    const trial = [...entries.slice(0, i), ...entries.slice(i + size)]
+    if ((await run(trial)).ms < SLOW_MS) entries = trial
+    else i += size
   }
-  console.log(`DIAG after chunk ${size}: ${missing.join(', ')}`)
 }
-console.log(`DIAG minimal set: ${missing.map(k => `${k}=${String(process.env[k]).slice(0, 60)}`).join(' | ')}`)
+console.log('DIAG minimal entries:', entries.join(' | '))
+console.log('DIAG minimal result', JSON.stringify(await run(entries)))

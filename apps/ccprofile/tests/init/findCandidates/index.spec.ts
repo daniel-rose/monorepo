@@ -31,6 +31,17 @@ describe('findCandidates', () => {
     ])
   })
 
+  it('offers the default for a bare ~/.claude directory', async () => {
+    const bare = await createSandbox()
+    bare.dir('.claude')
+    const candidates = await findCandidates(bare.ctx(bare.home))
+    await bare.cleanup()
+
+    expect(candidates).toEqual([
+      { configDir: undefined, suggestedName: 'default' },
+    ])
+  })
+
   it('finds nothing in a bare home', async () => {
     const bare = await createSandbox()
     const candidates = await findCandidates(bare.ctx(bare.home))

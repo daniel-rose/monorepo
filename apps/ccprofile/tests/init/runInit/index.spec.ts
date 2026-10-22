@@ -159,3 +159,112 @@ describe('runInit', () => {
     expect(() => readFileSync(configPath)).toThrow()
   })
 })
+
+describe('runInit wizard details', () => {
+  const onlyDefault = () =>
+    writeFileSync(join(sandbox.home, '.claude.json'), '{}')
+
+  const writtenConfig = () =>
+    JSON.parse(readFileSync(configPath, 'utf8')) as {
+      onUnknown: string
+      profiles: unknown[]
+    }
+
+  it.each([
+    [
+      'git@gitlab.example.com:group/sub/app.git',
+      'gitlab.example.com/group/sub',
+    ],
+    ['git@github.com:acme/app.git', 'github.com/acme'],
+    ['git@example.test:app.git', 'example.test'],
+  ])('suggests %s as %s', async (origin, expected) => {
+    onlyDefault()
+    const repo = await sandbox.repo('w/app', origin)
+    const ctx = ttyContext(repo, ['default', '', ''], fakeEnv())
+
+    const code = await runInit(ctx, { example: false })
+
+    expect(code).toBe(0)
+    expect(ctx.err()).toContain(`[${expected}]`)
+    expect(writtenConfig().profiles).toEqual([
+      { name: 'default', remotes: [expected] },
+    ])
+  })
+
+  it('re-asks after an invalid entry and then writes', async () => {
+    onlyDefault()
+    const ctx = ttyContext(
+      sandbox.dir('plain'),
+      ['default', './proj, proj/x, file:///x', 'gitlab.example.com', ''],
+      fakeEnv()
+    )
+
+    const code = await runInit(ctx, { example: false })
+
+    expect(code).toBe(0)
+    expect(ctx.err()).toContain('"./proj" is not a git remote')
+    expect(writtenConfig().profiles).toEqual([
+      { name: 'default', remotes: ['gitlab.example.com'] },
+    ])
+  })
+
+  it('rejects a relative path-like entry', async () => {
+    onlyDefault()
+    const ctx = ttyContext(
+      sandbox.dir('plain'),
+      ['default', '~other/x', '~/Projects', ''],
+      fakeEnv()
+    )
+
+    const code = await runInit(ctx, { example: false })
+
+    expect(code).toBe(0)
+    expect(ctx.err()).toContain('"~other/x" is not')
+    expect(writtenConfig().profiles).toEqual([
+      { name: 'default', paths: ['~/Projects'] },
+    ])
+  })
+
+  it('exits 1 and writes nothing when only invalid entries come', async () => {
+    onlyDefault()
+    const ctx = ttyContext(
+      sandbox.dir('plain'),
+      ['default', './proj'],
+      fakeEnv()
+    )
+
+    const code = await runInit(ctx, { example: false })
+
+    expect(code).toBe(1)
+    expect(() => readFileSync(configPath)).toThrow()
+  })
+
+  it('says that an entry is required when there is no suggestion', async () => {
+    onlyDefault()
+    const ctx = ttyContext(
+      sandbox.dir('plain'),
+      ['default', '', 'github.com/jane', ''],
+      fakeEnv()
+    )
+
+    await runInit(ctx, { example: false })
+
+    expect(ctx.err()).toContain('at least one remote or path is required')
+  })
+
+  it('re-asks an unknown onUnknown name', async () => {
+    onlyDefault()
+    const ctx = ttyContext(
+      sandbox.dir('plain'),
+      ['default', 'github.com/jane', 'nope', 'default'],
+      fakeEnv()
+    )
+
+    const code = await runInit(ctx, { example: false })
+
+    expect(code).toBe(0)
+    expect(ctx.err()).toContain('"nope" is not a profile name')
+    expect(writtenConfig().onUnknown).toBe('default')
+    expect(ctx.out()).toBe('default (onUnknown)\n')
+  })
+})

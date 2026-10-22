@@ -24,6 +24,11 @@ const INIT_TEXT = {
     `Remotes or paths for ${name}, comma-separated${
       suggestion === undefined ? '' : ` [${suggestion}]`
     }: `,
+  matcherRequired: 'at least one remote or path is required',
+  badPath: (entry: string) =>
+    `"${entry}" is not an absolute path (use ~/… or a full path)`,
+  badRemote: (entry: string) =>
+    `"${entry}" is not a git remote (use host or host/namespace)`,
   onUnknownPrompt: (names: readonly string[]) =>
     `When nothing matches: "prompt" or one of ${names.join(', ')} [prompt]: `,
   badOnUnknown: (value: string) => `"${value}" is not a profile name`,

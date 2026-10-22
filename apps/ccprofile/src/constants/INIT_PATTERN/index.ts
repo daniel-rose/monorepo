@@ -1,7 +1,7 @@
 const INIT_PATTERN = {
-  // Wizard entries that are directories: `~`, absolute POSIX/UNC paths, drive
+  // Wizard entries that are directories: anything starting with `~`, absolute POSIX/UNC paths, drive
   // letters. Everything else is a git remote.
-  pathEntry: /^(?:~(?:[/\\]|$)|[/\\]|[A-Za-z]:[/\\])/,
+  pathEntry: /^(?:~|[/\\]|[A-Za-z]:[/\\])/,
   separator: /\s*,\s*/,
 } as const
 

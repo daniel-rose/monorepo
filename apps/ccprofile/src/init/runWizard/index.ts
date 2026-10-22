@@ -1,5 +1,7 @@
 import { basename } from 'node:path'
 
+import { expandHome } from '../../config'
+import pathFlavor from '../../config/pathFlavor'
 import {
   CONFIG_FILE,
   CONFIG_PATTERN,
@@ -8,6 +10,7 @@ import {
   ON_UNKNOWN_PROMPT,
 } from '../../constants'
 import type { Context } from '../../context/types'
+import { normalizeRemote } from '../../match'
 import type { LineReader } from '../../prompt'
 import { createLineReader } from '../../prompt'
 import formatAuth from '../formatAuth'
@@ -49,10 +52,29 @@ const askName = async (
   }
 }
 
+// The hint for the first unusable entry, undefined when all are fine.
+const rejectEntry = (
+  entries: readonly string[],
+  ctx: Context
+): string | undefined => {
+  const flavor = pathFlavor(ctx.platform)
+  for (const entry of entries) {
+    if (INIT_PATTERN.pathEntry.test(entry)) {
+      if (!flavor.isAbsolute(expandHome(entry, ctx.homedir))) {
+        return INIT_TEXT.badPath(entry)
+      }
+    } else if (normalizeRemote(entry) === null) {
+      return INIT_TEXT.badRemote(entry)
+    }
+  }
+  return undefined
+}
+
 const askMatchers = async (
   reader: LineReader,
   name: string,
-  suggestion: string | undefined
+  suggestion: string | undefined,
+  ctx: Context
 ): Promise<string[] | null> => {
   for (;;) {
     const line = await reader.readLine(
@@ -63,7 +85,13 @@ const askMatchers = async (
     const entries = splitEntries(
       answer === '' && suggestion !== undefined ? suggestion : answer
     )
-    if (entries.length > 0) return entries
+    if (entries.length === 0) {
+      ctx.stderr.write(`${INIT_TEXT.matcherRequired}\n`)
+      continue
+    }
+    const rejected = rejectEntry(entries, ctx)
+    if (rejected === undefined) return entries
+    ctx.stderr.write(`${rejected}\n`)
   }
 }
 
@@ -110,7 +138,7 @@ const runWizard = async (
       if (name === null) return null
       if (name === '') continue
 
-      const entries = await askMatchers(reader, name, suggestion)
+      const entries = await askMatchers(reader, name, suggestion, ctx)
       if (entries === null) return null
 
       profiles.push({

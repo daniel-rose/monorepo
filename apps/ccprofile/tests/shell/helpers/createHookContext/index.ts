@@ -20,6 +20,8 @@ const createHookContext = async (
   const sandbox = await createSandbox()
   const { home } = sandbox
   const logPath = join(dirname(home), 'fake-claude.log')
+  const running = new AbortController()
+  const pending = new Set<Promise<unknown>>()
 
   return {
     shell,
@@ -34,8 +36,8 @@ const createHookContext = async (
     },
     privateConfigDir: join(home, '.claude-private'),
     writeConfig: () => writeShellConfig(home, HOOK_CONFIG),
-    run: (args, options) =>
-      runHook(shell, args, {
+    run: (args, options) => {
+      const run = runHook(shell, args, {
         cwd: options.cwd,
         env: {
           ...createShellEnv(shell, {
@@ -48,9 +50,18 @@ const createHookContext = async (
         },
         stdin: options.stdin,
         scenario: options.scenario,
-      }),
+        signal: running.signal,
+      })
+      pending.add(run)
+      return run.finally(() => pending.delete(run))
+    },
     invocations: () => readInvocations(logPath),
-    cleanup: sandbox.cleanup,
+    cleanup: async () => {
+      // A shell still running (the test timed out) blocks the removal.
+      running.abort()
+      await Promise.allSettled(pending)
+      await sandbox.cleanup()
+    },
   }
 }
 

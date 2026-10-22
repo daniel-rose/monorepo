@@ -1,4 +1,5 @@
-import { spawn } from 'node:child_process'
+import type { ChildProcess } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -19,6 +20,8 @@ type RunHookOptions = {
   env: Record<string, string>
   stdin?: string
   scenario?: Scenario
+  // Aborting kills the shell and its child processes.
+  signal?: AbortSignal
 }
 
 type Invocation = { file: string; args: string[]; cleanup: () => void }
@@ -34,6 +37,18 @@ const POWERSHELL_FLAGS = [
 ]
 const UTF8_BOM = String.fromCharCode(0xfeff)
 const noop = (): void => undefined
+
+// child.kill() ends only the shell itself on Windows, not what it started.
+const killTree = (child: ChildProcess): void => {
+  if (child.pid === undefined || child.exitCode !== null) return
+  if (process.platform === 'win32') {
+    spawnSync('taskkill', ['/pid', String(child.pid), '/t', '/f'], {
+      windowsHide: true,
+    })
+    return
+  }
+  child.kill('SIGKILL')
+}
 
 const encodeBase64 = (value: string): string =>
   Buffer.from(value, 'utf8').toString('base64')
@@ -144,6 +159,12 @@ const runHook = (
       cwd: options.cwd,
       env: { ...options.env, [TEST_ENV.hook]: toShellPath(shell, hook) },
       windowsHide: true,
+    })
+    // A timed-out test must not leave the shell (and its children) running:
+    // on Windows they keep the sandbox directory in use, and its removal
+    // fails with EPERM.
+    options.signal?.addEventListener('abort', () => killTree(child), {
+      once: true,
     })
     const stdout: Buffer[] = []
     const stderr: Buffer[] = []

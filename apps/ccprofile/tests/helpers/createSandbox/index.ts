@@ -12,6 +12,19 @@ import { dirname, join } from 'node:path'
 import createRunCommand from '../../../src/context/createRunCommand'
 import createTestContext from '../createTestContext'
 
+const RM_MAX_RETRIES = 10
+const RM_RETRY_DELAY_MS = 200
+
+// Windows releases handles of just-ended processes (and Defender scans) a
+// moment late; rmSync retries EBUSY, EPERM and friends.
+const removeTree = (path: string): void =>
+  rmSync(path, {
+    recursive: true,
+    force: true,
+    maxRetries: RM_MAX_RETRIES,
+    retryDelay: RM_RETRY_DELAY_MS,
+  })
+
 // Git hooks export GIT_DIR, GIT_INDEX_FILE and friends. runCommand merges the
 // given env over process.env, so those keys are set to undefined (which removes
 // them) or the fixtures would hit the surrounding repository.
@@ -79,7 +92,7 @@ const createSandbox = () => {
         runCommand: createRunCommand(process.platform),
       }),
     cleanup: (): Promise<void> => {
-      rmSync(root, { recursive: true, force: true })
+      removeTree(root)
       return Promise.resolve()
     },
   })

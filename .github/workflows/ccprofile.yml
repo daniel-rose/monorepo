@@ -1,0 +1,64 @@
+name: ccprofile
+on:
+  pull_request:
+    paths:
+      - "apps/ccprofile/**"
+      - ".github/workflows/ccprofile.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/ccprofile/**"
+      - ".github/workflows/ccprofile.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  shell-hooks:
+    name: Shell hooks (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            shells: zsh,bash,fish
+          # macOS: bash is /bin/bash 3.2.
+          - os: macos-latest
+            shells: zsh,bash
+          # Windows: bash is Git Bash.
+          - os: windows-latest
+            shells: pwsh,powershell,bash
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install zsh and fish
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y zsh fish
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "lts/*"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.1.0
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build
+        run: pnpm --filter "./configs/*" --filter ./apps/ccprofile build
+
+      - name: Run shell tests
+        run: pnpm --filter ./apps/ccprofile test:shell
+        env:
+          CCPROFILE_TEST_SHELLS: ${{ matrix.shells }}
+
+      - name: Benchmark resolve
+        run: pnpm --filter ./apps/ccprofile bench
+        continue-on-error: true

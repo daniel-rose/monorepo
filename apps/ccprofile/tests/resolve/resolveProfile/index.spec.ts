@@ -79,13 +79,14 @@ describe('resolveProfile detection', () => {
     },
   ])('$label', async ({ cwd, name, via }) => {
     await sandbox.writeConfig(BASE)
+    sandbox.dir('.claude-private')
     const ctx = sandbox.ctx(cwd())
     const outcome = await resolveProfile([], ctx, batch)
 
     expect(outcome).toMatchObject({ kind: 'profile', reason: 'match' })
     expect(profileOf(outcome)?.name).toBe(name)
     expect(outcome.kind === 'profile' && outcome.match?.via).toBe(via)
-    expect(ctx.err()).not.toContain('no match')
+    expect(ctx.err()).toBe('')
   })
 
   it('leaves the default profile without configDir', async () => {
@@ -107,6 +108,15 @@ describe('resolveProfile detection', () => {
 describe('resolveProfile overrides', () => {
   it('keeps an explicit CLAUDE_CONFIG_DIR', async () => {
     await sandbox.writeConfig(BASE)
+    const ctx = sandbox.ctx(workRepo, { CLAUDE_CONFIG_DIR: '/explicit' })
+    expect(await resolveProfile([], ctx, batch)).toEqual({
+      kind: 'unchanged',
+      reason: 'explicitConfigDir',
+    })
+  })
+
+  it('keeps an explicit CLAUDE_CONFIG_DIR with a broken config', async () => {
+    await sandbox.writeConfig('{ nope')
     const ctx = sandbox.ctx(workRepo, { CLAUDE_CONFIG_DIR: '/explicit' })
     expect(await resolveProfile([], ctx, batch)).toEqual({
       kind: 'unchanged',
@@ -251,13 +261,18 @@ describe('resolveProfile prompt', () => {
 
   it('selects a profile and prints the hint', async () => {
     await sandbox.writeConfig(BASE)
+    sandbox.dir('.claude-private')
     const { ctx, stdin } = ask('2\n')
     const outcome = await resolveProfile([], { ...ctx, stdin }, interactive)
     expect(outcome).toMatchObject({ kind: 'profile', reason: 'prompt' })
     expect(profileOf(outcome)?.name).toBe('private')
-    expect(ctx.err()).toContain(
-      'ccprofile: add a "paths" or "remotes" entry to skip this prompt\n'
-    )
+    expect(
+      ctx
+        .err()
+        .endsWith(
+          'ccprofile: add a "paths" or "remotes" entry to skip this prompt\n'
+        )
+    ).toBe(true)
   })
 
   it('aborts on an empty answer', async () => {

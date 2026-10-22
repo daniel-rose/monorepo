@@ -75,7 +75,8 @@ const createSandbox = () => {
         cwd,
         homedir: home,
         env: { ...baseEnv, ...env },
-        runCommand: createRunCommand('linux'),
+        platform: process.platform,
+        runCommand: createRunCommand(process.platform),
       }),
     cleanup: (): Promise<void> => {
       rmSync(root, { recursive: true, force: true })

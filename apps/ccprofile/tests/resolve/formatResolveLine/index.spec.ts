@@ -3,12 +3,25 @@ import { describe, expect, it } from 'vitest'
 import formatResolveLine from '../../../src/resolve/formatResolveLine'
 
 describe('formatResolveLine', () => {
-  it.each([
-    { name: 'private', configDir: '/home/jane/.claude-private' },
-    { name: 'work', configDir: undefined },
-  ])('formats $name', ({ name, configDir }) => {
-    expect(formatResolveLine({ name, configDir, paths: [], remotes: [] })).toBe(
-      `${name}\t${configDir ?? ''}\n`
-    )
+  it('prints name and configDir separated by a TAB', () => {
+    expect(
+      formatResolveLine({
+        name: 'private',
+        configDir: '/home/jane/.claude-private',
+        paths: [],
+        remotes: [],
+      })
+    ).toBe('private\t/home/jane/.claude-private\n')
+  })
+
+  it('leaves the configDir empty for the default profile', () => {
+    expect(
+      formatResolveLine({
+        name: 'work',
+        configDir: undefined,
+        paths: [],
+        remotes: [],
+      })
+    ).toBe('work\t\n')
   })
 })

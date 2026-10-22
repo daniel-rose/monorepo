@@ -6,6 +6,7 @@ import readPackageVersion from '../context/readPackageVersion'
 import type { Context } from '../context/types'
 import config from './commands/config'
 import hook from './commands/hook'
+import init from './commands/init'
 import list from './commands/list'
 import resolve from './commands/resolve'
 import status from './commands/status'
@@ -42,6 +43,14 @@ const registerCommands = (
     .description('print the shell hook (zsh, bash, fish, pwsh, powershell)')
     .argument('<shell>', 'shell to print the hook for')
     .action(async (shell: string) => setExitCode(await hook(ctx, shell)))
+
+  program
+    .command('init')
+    .description('create the config file (wizard, or the example)')
+    .option('--example', 'write the example config without asking')
+    .action(async (options: { example?: boolean }) =>
+      setExitCode(await init(ctx, options))
+    )
 
   // Used by the shell hooks: everything after the first `--` belongs to
   // claude, including `-h` and `-v`, so commander must not interpret it.

@@ -9,6 +9,10 @@ const DOCTOR_TEXT = {
       ? 'claude found on PATH'
       : `claude found on PATH (${version})`,
   claudeMissing: 'claude not found on PATH',
+  claudeFailed: (reason: string | undefined) =>
+    reason === undefined
+      ? 'claude --version failed'
+      : `claude --version failed (${reason})`,
   claudeTimedOut: 'claude --version did not answer in time',
 
   login: (profile: string, state: string) => `profile ${profile}: ${state}`,

@@ -24,6 +24,43 @@ describe('checkClaudeOnPath', () => {
     ])
   })
 
+  it('warns when claude --version exits with an error', async () => {
+    const ctx = createTestContext({
+      runCommand: () =>
+        Promise.resolve(
+          result({ exitCode: 126, stderr: 'permission denied\nsecond\n' })
+        ),
+    })
+
+    const [check] = await checkClaudeOnPath(ctx, null)
+
+    expect(check?.status).toBe('warn')
+    expect(check?.message).toContain('permission denied')
+    expect(check?.message).not.toContain('second')
+  })
+
+  it('warns when claude --version was killed by a signal', async () => {
+    const ctx = createTestContext({
+      runCommand: () => Promise.resolve(result({ exitCode: null })),
+    })
+
+    const [check] = await checkClaudeOnPath(ctx, null)
+
+    expect(check?.status).toBe('warn')
+  })
+
+  it('warns when claude --version does not answer in time', async () => {
+    const ctx = createTestContext({
+      runCommand: () =>
+        Promise.resolve(result({ exitCode: null, timedOut: true })),
+    })
+
+    const [check] = await checkClaudeOnPath(ctx, null)
+
+    expect(check?.status).toBe('warn')
+    expect(check?.message).toContain('in time')
+  })
+
   it('is ok and shows the first line of the version output', async () => {
     const calls: unknown[][] = []
     const ctx = createTestContext({

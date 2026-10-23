@@ -117,6 +117,40 @@ describe('checkHook', () => {
     expect(statuses(results)).toContain('warn')
   })
 
+  it('finds a block in .zshrc whose hook file is gone, whatever $SHELL says', async () => {
+    write(join(sandbox.home, '.zshrc'), block(hookFile('zsh')))
+
+    const results = await checkHook(makeCtx({ SHELL: '/usr/bin/fish' }), null)
+    const missing = results.find(result => result.message.includes('hook.zsh'))
+
+    expect(missing?.status).toBe('warn')
+    expect(missing?.message).toContain('missing')
+    expect(missing?.message).toContain('run ccprofile setup')
+  })
+
+  it('finds a block in .bashrc whose hook file is gone, whatever $SHELL says', async () => {
+    write(join(sandbox.home, '.bashrc'), block(hookFile('bash')))
+
+    const results = await checkHook(makeCtx({ SHELL: '/bin/zsh' }), null)
+
+    expect(
+      results.some(
+        result =>
+          result.status === 'warn' && result.message.includes('hook.bash')
+      )
+    ).toBe(true)
+  })
+
+  it('does not look at a startup file without a ccprofile block', async () => {
+    write(join(sandbox.home, '.bashrc'), 'export A=1\n')
+
+    const results = await checkHook(makeCtx({ SHELL: '/usr/bin/fish' }), null)
+
+    expect(results.map(result => result.message).join('\n')).not.toContain(
+      'bashrc'
+    )
+  })
+
   it('warns, and does not crash, for a startup file that is not UTF-8', async () => {
     write(hookFile('zsh'), await readHook('zsh'))
     write(join(sandbox.home, '.zshrc'), Buffer.from([0x66, 0xff, 0xfe, 0x0a]))

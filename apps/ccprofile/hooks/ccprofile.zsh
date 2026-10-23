@@ -11,19 +11,23 @@ function claude {
     return 127
   fi
 
+  # The locals carry a prefix: a zsh `local` hides an exported variable of the
+  # same name from claude, so a plain `out` or `name` would drop the user's
+  # variable from claude's environment.
+  #
   # stdout is the profile line; prompts and messages go to stderr.
-  local out
-  out=$(command ccprofile resolve -- "$@") || return
+  local ccprofile_out
+  ccprofile_out=$(command ccprofile resolve -- "$@") || return
 
-  local tab=$'\t'
-  local name=${out%%$tab*}
-  local dir=${out#*$tab}
+  local ccprofile_tab=$'\t'
+  local ccprofile_name=${ccprofile_out%%$ccprofile_tab*}
+  local ccprofile_dir=${ccprofile_out#*$ccprofile_tab}
 
-  if [[ -z $out ]]; then
+  if [[ -z $ccprofile_out ]]; then
     command claude "$@"
-  elif [[ -z $dir ]]; then
-    CCPROFILE=$name command claude "$@"
+  elif [[ -z $ccprofile_dir ]]; then
+    CCPROFILE=$ccprofile_name command claude "$@"
   else
-    CCPROFILE=$name CLAUDE_CONFIG_DIR=$dir command claude "$@"
+    CCPROFILE=$ccprofile_name CLAUDE_CONFIG_DIR=$ccprofile_dir command claude "$@"
   fi
 }

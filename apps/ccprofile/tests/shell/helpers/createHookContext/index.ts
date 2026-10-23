@@ -6,6 +6,7 @@ import createSandbox from '../../../helpers/createSandbox'
 import HOOK_CONFIG from '../../constants/HOOK_CONFIG'
 import type { FakeVariant, HookContext } from '../../types'
 import createShellEnv from '../createShellEnv'
+import readChildEnv from '../readChildEnv'
 import readInvocations from '../readInvocations'
 import runHook from '../runHook'
 import writeShellConfig from '../writeShellConfig'
@@ -56,6 +57,7 @@ const createHookContext = async (
       return run.finally(() => pending.delete(run))
     },
     invocations: () => readInvocations(logPath),
+    childEnv: () => readChildEnv(logPath),
     cleanup: async () => {
       // A shell still running (the test timed out) blocks the removal.
       running.abort()

@@ -15,5 +15,7 @@ report() {
 report "$@"
 if [ -n "${FAKE_CLAUDE_LOG-}" ]; then
   report "$@" >>"$FAKE_CLAUDE_LOG"
+  # The whole environment of the last run, for leak checks.
+  env >"$FAKE_CLAUDE_LOG.env"
 fi
 exit "${FAKE_CLAUDE_EXIT:-0}"

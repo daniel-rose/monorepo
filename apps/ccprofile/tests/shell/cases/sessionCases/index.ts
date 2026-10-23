@@ -70,6 +70,28 @@ const sessionCases: readonly HookCase[] = [
     },
   },
   {
+    // bash 3.2: a `local` inherits the export attribute of an exported
+    // variable of the same name, so the hook's own variables would reach
+    // claude and overwrite the user's.
+    title: 'neither leaks nor overwrites variables named like its own locals',
+    runIf: ({ isPowerShell }) => !isPowerShell,
+    test: async t => {
+      t.writeConfig()
+
+      const result = await t.run([], {
+        cwd: t.dirs.private,
+        env: { out: 'user-out', name: 'user-name' },
+      })
+
+      expect(result.exitCode).toBe(0)
+      const childEnv = t.childEnv()
+      expect(childEnv.out).toBe('user-out')
+      expect(childEnv.name).toBe('user-name')
+      expect(childEnv).not.toHaveProperty('tab')
+      expect(childEnv).not.toHaveProperty('dir')
+    },
+  },
+  {
     // The PowerShell hook sets CCPROFILE_ARGV only around `ccprofile
     // resolve`; a value the session had is back before claude starts.
     title: 'restores a CCPROFILE_ARGV the session already had',

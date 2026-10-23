@@ -41,6 +41,8 @@ export type HookContext = {
   writeConfig: () => void
   run: (args: string[], options: RunOptions) => Promise<ShellResult>
   invocations: () => Invocation[]
+  // The complete environment of the last fake claude run.
+  childEnv: () => Record<string, string>
 }
 
 export type HookCase = {

@@ -38,16 +38,24 @@ const POWERSHELL_FLAGS = [
 const UTF8_BOM = String.fromCharCode(0xfeff)
 const noop = (): void => undefined
 
-// child.kill() ends only the shell itself on Windows, not what it started.
+const IS_WINDOWS = process.platform === 'win32'
+
+// child.kill() ends only the shell itself, not what it started (which keeps
+// the output pipes open). Windows: taskkill /t. POSIX: the shell leads its own
+// process group (spawned `detached`), so one signal reaches all of it.
 const killTree = (child: ChildProcess): void => {
   if (child.pid === undefined || child.exitCode !== null) return
-  if (process.platform === 'win32') {
+  if (IS_WINDOWS) {
     spawnSync('taskkill', ['/pid', String(child.pid), '/t', '/f'], {
       windowsHide: true,
     })
     return
   }
-  child.kill('SIGKILL')
+  try {
+    process.kill(-child.pid, 'SIGKILL')
+  } catch {
+    child.kill('SIGKILL')
+  }
 }
 
 const encodeBase64 = (value: string): string =>
@@ -159,6 +167,7 @@ const runHook = (
       cwd: options.cwd,
       env: { ...options.env, [TEST_ENV.hook]: toShellPath(shell, hook) },
       windowsHide: true,
+      detached: !IS_WINDOWS,
     })
     // A timed-out test must not leave the shell (and its children) running:
     // on Windows they keep the sandbox directory in use, and its removal

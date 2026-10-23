@@ -9,18 +9,22 @@ function claude --description 'Start Claude Code with the ccprofile profile'
         return 127
     end
 
+    # The locals carry a prefix: a fish local hides an exported variable of the
+    # same name from claude, so a plain `out` would drop the user's variable
+    # from claude's environment.
+    #
     # stdout is the profile line; prompts and messages go to stderr.
-    set -l out (command ccprofile resolve -- $argv)
+    set -l ccprofile_out (command ccprofile resolve -- $argv)
     or return $status
 
     # `set -lx` is local to its block, so every branch starts claude itself.
-    if not set -q out[1]
+    if not set -q ccprofile_out[1]
         command claude $argv
     else
-        set -l parts (string split -m 1 \t -- $out[1])
-        set -lx CCPROFILE $parts[1]
-        if test -n "$parts[2]"
-            set -lx CLAUDE_CONFIG_DIR $parts[2]
+        set -l ccprofile_parts (string split -m 1 \t -- $ccprofile_out[1])
+        set -lx CCPROFILE $ccprofile_parts[1]
+        if test -n "$ccprofile_parts[2]"
+            set -lx CLAUDE_CONFIG_DIR $ccprofile_parts[2]
             command claude $argv
         else
             command claude $argv

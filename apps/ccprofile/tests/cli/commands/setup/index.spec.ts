@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import setup from '../../../../src/cli/commands/setup'
 import type { ExitCode } from '../../../../src/constants'
-import { MARKER } from '../../../../src/constants'
+import { MARKER, PROFILE_QUERY_TIMEOUT_MS } from '../../../../src/constants'
 import type { Context, RunCommand } from '../../../../src/context/types'
 import { readHook } from '../../../../src/hook'
 import createSandbox from '../../../helpers/createSandbox'
@@ -334,8 +334,12 @@ describe('setup', () => {
       })
 
     it.each([
-      ['powershell', 'powershell.exe', { env: { PSModulePath: '' } }],
-      ['pwsh', 'pwsh', undefined],
+      [
+        'powershell',
+        'powershell.exe',
+        { env: { PSModulePath: '' }, timeoutMs: PROFILE_QUERY_TIMEOUT_MS },
+      ],
+      ['pwsh', 'pwsh', { timeoutMs: PROFILE_QUERY_TIMEOUT_MS }],
     ] as const)('queries %s through %s', async (shell, exe, options) => {
       await withConfig()
       const runCommand = recording()

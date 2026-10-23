@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path'
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
-import { MARKER } from '../../../../src/constants'
+import { MARKER, PROFILE_QUERY_TIMEOUT_MS } from '../../../../src/constants'
 import type { RunCommand } from '../../../../src/context/types'
 import checkHook from '../../../../src/doctor/checks/hook'
 import { readHook } from '../../../../src/hook'
@@ -252,6 +252,31 @@ describe('checkHook', () => {
     const results = await checkHook(makeCtx({}, runCommand), null)
 
     expect(statuses(results)).toEqual(['ok'])
+  })
+
+  it('warns about a PowerShell that does not answer in time', async () => {
+    write(hookFile('ps1'), await readHook('pwsh'))
+    const timeouts: (number | undefined)[] = []
+    const runCommand: RunCommand = (_file, _args, options) => {
+      timeouts.push(options?.timeoutMs)
+      return Promise.resolve({
+        exitCode: null,
+        stdout: '',
+        stderr: '',
+        timedOut: true,
+        notFound: false,
+      })
+    }
+
+    const results = await checkHook(makeCtx({}, runCommand), null)
+    const warnings = results.filter(result => result.status === 'warn')
+
+    expect(timeouts).toEqual([
+      PROFILE_QUERY_TIMEOUT_MS,
+      PROFILE_QUERY_TIMEOUT_MS,
+    ])
+    expect(warnings).toHaveLength(2)
+    expect(warnings[0]?.message).toContain('in time')
   })
 
   it('warns that no hook is installed when no shell is in scope', async () => {

@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import { PROFILE_QUERY_TIMEOUT_MS } from '../../../src/constants'
 import type { RunCommand } from '../../../src/context/types'
 import getIntegrationTarget from '../../../src/setup/getIntegrationTarget'
+import ProfileQueryTimeoutError from '../../../src/setup/ProfileQueryTimeoutError'
 import createTestContext from '../../helpers/createTestContext'
 
 const QUERY =
@@ -63,11 +65,32 @@ describe('getIntegrationTarget', () => {
       file: 'C:\\Users\\jane\\Documents\\profile.ps1',
     })
     expect(runCommand).toHaveBeenCalledTimes(1)
-    expect(runCommand).toHaveBeenCalledWith('pwsh', [
-      '-NoProfile',
-      '-Command',
-      QUERY,
-    ])
+    expect(runCommand).toHaveBeenCalledWith(
+      'pwsh',
+      ['-NoProfile', '-Command', QUERY],
+      { timeoutMs: PROFILE_QUERY_TIMEOUT_MS }
+    )
+  })
+
+  it('throws a timeout error when PowerShell does not answer in time', async () => {
+    const runCommand = vi.fn<RunCommand>(() =>
+      Promise.resolve({
+        exitCode: null,
+        stdout: '',
+        stderr: '',
+        timedOut: true,
+        notFound: false,
+      })
+    )
+    const ctx = createTestContext({ platform: 'win32', runCommand })
+
+    const error: unknown = await getIntegrationTarget('powershell', ctx).catch(
+      (caught: unknown) => caught
+    )
+
+    expect(error).toBeInstanceOf(ProfileQueryTimeoutError)
+    expect((error as Error).message).toContain('in time')
+    expect((error as Error).message).toContain('nothing written')
   })
 
   it('asks powershell.exe with an empty PSModulePath', async () => {
@@ -81,7 +104,7 @@ describe('getIntegrationTarget', () => {
     expect(runCommand).toHaveBeenCalledWith(
       'powershell.exe',
       ['-NoProfile', '-Command', QUERY],
-      { env: { PSModulePath: '' } }
+      { env: { PSModulePath: '' }, timeoutMs: PROFILE_QUERY_TIMEOUT_MS }
     )
   })
 

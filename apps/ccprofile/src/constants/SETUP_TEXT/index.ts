@@ -6,6 +6,8 @@ const SETUP_TEXT = {
     `ccprofile: cannot detect your shell from $SHELL – pass one (${valid.join(', ')})`,
   profileQueryFailed: (executable: string) =>
     `ccprofile: could not read the profile path from ${executable} – nothing written`,
+  profileQueryTimedOut: (executable: string) =>
+    `ccprofile: ${executable} did not return its profile path in time – nothing written`,
   malformed: (file: string, reason: string) =>
     `ccprofile: ${file}: ${reason} – fix it by hand, nothing written`,
   unsupportedEncoding: (file: string) =>

@@ -3,12 +3,14 @@ import readEnv from '../../config/readEnv'
 import type { Shell } from '../../constants'
 import {
   ENV_VAR,
+  PROFILE_QUERY_TIMEOUT_MS,
   SETUP_FILE,
   SETUP_TEXT,
   SHELL,
   TARGET_KIND,
 } from '../../constants'
 import type { Context } from '../../context/types'
+import ProfileQueryTimeoutError from '../ProfileQueryTimeoutError'
 import type { IntegrationTarget } from '../types'
 
 const LINE_BREAK = /\r?\n/
@@ -21,13 +23,20 @@ const queryProfile = async (
   const args = SETUP_FILE.powerShellArgs
   // Windows PowerShell 5.1 must not inherit a PowerShell 7 module path from
   // the caller (and starts slowly without any value); pwsh needs no override.
+  const options = { timeoutMs: PROFILE_QUERY_TIMEOUT_MS }
   const result =
     shell === SHELL.powershell
       ? await ctx.runCommand(executable, args, {
+          ...options,
           env: SETUP_FILE.powerShellEnv,
         })
-      : await ctx.runCommand(executable, args)
+      : await ctx.runCommand(executable, args, options)
 
+  if (result.timedOut) {
+    throw new ProfileQueryTimeoutError(
+      SETUP_TEXT.profileQueryTimedOut(executable)
+    )
+  }
   if (result.exitCode !== 0) {
     throw new Error(SETUP_TEXT.profileQueryFailed(executable))
   }

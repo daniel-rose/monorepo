@@ -25,8 +25,8 @@ jobs:
           # No registry-url: it sets one shared NPM_CONFIG_USERCONFIG for all
           # packages. semantic-release-pnpm then writes the OIDC token of one
           # package into it and reuses that token for a new package that has
-          # to fall back to NPM_TOKEN. Without it, each package gets its own
-          # .npmrc in its directory.
+          # to fall back to NPM_TOKEN. Without it, the plugin keeps each
+          # package's OIDC token in that package's own .npmrc.
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6.1.0
@@ -46,9 +46,23 @@ jobs:
       - name: Run e2e tests
         run: pnpm --filter "./packages/*" --filter "./examples/*" test:e2e:ci
 
+      # Token fallback for a package without trusted publishing yet. pnpm
+      # publish ignores the .npmrc in a package directory, so the token goes
+      # into the user .npmrc. ${NPM_TOKEN} stays a placeholder that pnpm
+      # resolves at runtime. pnpm still tries OIDC first for every package.
+      - name: Configure npm token fallback
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -n "$NPM_TOKEN" ]; then
+            printf '%s\n' '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' >> ~/.npmrc
+          fi
+
       - name: Publish packages (multi-semantic-release)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: true
+          # pnpm 12 ignores NPM_CONFIG_*; OIDC publishes get provenance anyway,
+          # token publishes only with this.
+          PNPM_CONFIG_PROVENANCE: true
         run: pnpm exec multi-semantic-release --ignore-packages='examples/**' --deps.bump=override --deps.prefix='^'

@@ -242,19 +242,18 @@ const restores = []
 const main = () => {
   check(existsSync(ENTRY), `${ENTRY} missing – build first`)
   mkdirSync(home, { recursive: true })
-  if (IS_WINDOWS) {
-    // Windows PowerShell 5.1 (.NET Framework) resolves the Documents folder
-    // only if it exists, as it does in every real Windows home; without it
-    // $PROFILE comes back empty. Logged once without, for the record.
-    for (const shell of SHELLS.filter(name => POWERSHELLS.includes(name))) {
-      queryProfile(shell, createEnv())
-    }
-    mkdirSync(join(home, 'Documents'))
-  }
   mkdirSync(work, { recursive: true })
   installFakeClaude()
   const env = createEnv()
   log(`smoke: shells ${SHELLS.join(', ')} in ${root}`)
+  if (IS_WINDOWS) {
+    // Every real Windows home has a Documents folder, the PowerShell profiles
+    // live below it. Asked once before it exists, for the record.
+    for (const shell of SHELLS.filter(name => POWERSHELLS.includes(name))) {
+      queryProfile(shell, env)
+    }
+    mkdirSync(join(home, 'Documents'))
+  }
 
   const configPath = ccprofile(env, 'config').stdout.trim()
   check(

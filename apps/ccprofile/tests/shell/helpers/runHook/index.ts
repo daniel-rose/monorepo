@@ -1,0 +1,198 @@
+import type { ChildProcess } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
+import { inject } from 'vitest'
+
+import type { Shell } from '../../../../src/constants'
+import { HOOK_FILE_EXTENSION, SHELL } from '../../../../src/constants'
+import SCENARIO from '../../constants/SCENARIO'
+import TEST_ENV from '../../constants/TEST_ENV'
+import type { Scenario, ShellResult } from '../../types'
+import findShellBinary from '../findShellBinary'
+import scenarioScript from '../scenarioScript'
+import toShellPath from '../toShellPath'
+
+type RunHookOptions = {
+  cwd: string
+  env: Record<string, string>
+  stdin?: string
+  scenario?: Scenario
+  // Aborting kills the shell and its child processes.
+  signal?: AbortSignal
+}
+
+type Invocation = { file: string; args: string[]; cleanup: () => void }
+
+const NAME_FOR_DOLLAR_ZERO = 'ccprofile-test'
+const POWERSHELL_FLAGS = [
+  '-NoLogo',
+  '-NoProfile',
+  '-NonInteractive',
+  '-ExecutionPolicy',
+  'Bypass',
+  '-File',
+]
+const UTF8_BOM = String.fromCharCode(0xfeff)
+const noop = (): void => undefined
+
+const IS_WINDOWS = process.platform === 'win32'
+
+// child.kill() ends only the shell itself, not what it started (which keeps
+// the output pipes open). Windows: taskkill /t. POSIX: the shell leads its own
+// process group (spawned `detached`), so one signal reaches all of it.
+const killTree = (child: ChildProcess): void => {
+  if (child.pid === undefined || child.exitCode !== null) return
+  if (IS_WINDOWS) {
+    spawnSync('taskkill', ['/pid', String(child.pid), '/t', '/f'], {
+      windowsHide: true,
+    })
+    return
+  }
+  try {
+    process.kill(-child.pid, 'SIGKILL')
+  } catch {
+    child.kill('SIGKILL')
+  }
+}
+
+const encodeBase64 = (value: string): string =>
+  Buffer.from(value, 'utf8').toString('base64')
+
+const quotePosix = (value: string): string =>
+  `'${value.replaceAll("'", `'\\''`)}'`
+
+// A throwaway script file; `cleanup` removes it with its directory.
+const writeScript = (name: string, content: string) => {
+  const dir = mkdtempSync(join(tmpdir(), 'ccprofile-script-'))
+  const file = join(dir, name)
+  writeFileSync(file, content)
+  return { file, cleanup: () => rmSync(dir, { recursive: true, force: true }) }
+}
+
+// The driver rebuilds the arguments from base64, so neither the command line
+// nor the file encoding can alter them, then loads the hook.
+const writePowerShellDriver = (args: string[], scenario: Scenario) =>
+  writeScript(
+    'driver.ps1',
+    `${UTF8_BOM}${[
+      '$argList = [System.Collections.Generic.List[string]]::new()',
+      ...args.map(
+        arg =>
+          `$argList.Add([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${encodeBase64(arg)}')))`
+      ),
+      '$a = $argList.ToArray()',
+      `. $env:${TEST_ENV.hook}`,
+      scenarioScript(SHELL.pwsh, scenario),
+    ].join('\n')}\n`
+  )
+
+// bash gets its arguments from `set --` inside the script: on Windows the
+// msys runtime would otherwise re-parse (and glob) the command line.
+const writeBashScript = (args: string[], scenario: Scenario) =>
+  writeScript(
+    'script.bash',
+    `set --${args.map(arg => ` ${quotePosix(arg)}`).join('')}\n${scenarioScript(SHELL.bash, scenario)}\n`
+  )
+
+const createInvocation = (
+  shell: Shell,
+  args: string[],
+  scenario: Scenario
+): Invocation => {
+  const file = findShellBinary(shell)
+
+  switch (shell) {
+    case SHELL.zsh:
+      return {
+        file,
+        args: [
+          '-f',
+          '-c',
+          scenarioScript(shell, scenario),
+          NAME_FOR_DOLLAR_ZERO,
+          ...args,
+        ],
+        cleanup: noop,
+      }
+    case SHELL.bash: {
+      const script = writeBashScript(args, scenario)
+      return {
+        file,
+        args: ['--norc', '--noprofile', toShellPath(shell, script.file)],
+        cleanup: script.cleanup,
+      }
+    }
+    case SHELL.fish: {
+      // fish stops option parsing at the script file, so `-p` after it
+      // reaches $argv instead of being read as fish's --profile.
+      const script = writeScript('script.fish', scenarioScript(shell, scenario))
+      return {
+        file,
+        args: ['--no-config', script.file, ...args],
+        cleanup: script.cleanup,
+      }
+    }
+    case SHELL.pwsh:
+    case SHELL.powershell: {
+      const driver = writePowerShellDriver(args, scenario)
+      return {
+        file,
+        args: [...POWERSHELL_FLAGS, driver.file],
+        cleanup: driver.cleanup,
+      }
+    }
+  }
+}
+
+// Starts `shell` without any user configuration, loads the hook and runs the
+// scenario with `args` as the claude arguments.
+const runHook = (
+  shell: Shell,
+  args: string[],
+  options: RunHookOptions
+): Promise<ShellResult> => {
+  const scenario = options.scenario ?? SCENARIO.call
+  const invocation = createInvocation(shell, args, scenario)
+  // The hook files of the installed package, not the ones in the repo.
+  const hook = join(
+    inject('hookDir'),
+    `ccprofile.${HOOK_FILE_EXTENSION[shell]}`
+  )
+
+  return new Promise((resolve, reject) => {
+    const child = spawn(invocation.file, invocation.args, {
+      cwd: options.cwd,
+      env: { ...options.env, [TEST_ENV.hook]: toShellPath(shell, hook) },
+      windowsHide: true,
+      detached: !IS_WINDOWS,
+    })
+    // A timed-out test must not leave the shell (and its children) running:
+    // on Windows they keep the sandbox directory in use, and its removal
+    // fails with EPERM.
+    options.signal?.addEventListener('abort', () => killTree(child), {
+      once: true,
+    })
+    const stdout: Buffer[] = []
+    const stderr: Buffer[] = []
+    child.stdout.on('data', (chunk: Buffer) => stdout.push(chunk))
+    child.stderr.on('data', (chunk: Buffer) => stderr.push(chunk))
+    child.on('error', error => {
+      invocation.cleanup()
+      reject(error)
+    })
+    child.on('close', code => {
+      invocation.cleanup()
+      resolve({
+        stdout: Buffer.concat(stdout).toString('utf8'),
+        stderr: Buffer.concat(stderr).toString('utf8'),
+        exitCode: code ?? -1,
+      })
+    })
+    child.stdin.end(options.stdin ?? '')
+  })
+}
+
+export default runHook

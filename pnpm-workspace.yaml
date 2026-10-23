@@ -12,10 +12,10 @@ packages:
 # the internal @daniel-rose/* packages, whose ranges multi-semantic-release
 # rewrites on release (--deps.bump=override).
 catalog:
-  '@anolilab/multi-semantic-release': ^4.4.24
-  '@commitlint/cli': ^21.2.3
-  '@commitlint/config-conventional': ^21.2.3
-  '@playwright/test': ^1.64.0
+  '@anolilab/multi-semantic-release': ^4.6.0
+  '@commitlint/cli': ^21.2.4
+  '@commitlint/config-conventional': ^21.2.4
+  '@playwright/test': ^1.64.1
   '@secretlint/core': ^13.0.7
   '@secretlint/secretlint-rule-preset-recommend': ^13.0.7
   '@types/node': ^26.6.5
@@ -23,31 +23,31 @@ catalog:
   '@types/react-dom': ^19.3.0
   '@vitejs/plugin-react': ^6.1.2
   '@vitejs/plugin-react-swc': ^4.3.3
-  '@vitest/browser': ^5.0.4
-  '@vitest/browser-playwright': ^5.0.4
-  '@vitest/coverage-v8': ^5.0.4
+  '@vitest/browser': ^5.0.5
+  '@vitest/browser-playwright': ^5.0.5
+  '@vitest/coverage-v8': ^5.0.5
   commander: ^15.0.0
-  eslint: ^10.12.0
-  eslint-config-next: ^16.4.0
+  eslint: ^10.13.0
+  eslint-config-next: ^16.4.2
   eslint-plugin-jsx-a11y-x: ^0.2.0
   eslint-plugin-react-hooks: ^7.1.1
   eslint-plugin-react-refresh: ^0.5.7
   husky: ^9.1.7
-  next: ^16.4.0
-  playwright: ^1.64.0
+  next: ^16.4.2
+  playwright: ^1.64.1
   prettier: ^3.9.10
-  react: ^19.3.0
-  react-dom: ^19.3.0
+  react: ^19.3.1
+  react-dom: ^19.3.1
   rolldown-plugin-dts: ^0.28.8
   semantic-release: ^25.0.9
   typescript: ^5.9.3
-  vite: ^8.3.4
-  vitest: ^5.0.4
+  vite: ^8.3.5
+  vitest: ^5.0.5
   vitest-browser-react: ^2.3.0
   zod: ^4.6.7
 catalogs:
   prod:
-    '@anolilab/semantic-release-pnpm': ^8.1.33
+    '@anolilab/semantic-release-pnpm': ^8.1.35
     '@eslint/js': ^10.0.1
     '@semantic-release/changelog': ^7.0.0
     '@semantic-release/commit-analyzer': ^13.0.1
@@ -58,7 +58,7 @@ catalogs:
     eslint-config-prettier: ^10.1.8
     eslint-plugin-prettier: ^5.5.7
     prettier-plugin-organize-imports: ^4.3.0
-    typescript-eslint: ^8.71.2
+    typescript-eslint: ^8.72.0
 catalogMode: strict
 auditConfig:
   ignoreGhsas:

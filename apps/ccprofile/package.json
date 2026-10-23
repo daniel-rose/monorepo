@@ -1,0 +1,65 @@
+{
+  "name": "@daniel-rose/ccprofile",
+  "version": "0.0.0",
+  "description": "Starts Claude Code with the right CLAUDE_CONFIG_DIR per directory or git remote.",
+  "license": "MIT",
+  "author": "Daniel Rose",
+  "keywords": [
+    "claude-code",
+    "claude",
+    "profile",
+    "cli",
+    "config-dir"
+  ],
+  "type": "module",
+  "bin": {
+    "ccprofile": "./dist/index.js"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "test:unit": "vitest",
+    "test:unit:ci": "vitest run --coverage --outputFile=coverage/junit.xml --reporter=junit",
+    "test:shell": "vitest run --config vitest.shell.config.ts",
+    "test:smoke": "node tests/smoke/setup-doctor.mjs",
+    "bench": "node tests/bench/resolve.mjs"
+  },
+  "files": [
+    "dist",
+    "hooks",
+    "schema.json",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@daniel-rose/eslint-config": "workspace:^",
+    "@daniel-rose/prettier-config": "workspace:^",
+    "@daniel-rose/semantic-release-config": "workspace:^",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "commander": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "semantic-release": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:",
+    "zod": "catalog:"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/daniel-rose/monorepo.git",
+    "directory": "apps/ccprofile"
+  },
+  "bugs": {
+    "url": "https://github.com/daniel-rose/monorepo/issues"
+  },
+  "homepage": "https://github.com/daniel-rose/monorepo/blob/main/apps/ccprofile/README.md"
+}

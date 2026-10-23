@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process'
 import { statSync } from 'node:fs'
 
 import { KILL_GRACE_MS } from '../../constants'
-import isSafeShellArgs from '../isSafeShellArgs'
+import buildBatchCommand from '../buildBatchCommand'
 import resolveWindowsExecutable from '../resolveWindowsExecutable'
 import type { RunCommand, RunCommandResult } from '../types'
 
@@ -45,10 +45,18 @@ const createRunCommand =
             }) ?? file)
           : file
 
-      // Node refuses to spawn .cmd/.bat without a shell (CVE-2024-27980), and a
-      // shell re-parses the arguments, so only plain ones are let through.
-      const useShell = platform === 'win32' && isBatchFile(executable)
-      if (useShell && !isSafeShellArgs(args)) {
+      // Node refuses to spawn .cmd/.bat directly (CVE-2024-27980) and
+      // deprecates an args array with `shell: true`; cmd.exe re-parses the
+      // command line, so only plain arguments are let through.
+      const batch =
+        platform === 'win32' && isBatchFile(executable)
+          ? buildBatchCommand({
+              executable,
+              args,
+              comSpec: getEnvValue(env, 'COMSPEC'),
+            })
+          : undefined
+      if (batch === null) {
         resolve(
           failure(`ccprofile: refusing to pass unsafe arguments to ${file}`)
         )
@@ -74,13 +82,13 @@ const createRunCommand =
 
       try {
         const child = spawn(
-          useShell ? `"${executable}"` : executable,
-          [...args],
+          batch?.file ?? executable,
+          batch?.args ?? [...args],
           {
             cwd: options.cwd,
             env,
-            shell: useShell,
             windowsHide: true,
+            windowsVerbatimArguments: batch !== undefined,
             stdio: [options.input ?? 'ignore', 'pipe', 'pipe'],
           }
         )

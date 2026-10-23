@@ -143,12 +143,17 @@ const ccprofile = (env, ...args) => {
 const powerShellEnv = (shell, env) =>
   shell === 'powershell' ? { ...env, PSModulePath: '' } : env
 
-const queryProfile = (shell, env) =>
-  run(
+const queryProfile = (shell, env) => {
+  const result = run(
     PS_EXECUTABLE[shell],
     ['-NoProfile', '-Command', '$PROFILE.CurrentUserAllHosts'],
     powerShellEnv(shell, env)
-  ).stdout.trim()
+  )
+  log(
+    `smoke: ${shell} profile query: exit ${result.status}, stdout ${JSON.stringify(result.stdout.trim())}, stderr ${JSON.stringify(result.stderr.trim())}`
+  )
+  return result.stdout.trim()
+}
 
 const findBash = () => {
   if (IS_WINDOWS)
@@ -237,6 +242,15 @@ const restores = []
 const main = () => {
   check(existsSync(ENTRY), `${ENTRY} missing – build first`)
   mkdirSync(home, { recursive: true })
+  if (IS_WINDOWS) {
+    // Windows PowerShell 5.1 (.NET Framework) resolves the Documents folder
+    // only if it exists, as it does in every real Windows home; without it
+    // $PROFILE comes back empty. Logged once without, for the record.
+    for (const shell of SHELLS.filter(name => POWERSHELLS.includes(name))) {
+      queryProfile(shell, createEnv())
+    }
+    mkdirSync(join(home, 'Documents'))
+  }
   mkdirSync(work, { recursive: true })
   installFakeClaude()
   const env = createEnv()

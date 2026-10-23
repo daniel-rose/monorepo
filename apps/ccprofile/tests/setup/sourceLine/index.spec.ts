@@ -30,6 +30,15 @@ describe('sourceLine', () => {
     }
   )
 
+  it.each(['pwsh', 'powershell'] as const)(
+    'doubles typographic single quotes for %s',
+    shell => {
+      expect(sourceLine(shell, 'C:\\Users\\O’Brien\\hook.ps1')).toBe(
+        ". 'C:\\Users\\O’’Brien\\hook.ps1'"
+      )
+    }
+  )
+
   it('rejects fish, which needs no source line', () => {
     expect(() => sourceLine('fish', '/x')).toThrow()
   })

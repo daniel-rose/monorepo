@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto'
 import {
   chmod,
   lstat,
@@ -15,6 +16,8 @@ import { basename, dirname, resolve } from 'node:path'
 import { CONFIG_FILE } from '../../constants'
 
 const MODE_MASK = 0o7777
+const TEMP_ATTEMPTS = 5
+const TEMP_SUFFIX_BYTES = 6
 
 const errorCode = (error: unknown): string | undefined =>
   error instanceof Error && 'code' in error ? String(error.code) : undefined
@@ -51,6 +54,25 @@ const readOld = async (
   }
 }
 
+// Creates the temp file exclusively (`wx`: never follows or reuses a file that
+// is already there), with a fresh random suffix if the name is taken.
+const writeTemp = async (
+  dir: string,
+  name: string,
+  text: string
+): Promise<string> => {
+  for (let attempt = 1; ; attempt += 1) {
+    const suffix = randomBytes(TEMP_SUFFIX_BYTES).toString('hex')
+    const temp = resolve(dir, `.${name}.${suffix}.tmp`)
+    try {
+      await writeFile(temp, text, { encoding: 'utf8', flag: 'wx' })
+      return temp
+    } catch (error) {
+      if (errorCode(error) !== 'EEXIST' || attempt >= TEMP_ATTEMPTS) throw error
+    }
+  }
+}
+
 // Writes a temp file next to the target and renames it over it, so a reader
 // never sees a half-written startup file. A symlink stays a symlink, the old
 // file's UTF-8 byte order mark and permission bits are kept.
@@ -67,10 +89,9 @@ const writeFileAtomic = async (
     old.bom && !content.startsWith(CONFIG_FILE.byteOrderMark)
       ? `${CONFIG_FILE.byteOrderMark}${content}`
       : content
-  const temp = resolve(dir, `.${basename(target)}.${process.pid}.tmp`)
 
+  const temp = await writeTemp(dir, basename(target), text)
   try {
-    await writeFile(temp, text, { encoding: 'utf8', flag: 'w' })
     if (old.mode !== undefined) await chmod(temp, old.mode)
     await rename(temp, target)
   } catch (error) {

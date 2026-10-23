@@ -4,8 +4,10 @@ import { loadConfig } from '../../../config'
 import type { ExitCode } from '../../../constants'
 import {
   CLI_MESSAGE,
+  CONFIG_FILE,
   EXIT_CODE,
   LOAD_STATUS,
+  SETUP_MODE,
   SETUP_TEXT,
   SHELL,
 } from '../../../constants'
@@ -19,6 +21,7 @@ import {
   checkBashProfile,
   detectShell,
   getIntegrationTarget,
+  readText,
   renderDiff,
   writeFileAtomic,
 } from '../../../setup'
@@ -56,12 +59,27 @@ const applyChanges = async (
   changes: readonly FileChange[],
   mode: SetupMode
 ): Promise<void> => {
+  // The files may have changed while the question was open: write nothing then.
+  for (const change of changes) {
+    if ((await readText(change.file)) !== change.before) {
+      throw new Error(SETUP_TEXT.changedMeanwhile(change.file))
+    }
+  }
+
   // Install: hook first, so the startup file never sources a missing file.
   // Remove: startup file first, for the same reason.
-  const ordered = mode === 'install' ? changes : [...changes].reverse()
+  const ordered = mode === SETUP_MODE.install ? changes : [...changes].reverse()
   for (const change of ordered) {
-    if (change.after === null) await rm(change.file, { force: true })
-    else await writeFileAtomic(change.file, change.after)
+    if (change.after === null) {
+      await rm(change.file, { force: true })
+    } else {
+      await writeFileAtomic(
+        change.file,
+        change.bom
+          ? `${CONFIG_FILE.byteOrderMark}${change.after}`
+          : change.after
+      )
+    }
   }
 }
 
@@ -75,7 +93,7 @@ const finish = async (
   mode: SetupMode,
   deps: SetupDeps
 ): Promise<ExitCode> => {
-  if (mode === 'remove') return EXIT_CODE.ok
+  if (mode === SETUP_MODE.remove) return EXIT_CODE.ok
   const config = await loadConfig(ctx)
   if (config.status !== LOAD_STATUS.missing) return EXIT_CODE.ok
   return deps.runInit(ctx, { example: false })
@@ -89,7 +107,8 @@ const setup = async (
   options: SetupOptions,
   deps: SetupDeps = { runInit }
 ): Promise<ExitCode> => {
-  const mode: SetupMode = options.remove === true ? 'remove' : 'install'
+  const mode: SetupMode =
+    options.remove === true ? SETUP_MODE.remove : SETUP_MODE.install
 
   const shell = pickShell(ctx, shellName)
   if (shell === null) {
@@ -117,7 +136,9 @@ const setup = async (
     if (plan.changes.length === 0) {
       say(
         ctx,
-        mode === 'install' ? SETUP_TEXT.unchanged : SETUP_TEXT.unchangedRemove
+        mode === SETUP_MODE.install
+          ? SETUP_TEXT.unchanged
+          : SETUP_TEXT.unchangedRemove
       )
     } else {
       describeChanges(ctx, plan.changes)
@@ -131,7 +152,7 @@ const setup = async (
       say(ctx, SETUP_TEXT.done(plan.changes.length))
     }
 
-    if (mode === 'install') {
+    if (mode === SETUP_MODE.install) {
       if (shell === SHELL.bash) {
         const warning = await checkBashProfile(ctx)
         if (warning !== null) say(ctx, warning)

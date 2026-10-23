@@ -1,9 +1,17 @@
 import pathFlavor from '../../config/pathFlavor'
 import readEnv from '../../config/readEnv'
 import type { Shell } from '../../constants'
-import { ENV_VAR, SETUP_FILE, SETUP_TEXT, SHELL } from '../../constants'
+import {
+  ENV_VAR,
+  SETUP_FILE,
+  SETUP_TEXT,
+  SHELL,
+  TARGET_KIND,
+} from '../../constants'
 import type { Context } from '../../context/types'
 import type { IntegrationTarget } from '../types'
+
+const LINE_BREAK = /\r?\n/
 
 const queryProfile = async (
   shell: typeof SHELL.pwsh | typeof SHELL.powershell,
@@ -20,10 +28,21 @@ const queryProfile = async (
         })
       : await ctx.runCommand(executable, args)
 
-  // trim() also drops a UTF-8 byte order mark.
-  const file = result.stdout.trim()
-  if (result.exitCode !== 0 || file === '') {
+  if (result.exitCode !== 0) {
     throw new Error(SETUP_TEXT.profileQueryFailed(executable))
+  }
+  // trim() also drops a UTF-8 byte order mark. Anything but one absolute path
+  // (extra output from a noisy profile, a relative path) is not trusted.
+  const lines = result.stdout
+    .split(LINE_BREAK)
+    .map(line => line.trim())
+    .filter(line => line !== '')
+  const [file] = lines
+  if (file === undefined) {
+    throw new Error(SETUP_TEXT.profileQueryFailed(executable))
+  }
+  if (lines.length !== 1 || !pathFlavor(ctx.platform).isAbsolute(file)) {
+    throw new Error(SETUP_TEXT.profileQueryInvalid(executable, result.stdout))
   }
   return file
 }
@@ -39,7 +58,7 @@ const getIntegrationTarget = async (
   switch (shell) {
     case SHELL.zsh:
       return {
-        kind: 'block',
+        kind: TARGET_KIND.block,
         file: flavor.join(
           readEnv(ctx, ENV_VAR.zdotdir) ?? ctx.homedir,
           SETUP_FILE.zshrc
@@ -47,17 +66,20 @@ const getIntegrationTarget = async (
       }
     case SHELL.bash:
       return {
-        kind: 'block',
+        kind: TARGET_KIND.block,
         file: flavor.join(ctx.homedir, SETUP_FILE.bashrc),
       }
     case SHELL.fish:
       return {
-        kind: 'file',
+        kind: TARGET_KIND.file,
         file: flavor.join(ctx.homedir, ...SETUP_FILE.fishConfD),
       }
     case SHELL.pwsh:
     case SHELL.powershell:
-      return { kind: 'block', file: await queryProfile(shell, ctx) }
+      return {
+        kind: TARGET_KIND.block,
+        file: await queryProfile(shell, ctx),
+      }
   }
 }
 

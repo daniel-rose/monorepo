@@ -86,6 +86,16 @@ describe('getIntegrationTarget', () => {
   })
 
   it.each([
+    ['several lines', answering('C:\\a\\profile.ps1\nnoise\n')],
+    ['a relative path', answering('Documents\\profile.ps1\n')],
+  ])('rejects %s from the profile query', async (_name, runCommand) => {
+    const ctx = createTestContext({ platform: 'win32', runCommand })
+    await expect(getIntegrationTarget('pwsh', ctx)).rejects.toThrow(
+      /single absolute profile path/
+    )
+  })
+
+  it.each([
     ['empty output', answering('  \n')],
     ['a non-zero exit', answering('x', 1)],
     ['a missing executable', answering('', null)],

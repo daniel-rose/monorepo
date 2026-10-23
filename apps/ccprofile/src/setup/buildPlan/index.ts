@@ -1,44 +1,41 @@
-import { readFile } from 'node:fs/promises'
-
 import type { Shell } from '../../constants'
 import {
-  CONFIG_FILE,
   MARKER,
   MARKER_UPDATE_STATUS,
+  SETUP_MODE,
   SETUP_TEXT,
+  SHELL,
+  TARGET_KIND,
 } from '../../constants'
 import type { Context } from '../../context/types'
 import hookFilePath from '../hookFilePath'
+import readText from '../readText'
 import sourceLine from '../sourceLine'
 import type { FileChange, IntegrationTarget, Plan, SetupMode } from '../types'
 import updateMarkerBlock from '../updateMarkerBlock'
 
-const errorCode = (error: unknown): string =>
-  error instanceof Error && 'code' in error ? String(error.code) : 'error'
-
-// null: the file does not exist. A byte order mark is not part of the text
-// (writeFileAtomic puts it back).
-const readText = async (file: string): Promise<string | null> => {
-  try {
-    const text = await readFile(file, 'utf8')
-    return text.startsWith(CONFIG_FILE.byteOrderMark)
-      ? text.slice(CONFIG_FILE.byteOrderMark.length)
-      : text
-  } catch (error) {
-    if (errorCode(error) === 'ENOENT') return null
-    throw new Error(SETUP_TEXT.cannotAccess(file, errorCode(error)), {
-      cause: error,
-    })
-  }
-}
+const NON_ASCII = /[^\0-\x7f]/
+const POWERSHELLS: readonly Shell[] = [SHELL.pwsh, SHELL.powershell]
 
 const isChange = (change: FileChange): boolean => change.before !== change.after
 
 const buildBlock = (shell: Shell, hookFile: string): string =>
   [MARKER.start, sourceLine(shell, hookFile), MARKER.end].join('\n')
 
+// Windows PowerShell 5.1 reads a file without a byte order mark as ANSI, so a
+// new file, or one with non-ASCII text (a user name in the hook path), needs one.
+const needsBom = (
+  shell: Shell,
+  before: string | null,
+  after: string | null
+): boolean =>
+  POWERSHELLS.includes(shell) &&
+  after !== null &&
+  (before === null || NON_ASCII.test(after))
+
 // Works out every file `setup` would touch, without touching any. Fails (and so
-// writes nothing at all) if the startup file has a broken marker block.
+// writes nothing at all) if a startup file is not UTF-8 or has a broken marker
+// block.
 const buildPlan = async (
   shell: Shell,
   target: IntegrationTarget,
@@ -46,22 +43,25 @@ const buildPlan = async (
   hook: string,
   ctx: Context
 ): Promise<Plan> => {
-  const install = mode === 'install'
+  const install = mode === SETUP_MODE.install
 
   // fish: the conf.d file is the hook, there is no separate hook file.
-  if (target.kind === 'file') {
+  if (target.kind === TARGET_KIND.file) {
     const before = await readText(target.file)
+    const after = install ? hook : null
     const change = {
       file: target.file,
       before,
-      after: install ? hook : null,
+      after,
       showDiff: false,
+      bom: needsBom(shell, before, after),
     }
     return { ok: true, changes: [change].filter(isChange) }
   }
 
   const hookFile = hookFilePath(shell, ctx)
   const rcBefore = await readText(target.file)
+  const hookBefore = await readText(hookFile)
   const update = updateMarkerBlock(
     rcBefore ?? '',
     install ? buildBlock(shell, hookFile) : null
@@ -73,20 +73,23 @@ const buildPlan = async (
     }
   }
 
-  const hookBefore = await readText(hookFile)
+  // Removing from a file that does not exist stays a no-op.
+  const rcAfter = rcBefore === null && !install ? null : update.content
+  const hookAfter = install ? hook : null
   const changes: FileChange[] = [
     {
       file: hookFile,
       before: hookBefore,
-      after: install ? hook : null,
+      after: hookAfter,
       showDiff: false,
+      bom: needsBom(shell, hookBefore, hookAfter),
     },
     {
       file: target.file,
       before: rcBefore,
-      // Removing from a file that does not exist stays a no-op.
-      after: rcBefore === null && !install ? null : update.content,
+      after: rcAfter,
       showDiff: true,
+      bom: needsBom(shell, rcBefore, rcAfter),
     },
   ]
   return { ok: true, changes: changes.filter(isChange) }

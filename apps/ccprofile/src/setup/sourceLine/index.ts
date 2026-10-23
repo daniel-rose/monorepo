@@ -1,11 +1,14 @@
 import type { Shell } from '../../constants'
 import { SHELL } from '../../constants'
 
+// PowerShell treats the typographic quotes U+2018 to U+201B as single quotes.
+const POWERSHELL_QUOTES = /['‘’‚‛]/g
+
 const quoteForPosix = (value: string): string =>
   `'${value.replaceAll("'", "'\\''")}'`
 
 const quoteForPowerShell = (value: string): string =>
-  `'${value.replaceAll("'", "''")}'`
+  `'${value.replace(POWERSHELL_QUOTES, quote => `${quote}${quote}`)}'`
 
 // The line the startup file uses to load the hook. Single-quoted, so spaces and
 // non-ASCII characters in the path stay literal; fish has no such line (its

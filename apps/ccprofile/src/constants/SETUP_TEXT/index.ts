@@ -8,6 +8,12 @@ const SETUP_TEXT = {
     `ccprofile: could not read the profile path from ${executable} – nothing written`,
   malformed: (file: string, reason: string) =>
     `ccprofile: ${file}: ${reason} – fix it by hand, nothing written`,
+  unsupportedEncoding: (file: string) =>
+    `ccprofile: ${file}: unsupported encoding – convert it to UTF-8; nothing written`,
+  changedMeanwhile: (file: string) =>
+    `ccprofile: ${file} changed while waiting – run setup again; nothing written`,
+  profileQueryInvalid: (executable: string, output: string) =>
+    `ccprofile: ${executable} did not return a single absolute profile path (got ${JSON.stringify(output)}) – nothing written`,
   multipleBlocks: 'more than one ccprofile block',
   unmatchedMarker: 'unmatched ccprofile marker',
   cannotAccess: (file: string, reason: string) =>

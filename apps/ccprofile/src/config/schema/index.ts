@@ -20,7 +20,7 @@ const profileSchema = z
       .regex(CONFIG_PATTERN.name, CONFIG_REASON.badName)
       .refine(name => name !== ON_UNKNOWN_PROMPT, CONFIG_REASON.reservedName)
       .describe(
-        'Profile name, used by `ccprofile use`, the CCPROFILE variable and `onUnknown`.'
+        'Profile name: shown by `ccprofile status` and `ccprofile list`, selects this profile through the CCPROFILE variable (`CCPROFILE=<name> claude`) and through `onUnknown`.'
       ),
     configDir: text(
       'CLAUDE_CONFIG_DIR of this profile; `~` is expanded. Omit it for the default profile (~/.claude). At most one profile may omit it.'
@@ -61,7 +61,7 @@ const configSchema = z
       .array(text('Argument that skips profile selection.'))
       .default([...DEFAULT_PASSTHROUGH])
       .describe(
-        'First arguments that go straight to `claude` without a profile.'
+        'Arguments that start `claude` without a profile. Entries starting with `-` match any argument before a literal `--`; other entries match only the first argument. Replaces the default list.'
       ),
     profiles: z
       .array(profileSchema)

@@ -27,9 +27,24 @@ describe('checkBashProfile', () => {
     expect(await checkBashProfile(ctxOn('darwin'))).toContain('.bashrc')
   })
 
-  it('warns on darwin when there is no .bash_profile at all', async () => {
-    expect(await checkBashProfile(ctxOn('darwin'))).toContain('.bash_profile')
-  })
+  it.each(['darwin', 'win32'] as const)(
+    'warns on %s when there is no .bash_profile, without shadowing ~/.profile',
+    async platform => {
+      const warning = await checkBashProfile(ctxOn(platform))
+      expect(warning).toContain('~/.bash_profile does not exist')
+      // Login bash falls back to these; the advice targets them first …
+      expect(warning).toContain('~/.bash_login or else ~/.profile')
+      expect(warning).toContain(
+        'add to that file: [ -n "$BASH_VERSION" ] && [ -f ~/.bashrc ] && . ~/.bashrc'
+      )
+      // … and a newly created .bash_profile must keep loading them.
+      expect(warning).toContain(
+        'bash stops reading ~/.bash_login and ~/.profile'
+      )
+      expect(warning).toContain('[ -f ~/.profile ] && . ~/.profile')
+      expect(warning).not.toContain('create it with')
+    }
+  )
 
   it('warns on linux when an existing .bash_profile lacks the source', async () => {
     writeFileSync(join(home, '.bash_profile'), 'export A=1\n')

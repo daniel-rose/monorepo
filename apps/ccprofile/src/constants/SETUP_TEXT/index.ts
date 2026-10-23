@@ -18,8 +18,6 @@ const SETUP_TEXT = {
   unmatchedMarker: 'unmatched ccprofile marker',
   cannotAccess: (file: string, reason: string) =>
     `ccprofile: cannot access ${file} (${reason}) – nothing written`,
-  cannotWrite: (file: string, reason: string) =>
-    `ccprofile: cannot write ${file} (${reason})`,
   diffHeader: (file: string) => `--- ${file}`,
   writeLine: (file: string) => `write ${file}`,
   removeLine: (file: string) => `remove ${file}`,
@@ -32,7 +30,7 @@ const SETUP_TEXT = {
   done: (count: number) => `ccprofile: done, ${count} file(s) changed`,
   reload: 'open a new terminal (or reload your shell startup file) to apply it',
   bashProfileMissing:
-    'ccprofile: warning: ~/.bash_profile does not exist; login shells (the default on macOS and Windows terminals) do not read ~/.bashrc – create it with: [ -f ~/.bashrc ] && source ~/.bashrc',
+    'ccprofile: warning: ~/.bash_profile does not exist; bash login shells (the default on macOS and Windows terminals) then read ~/.bash_login or else ~/.profile, never ~/.bashrc – add to that file: [ -n "$BASH_VERSION" ] && [ -f ~/.bashrc ] && . ~/.bashrc; if you create ~/.bash_profile instead, bash stops reading ~/.bash_login and ~/.profile, so also source the one you use from it, e.g. [ -f ~/.profile ] && . ~/.profile',
   bashProfileNoBashrc:
     'ccprofile: warning: ~/.bash_profile does not source ~/.bashrc; login shells will not load the hook – add: [ -f ~/.bashrc ] && source ~/.bashrc',
 } as const

@@ -61,7 +61,8 @@ const applyChanges = async (
 ): Promise<void> => {
   // The files may have changed while the question was open: write nothing then.
   for (const change of changes) {
-    if ((await readText(change.file)) !== change.before) {
+    const now = await readText(change.file, { lenient: change.owned })
+    if (now !== change.before) {
       throw new Error(SETUP_TEXT.changedMeanwhile(change.file))
     }
   }
@@ -132,6 +133,7 @@ const setup = async (
       ctx
     )
     if (!plan.ok) return failWith(ctx, [plan.message])
+    for (const note of plan.notes) say(ctx, note)
 
     if (plan.changes.length === 0) {
       say(

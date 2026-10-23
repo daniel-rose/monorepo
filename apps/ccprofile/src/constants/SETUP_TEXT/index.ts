@@ -23,6 +23,8 @@ const SETUP_TEXT = {
   diffHeader: (file: string) => `--- ${file}`,
   writeLine: (file: string) => `write ${file}`,
   removeLine: (file: string) => `remove ${file}`,
+  keptHook: (file: string, shell: string) =>
+    `kept ${file} – still used by ${shell} profile`,
   applyPrompt: 'Apply these changes? [y/N] ',
   declined: 'ccprofile: nothing written',
   unchanged: 'ccprofile: nothing to change, already up to date (unchanged)',

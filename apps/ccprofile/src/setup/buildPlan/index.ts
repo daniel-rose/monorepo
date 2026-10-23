@@ -9,6 +9,7 @@ import {
 import type { Context } from '../../context/types'
 import buildBlock from '../buildBlock'
 import hookFilePath from '../hookFilePath'
+import otherPowerShellUsingHook from '../otherPowerShellUsingHook'
 import readText from '../readText'
 import type { FileChange, IntegrationTarget, Plan, SetupMode } from '../types'
 import updateMarkerBlock from '../updateMarkerBlock'
@@ -43,7 +44,7 @@ const buildPlan = async (
 
   // fish: the conf.d file is the hook, there is no separate hook file.
   if (target.kind === TARGET_KIND.file) {
-    const before = await readText(target.file)
+    const before = await readText(target.file, { lenient: true })
     const after = install ? hook : null
     const change = {
       file: target.file,
@@ -51,13 +52,15 @@ const buildPlan = async (
       after,
       showDiff: false,
       bom: needsBom(shell, before, after),
+      owned: true,
     }
-    return { ok: true, changes: [change].filter(isChange) }
+    return { ok: true, changes: [change].filter(isChange), notes: [] }
   }
 
   const hookFile = hookFilePath(shell, ctx)
   const rcBefore = await readText(target.file)
-  const hookBefore = await readText(hookFile)
+  // The hook file is ccprofile's own: always overwritten (spec §9).
+  const hookBefore = await readText(hookFile, { lenient: true })
   const update = updateMarkerBlock(
     rcBefore ?? '',
     install ? buildBlock(shell, hookFile) : null
@@ -71,7 +74,12 @@ const buildPlan = async (
 
   // Removing from a file that does not exist stays a no-op.
   const rcAfter = rcBefore === null && !install ? null : update.content
-  const hookAfter = install ? hook : null
+  // Remove: the other PowerShell's profile may still source the shared hook.
+  const keptFor = install
+    ? null
+    : await otherPowerShellUsingHook(shell, target.file, ctx)
+  const hookOnRemove = keptFor === null ? null : hookBefore
+  const hookAfter = install ? hook : hookOnRemove
   const changes: FileChange[] = [
     {
       file: hookFile,
@@ -79,6 +87,7 @@ const buildPlan = async (
       after: hookAfter,
       showDiff: false,
       bom: needsBom(shell, hookBefore, hookAfter),
+      owned: true,
     },
     {
       file: target.file,
@@ -86,9 +95,17 @@ const buildPlan = async (
       after: rcAfter,
       showDiff: true,
       bom: needsBom(shell, rcBefore, rcAfter),
+      owned: false,
     },
   ]
-  return { ok: true, changes: changes.filter(isChange) }
+  return {
+    ok: true,
+    changes: changes.filter(isChange),
+    notes:
+      keptFor === null || hookBefore === null
+        ? []
+        : [SETUP_TEXT.keptHook(hookFile, keptFor)],
+  }
 }
 
 export default buildPlan

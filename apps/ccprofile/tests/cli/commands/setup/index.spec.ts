@@ -144,6 +144,62 @@ describe('setup', () => {
     expect(runInit).not.toHaveBeenCalled()
   })
 
+  describe('a hook file that is not UTF-8', () => {
+    const UTF16LE_BOM = Buffer.from([0xff, 0xfe])
+
+    const writeUtf16Hook = () => {
+      mkdirSync(dirname(hookFile('zsh')), { recursive: true })
+      writeFileSync(
+        hookFile('zsh'),
+        Buffer.concat([UTF16LE_BOM, Buffer.from('# old hook\n', 'utf16le')])
+      )
+    }
+
+    it('is overwritten by setup', async () => {
+      await withConfig()
+      writeUtf16Hook()
+
+      const ctx = makeCtx()
+      expect(await setup(ctx, 'zsh', { yes: true }, deps)).toBe(0)
+
+      expect(read(hookFile('zsh'))).toBe(await readHook('zsh'))
+      expect(read(zshrc())).toContain(MARKER.start)
+    })
+
+    it('is removed by --remove', async () => {
+      await withConfig()
+      await setup(makeCtx(), 'zsh', { yes: true }, deps)
+      writeUtf16Hook()
+
+      expect(
+        await setup(makeCtx(), 'zsh', { yes: true, remove: true }, deps)
+      ).toBe(0)
+
+      expect(existsSync(hookFile('zsh'))).toBe(false)
+      expect(read(zshrc())).not.toContain(MARKER.start)
+    })
+
+    it('is overwritten as the fish conf.d file', async () => {
+      await withConfig()
+      const target = join(
+        sandbox.home,
+        '.config',
+        'fish',
+        'conf.d',
+        'ccprofile.fish'
+      )
+      mkdirSync(dirname(target), { recursive: true })
+      writeFileSync(
+        target,
+        Buffer.concat([UTF16LE_BOM, Buffer.from('# old\n', 'utf16le')])
+      )
+
+      expect(await setup(makeCtx(), 'fish', { yes: true }, deps)).toBe(0)
+
+      expect(read(target)).toBe(await readHook('fish'))
+    })
+  })
+
   it('--remove with nothing installed reports unchanged and exits 0', async () => {
     const ctx = makeCtx()
     expect(await setup(ctx, 'zsh', { yes: true, remove: true }, deps)).toBe(0)
@@ -295,6 +351,120 @@ describe('setup', () => {
       expect(passed).toEqual(options)
       expect(read(profile())).toContain(MARKER.start)
       expect(read(profile())).toContain('. ')
+    })
+
+    describe('shared hook.ps1', () => {
+      const profiles = {
+        pwsh: () =>
+          join(sandbox.home, 'Documents', 'PowerShell', 'profile.ps1'),
+        'powershell.exe': () =>
+          join(sandbox.home, 'Documents', 'WindowsPowerShell', 'profile.ps1'),
+      } as const
+
+      // Answers each PowerShell's profile query; a name missing from
+      // `installed` behaves like an executable that is not on PATH.
+      const twoPowerShells = (installed: readonly string[]) =>
+        vi.fn<RunCommand>(file => {
+          if (!installed.includes(file) || !(file in profiles)) {
+            return Promise.resolve({
+              exitCode: null,
+              stdout: '',
+              stderr: '',
+              timedOut: false,
+              notFound: true,
+            })
+          }
+          const target = profiles[file as keyof typeof profiles]()
+          mkdirSync(dirname(target), { recursive: true })
+          return Promise.resolve({
+            exitCode: 0,
+            stdout: `${target}\r\n`,
+            stderr: '',
+            timedOut: false,
+            notFound: false,
+          })
+        })
+
+      const both = ['pwsh', 'powershell.exe']
+
+      it.each([
+        ['pwsh', 'powershell', 'powershell.exe', 'pwsh'],
+        ['powershell', 'pwsh', 'pwsh', 'powershell.exe'],
+      ] as const)(
+        'keeps hook.ps1 when removing %s while %s still uses it, then removes it with the second',
+        async (first, second, otherExe, firstExe) => {
+          await withConfig()
+          const runCommand = twoPowerShells(both)
+          expect(
+            await setup(makeCtx({ runCommand }), first, { yes: true }, deps)
+          ).toBe(0)
+          expect(
+            await setup(makeCtx({ runCommand }), second, { yes: true }, deps)
+          ).toBe(0)
+
+          const ctx = makeCtx({ runCommand })
+          expect(
+            await setup(ctx, first, { yes: true, remove: true }, deps)
+          ).toBe(0)
+
+          expect(read(profiles[firstExe]())).not.toContain(MARKER.start)
+          expect(read(profiles[otherExe]())).toContain(MARKER.start)
+          expect(existsSync(hookFile('ps1'))).toBe(true)
+          expect(ctx.err()).toContain(
+            `kept ${hookFile('ps1')} – still used by ${second} profile`
+          )
+
+          const last = makeCtx({ runCommand })
+          expect(
+            await setup(last, second, { yes: true, remove: true }, deps)
+          ).toBe(0)
+
+          expect(read(profiles[otherExe]())).not.toContain(MARKER.start)
+          expect(existsSync(hookFile('ps1'))).toBe(false)
+          expect(last.err()).not.toContain('kept')
+        }
+      )
+
+      it('removes hook.ps1 when the other PowerShell is not installed', async () => {
+        await withConfig()
+        const runCommand = twoPowerShells(['pwsh'])
+        expect(
+          await setup(makeCtx({ runCommand }), 'pwsh', { yes: true }, deps)
+        ).toBe(0)
+
+        const ctx = makeCtx({ runCommand })
+        expect(
+          await setup(ctx, 'pwsh', { yes: true, remove: true }, deps)
+        ).toBe(0)
+
+        expect(read(profiles.pwsh())).not.toContain(MARKER.start)
+        expect(existsSync(hookFile('ps1'))).toBe(false)
+        expect(runCommand.mock.calls.map(([file]) => file)).toContain(
+          'powershell.exe'
+        )
+      })
+
+      it('removes hook.ps1 when the other profile has no ccprofile block', async () => {
+        await withConfig()
+        const runCommand = twoPowerShells(both)
+        expect(
+          await setup(makeCtx({ runCommand }), 'pwsh', { yes: true }, deps)
+        ).toBe(0)
+        mkdirSync(dirname(profiles['powershell.exe']()), { recursive: true })
+        writeFileSync(profiles['powershell.exe'](), 'Set-Alias x y\r\n')
+
+        expect(
+          await setup(
+            makeCtx({ runCommand }),
+            'pwsh',
+            { yes: true, remove: true },
+            deps
+          )
+        ).toBe(0)
+
+        expect(existsSync(hookFile('ps1'))).toBe(false)
+        expect(read(profiles['powershell.exe']())).toBe('Set-Alias x y\r\n')
+      })
     })
 
     it('exits 1 and writes nothing when the query returns nothing', async () => {

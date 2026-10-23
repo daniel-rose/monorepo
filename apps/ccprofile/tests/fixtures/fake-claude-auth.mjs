@@ -14,6 +14,12 @@ if (log !== '') {
   appendFileSync(log, `${state}\n`)
 }
 
+// `claude --version` (doctor's PATH check) is answered in every mode.
+if (process.argv[2] === '--version') {
+  process.stdout.write('2.1.0 (Claude Code)\n')
+  process.exit(0)
+}
+
 const print = value => process.stdout.write(`${JSON.stringify(value)}\n`)
 
 switch (mode) {

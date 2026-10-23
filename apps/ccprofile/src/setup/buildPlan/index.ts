@@ -1,6 +1,5 @@
 import type { Shell } from '../../constants'
 import {
-  MARKER,
   MARKER_UPDATE_STATUS,
   SETUP_MODE,
   SETUP_TEXT,
@@ -8,9 +7,9 @@ import {
   TARGET_KIND,
 } from '../../constants'
 import type { Context } from '../../context/types'
+import buildBlock from '../buildBlock'
 import hookFilePath from '../hookFilePath'
 import readText from '../readText'
-import sourceLine from '../sourceLine'
 import type { FileChange, IntegrationTarget, Plan, SetupMode } from '../types'
 import updateMarkerBlock from '../updateMarkerBlock'
 
@@ -18,9 +17,6 @@ const NON_ASCII = /[^\0-\x7f]/
 const POWERSHELLS: readonly Shell[] = [SHELL.pwsh, SHELL.powershell]
 
 const isChange = (change: FileChange): boolean => change.before !== change.after
-
-const buildBlock = (shell: Shell, hookFile: string): string =>
-  [MARKER.start, sourceLine(shell, hookFile), MARKER.end].join('\n')
 
 // Windows PowerShell 5.1 reads a file without a byte order mark as ANSI, so a
 // new file, or one with non-ASCII text (a user name in the hook path), needs one.

@@ -1,3 +1,4 @@
+export { default as buildBlock } from './buildBlock'
 export { default as buildPlan } from './buildPlan'
 export { default as checkBashProfile } from './checkBashProfile'
 export { default as detectShell } from './detectShell'

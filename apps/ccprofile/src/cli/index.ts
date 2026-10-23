@@ -5,6 +5,7 @@ import { CLI_MESSAGE, EXIT_CODE } from '../constants'
 import readPackageVersion from '../context/readPackageVersion'
 import type { Context } from '../context/types'
 import config from './commands/config'
+import doctor from './commands/doctor'
 import hook from './commands/hook'
 import init from './commands/init'
 import list from './commands/list'
@@ -71,6 +72,11 @@ const registerCommands = (
         options: { yes?: boolean; remove?: boolean }
       ) => setExitCode(await setup(ctx, shell, options))
     )
+
+  program
+    .command('doctor')
+    .description('check config, claude, logins and hook installation')
+    .action(async () => setExitCode(await doctor(ctx)))
 
   // Used by the shell hooks: everything after the first `--` belongs to
   // claude, including `-h` and `-v`, so commander must not interpret it.

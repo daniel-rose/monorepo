@@ -1,6 +1,6 @@
 {
   "name": "@daniel-rose/ccprofile",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "Starts Claude Code with the right CLAUDE_CONFIG_DIR per directory or git remote.",
   "license": "MIT",
   "author": "Daniel Rose",
@@ -39,9 +39,9 @@
     "access": "public"
   },
   "devDependencies": {
-    "@daniel-rose/eslint-config": "^5.1.0",
-    "@daniel-rose/prettier-config": "^2.0.0",
-    "@daniel-rose/semantic-release-config": "^2.0.0",
+    "@daniel-rose/eslint-config": "workspace:^",
+    "@daniel-rose/prettier-config": "workspace:^",
+    "@daniel-rose/semantic-release-config": "workspace:^",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "commander": "catalog:",

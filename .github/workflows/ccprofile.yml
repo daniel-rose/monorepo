@@ -60,6 +60,13 @@ jobs:
         env:
           CCPROFILE_TEST_SHELLS: ${{ matrix.shells }}
 
+      # The built CLI on the real OS: init, setup per shell, doctor, setup
+      # --remove, in a temp HOME with a fake claude on PATH.
+      - name: Smoke-test setup and doctor
+        run: pnpm --filter ./apps/ccprofile test:smoke
+        env:
+          CCPROFILE_TEST_SHELLS: ${{ matrix.shells }}
+
       - name: Benchmark resolve
         if: hashFiles('apps/ccprofile/tests/bench/resolve.mjs') != ''
         run: pnpm --filter ./apps/ccprofile bench

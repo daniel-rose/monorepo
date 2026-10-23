@@ -22,7 +22,11 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: "lts/*"
-          registry-url: https://registry.npmjs.org/
+          # No registry-url: it sets one shared NPM_CONFIG_USERCONFIG for all
+          # packages. semantic-release-pnpm then writes the OIDC token of one
+          # package into it and reuses that token for a new package that has
+          # to fall back to NPM_TOKEN. Without it, each package gets its own
+          # .npmrc in its directory.
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6.1.0
@@ -46,6 +50,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
         run: pnpm exec multi-semantic-release --ignore-packages='examples/**' --deps.bump=override --deps.prefix='^'

@@ -14,6 +14,7 @@ const createConfig = (
     configDir: undefined,
     paths: [],
     remotes: [],
+    accounts: [],
     ...profile,
   })),
 })

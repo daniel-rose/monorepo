@@ -13,6 +13,7 @@ const CONFIG_REASON = {
   claudeHome: 'must not be ~/.claude (omit configDir for the default profile)',
   notDirectory: 'exists but is not a directory',
   noHost: 'has no host',
+  accountIsProfile: 'must differ from the profile name',
 } as const
 
 export default CONFIG_REASON

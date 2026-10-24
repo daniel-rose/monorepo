@@ -10,6 +10,7 @@ describe('formatResolveLine', () => {
         configDir: '/home/jane/.claude-private',
         paths: [],
         remotes: [],
+        accounts: [],
       })
     ).toBe('private\t/home/jane/.claude-private\n')
   })
@@ -21,6 +22,7 @@ describe('formatResolveLine', () => {
         configDir: undefined,
         paths: [],
         remotes: [],
+        accounts: [],
       })
     ).toBe('work\t\n')
   })

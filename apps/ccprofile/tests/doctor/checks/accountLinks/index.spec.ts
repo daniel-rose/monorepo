@@ -42,6 +42,42 @@ beforeEach(async () => {
 
 afterEach(() => sandbox.cleanup())
 
+describe('checkAccountLinks without a source', () => {
+  it('reports a real directory as replaced, not as missing', async () => {
+    rmSync(join(source, 'skills'), { recursive: true })
+    linkAll()
+    rmSync(join(account, 'skills'))
+    mkdirSync(join(account, 'skills'))
+
+    const results = await checkAccountLinks(
+      sandbox.ctx(sandbox.home),
+      configOf()
+    )
+
+    expect(results).toContainEqual({
+      status: 'warn',
+      message: `profile private, account seat-2: ${join(account, 'skills')} replaced by a directory – merge it into ${join(source, 'skills')}, delete it, run ccprofile link`,
+    })
+  })
+
+  it('does not hide a regular file behind a missing source file', async () => {
+    rmSync(join(source, 'CLAUDE.md'))
+    linkAll()
+    rmSync(join(account, 'CLAUDE.md'))
+    writeFileSync(join(account, 'CLAUDE.md'), 'mine')
+
+    const results = await checkAccountLinks(
+      sandbox.ctx(sandbox.home),
+      configOf()
+    )
+
+    expect(results).toContainEqual({
+      status: 'warn',
+      message: `profile private, account seat-2: ${join(account, 'CLAUDE.md')} replaced by a file – merge it into ${join(source, 'CLAUDE.md')}, delete it, run ccprofile link`,
+    })
+  })
+})
+
 describe('checkAccountLinks', () => {
   it('does nothing without a config or without accounts', async () => {
     const ctx = sandbox.ctx(sandbox.home)

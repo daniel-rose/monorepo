@@ -21,8 +21,23 @@ const exists = (path: string): Promise<boolean> =>
     () => false
   )
 
-// The problem of one entry, or null when it is fine (or has no source file,
-// which is reported in one line per account).
+// An absent or correctly linked target: fine, unless the source is missing.
+// A missing source file is reported in one line per account; a missing
+// source directory is created by `link`.
+const describeLinkable = (inspection: EntryInspection): string | null => {
+  const { entry, target, sourceState, targetState } = inspection
+  if (sourceState === ENTRY_STATE.source.missing) {
+    return entry.kind === ENTRY_KIND.file
+      ? null
+      : DOCTOR_TEXT.entryMissing(target)
+  }
+  return targetState === ENTRY_STATE.target.linked
+    ? null
+    : DOCTOR_TEXT.entryMissing(target)
+}
+
+// The problem of one entry, or null when it is fine. The target decides
+// before a missing source, so a conflict is never hidden behind it.
 const describeEntry = (inspection: EntryInspection): string | null => {
   const { entry, source, target, sourceState } = inspection
   if (sourceState === ENTRY_STATE.source.wrongKind) {
@@ -31,17 +46,11 @@ const describeEntry = (inspection: EntryInspection): string | null => {
       LINK_TEXT.sourceWrongKind(source, entry.kind)
     )
   }
-  if (sourceState === ENTRY_STATE.source.missing) {
-    return entry.kind === ENTRY_KIND.file
-      ? null
-      : DOCTOR_TEXT.entryMissing(target)
-  }
 
   switch (inspection.targetState) {
     case ENTRY_STATE.target.linked:
-      return null
     case ENTRY_STATE.target.absent:
-      return DOCTOR_TEXT.entryMissing(target)
+      return describeLinkable(inspection)
     case ENTRY_STATE.target.elsewhere:
       return DOCTOR_TEXT.entryElsewhere(
         target,

@@ -19,6 +19,7 @@ public static class FakeClaude
     {
         var report = new StringBuilder();
         report.Append("CCPROFILE=").Append(Read("CCPROFILE")).Append('\n');
+        report.Append("CCPROFILE_ACCOUNT=").Append(Read("CCPROFILE_ACCOUNT")).Append('\n');
         report.Append("CLAUDE_CONFIG_DIR=").Append(Read("CLAUDE_CONFIG_DIR")).Append('\n');
         report.Append("CCPROFILE_ARGV=").Append(Read("CCPROFILE_ARGV")).Append('\n');
         foreach (var arg in args)

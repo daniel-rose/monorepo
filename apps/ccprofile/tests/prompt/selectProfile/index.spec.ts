@@ -12,6 +12,7 @@ const createProfiles = (count: number) =>
     configDir: undefined,
     paths: [],
     remotes: [],
+    accounts: [],
   }))
 
 const run = (profiles: ReturnType<typeof createProfiles>, input: string[]) => {

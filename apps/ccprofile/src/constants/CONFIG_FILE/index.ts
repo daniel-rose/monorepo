@@ -4,6 +4,8 @@ const CONFIG_FILE = {
   defaultXdgDirName: '.config',
   windowsRoamingDirNames: ['AppData', 'Roaming'],
   claudeDirName: '.claude',
+  // Cost-center MCP servers in the shared source, passed as --mcp-config.
+  mcpConfigName: '.mcp.json',
   byteOrderMark: '﻿',
   homeMarker: '~',
 } as const

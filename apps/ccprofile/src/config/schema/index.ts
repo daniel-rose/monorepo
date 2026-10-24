@@ -13,6 +13,28 @@ const text = (description: string) =>
     .regex(CONFIG_PATTERN.nonBlank, CONFIG_REASON.empty)
     .describe(description)
 
+const configDirText = (description: string) =>
+  text(description).regex(
+    CONFIG_PATTERN.noLineControl,
+    CONFIG_REASON.lineControl
+  )
+
+const accountSchema = z
+  .strictObject({
+    name: z
+      .string()
+      .regex(CONFIG_PATTERN.name, CONFIG_REASON.badName)
+      .describe(
+        'Account name: unique within the profile and different from the profile name; selects this account through the CCPROFILE_ACCOUNT variable.'
+      ),
+    configDir: configDirText(
+      'CLAUDE_CONFIG_DIR of this account (its own login); `~` is expanded. `ccprofile link` links the shared config of the profile into it.'
+    ),
+  })
+  .describe(
+    'A further login of the profile. It shares the config of the profile configDir.'
+  )
+
 const profileSchema = z
   .strictObject({
     name: z
@@ -22,11 +44,9 @@ const profileSchema = z
       .describe(
         'Profile name: shown by `ccprofile status` and `ccprofile list`, selects this profile through the CCPROFILE variable (`CCPROFILE=<name> claude`) and through `onUnknown`.'
       ),
-    configDir: text(
-      'CLAUDE_CONFIG_DIR of this profile; `~` is expanded. Omit it for the default profile (~/.claude). At most one profile may omit it.'
-    )
-      .regex(CONFIG_PATTERN.noLineControl, CONFIG_REASON.lineControl)
-      .optional(),
+    configDir: configDirText(
+      'CLAUDE_CONFIG_DIR of this profile; `~` is expanded. Omit it for the default profile (~/.claude). At most one profile may omit it. It is the first account and the shared config of all accounts.'
+    ).optional(),
     paths: z
       .array(
         text('Directory (`~` expanded) whose subtree selects this profile.')
@@ -41,10 +61,45 @@ const profileSchema = z
       )
       .default([])
       .describe('Git remotes of `origin` that select this profile.'),
+    accounts: z
+      .array(accountSchema)
+      .default([])
+      .describe(
+        'Further accounts in order, after the profile itself (the first account).'
+      ),
   })
   .describe(
     'A profile. The first profile whose paths or remotes match wins; a profile needs at least one of them unless it is the `onUnknown` profile.'
   )
+
+type ParsedProfile = z.output<typeof profileSchema>
+
+// Account names are unique within their profile and differ from its name
+// (the first account carries the profile name).
+const checkAccounts = (
+  profile: ParsedProfile,
+  index: number,
+  ctx: z.RefinementCtx
+): void => {
+  const seen = new Set<string>()
+  profile.accounts.forEach(({ name }, entry) => {
+    const path = ['profiles', index, 'accounts', entry, 'name']
+    if (name === profile.name) {
+      ctx.addIssue({
+        code: 'custom',
+        path,
+        message: CONFIG_REASON.accountIsProfile,
+      })
+    } else if (seen.has(name)) {
+      ctx.addIssue({
+        code: 'custom',
+        path,
+        message: `duplicate account name "${name}"`,
+      })
+    }
+    seen.add(name)
+  })
+}
 
 // Cross-field rules that need no filesystem and no platform. Path rules
 // (absolute, duplicates, ~/.claude, directory checks) live in resolveConfig.
@@ -94,6 +149,8 @@ const configSchema = z
           })
         }
       }
+
+      checkAccounts(profile, index, ctx)
 
       if (
         profile.paths.length === 0 &&

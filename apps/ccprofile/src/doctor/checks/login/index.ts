@@ -1,3 +1,4 @@
+import type { ResolvedConfig } from '../../../config'
 import {
   AUTH_STATE,
   AUTH_UNKNOWN_REASON,
@@ -8,14 +9,34 @@ import formatAuth from '../../../init/formatAuth'
 import readAuthStatus from '../../../init/readAuthStatus'
 import type { Check, CheckResult } from '../../types'
 
-// One line per profile, all asked at once. A missing claude is already the
-// PATH check's fail, so it is not repeated per profile.
+type LoginTarget = {
+  configDir: string | undefined
+  label: (state: string) => string
+}
+
+// Every account has its own login: the profile (first account), then the
+// further accounts.
+const loginTargets = (config: ResolvedConfig): LoginTarget[] =>
+  config.profiles.flatMap(profile => [
+    {
+      configDir: profile.configDir,
+      label: (state: string) => DOCTOR_TEXT.login(profile.name, state),
+    },
+    ...profile.accounts.map(account => ({
+      configDir: account.configDir,
+      label: (state: string) =>
+        DOCTOR_TEXT.accountLogin(profile.name, account.name, state),
+    })),
+  ])
+
+// One line per account, all asked at once. A missing claude is already the
+// PATH check's fail, so it is not repeated per account.
 const checkLogin: Check = async (ctx, config) => {
   if (config === null) return []
 
   const lines = await Promise.all(
-    config.profiles.map(async (profile): Promise<CheckResult | null> => {
-      const auth = await readAuthStatus(profile.configDir, ctx)
+    loginTargets(config).map(async (target): Promise<CheckResult | null> => {
+      const auth = await readAuthStatus(target.configDir, ctx)
       if (
         auth.state === AUTH_STATE.unknown &&
         auth.reason === AUTH_UNKNOWN_REASON.notFound
@@ -27,7 +48,7 @@ const checkLogin: Check = async (ctx, config) => {
           auth.state === AUTH_STATE.loggedIn
             ? CHECK_STATUS.ok
             : CHECK_STATUS.warn,
-        message: DOCTOR_TEXT.login(profile.name, formatAuth(auth)),
+        message: target.label(formatAuth(auth)),
       }
     })
   )

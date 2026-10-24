@@ -66,11 +66,15 @@ try {
   git('remote', 'add', 'origin', 'git@gitlab.example.com:acme/app.git')
 
   const resolve = () =>
-    execFileSync(process.execPath, [ENTRY, 'resolve', '--', '-p', 'hi'], {
-      cwd: repo,
-      env,
-      stdio: ['ignore', 'pipe', 'inherit'],
-    })
+    execFileSync(
+      process.execPath,
+      [ENTRY, 'resolve', '--protocol', '2', '--', '-p', 'hi'],
+      {
+        cwd: repo,
+        env,
+        stdio: ['ignore', 'pipe', 'inherit'],
+      }
+    )
 
   resolve()
   const timings = []

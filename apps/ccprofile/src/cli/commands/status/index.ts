@@ -1,9 +1,9 @@
 import type { ExitCode } from '../../../constants'
 import { EXIT_CODE, OUTCOME_KIND } from '../../../constants'
+import createSilentContext from '../../../context/createSilentContext'
 import type { Context } from '../../../context/types'
 import { resolveProfile } from '../../../resolve'
 import failWith from '../failWith'
-import createSilentContext from './createSilentContext'
 import formatStatus from './formatStatus'
 
 // Which profile `claude` would get here and why. Never prompts or reads stdin.

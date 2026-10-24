@@ -1,5 +1,6 @@
 const ENV_VAR = {
   profile: 'CCPROFILE',
+  account: 'CCPROFILE_ACCOUNT',
   config: 'CCPROFILE_CONFIG',
   argv: 'CCPROFILE_ARGV',
   claudeConfigDir: 'CLAUDE_CONFIG_DIR',

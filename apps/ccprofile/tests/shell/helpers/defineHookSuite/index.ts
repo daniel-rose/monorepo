@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, it } from 'vitest'
 
 import type { Shell } from '../../../../src/constants'
 import { SHELL } from '../../../../src/constants'
+import accountCases from '../../cases/accountCases'
 import argumentCases from '../../cases/argumentCases'
 import failureCases from '../../cases/failureCases'
 import profileCases from '../../cases/profileCases'
@@ -14,6 +15,7 @@ import requestedShells from '../requestedShells'
 const POWERSHELLS: readonly Shell[] = [SHELL.pwsh, SHELL.powershell]
 const CASES: readonly HookCase[] = [
   ...profileCases,
+  ...accountCases,
   ...argumentCases,
   ...failureCases,
   ...sessionCases,

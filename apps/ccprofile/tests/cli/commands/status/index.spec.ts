@@ -118,6 +118,31 @@ describe('status', () => {
     expect(ctx.err()).toMatch(/^ccprofile: invalid config /)
   })
 
+  it('names the account of a profile with accounts', async () => {
+    const multi = await createSandbox()
+    const repo = await multi.repo('w/app', 'git@gitlab.example.com:acme/a.git')
+    multi.dir('.claude-work-2')
+    await multi.writeConfig({
+      profiles: [
+        {
+          ...CONFIG.profiles[0],
+          accounts: [{ name: 'work-2', configDir: '~/.claude-work-2' }],
+        },
+      ],
+    })
+    const first = multi.ctx(repo)
+    const second = multi.ctx(repo, { CCPROFILE_ACCOUNT: 'work-2' })
+
+    await run(['status'], first)
+    await run(['status'], second)
+    await multi.cleanup()
+
+    expect(first.out()).toBe('work (remote gitlab.example.com), account work\n')
+    expect(second.out()).toBe(
+      'work (remote gitlab.example.com), account work-2 (CCPROFILE_ACCOUNT)\n'
+    )
+  })
+
   it('is what ccprofile does without arguments', async () => {
     const withStatus = sandbox.ctx(workRepo)
     const without = sandbox.ctx(workRepo)

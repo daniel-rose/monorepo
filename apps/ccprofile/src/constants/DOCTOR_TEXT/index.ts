@@ -16,6 +16,23 @@ const DOCTOR_TEXT = {
   claudeTimedOut: 'claude --version did not answer in time',
 
   login: (profile: string, state: string) => `profile ${profile}: ${state}`,
+  accountLogin: (profile: string, account: string, state: string) =>
+    `profile ${profile}, account ${account}: ${state}`,
+
+  sharedSource: (profile: string, dir: string | undefined) =>
+    `profile ${profile}: shared source ${dir ?? '~/.claude (default)'}`,
+  accountLinksOk: (profile: string, account: string) =>
+    `profile ${profile}, account ${account}: links ok`,
+  accountDirMissing: (profile: string, account: string, dir: string) =>
+    `profile ${profile}, account ${account}: ${dir} does not exist – run ccprofile link`,
+  accountEntry: (profile: string, account: string, detail: string) =>
+    `profile ${profile}, account ${account}: ${detail}`,
+  entryMissing: (target: string) => `${target} missing – run ccprofile link`,
+  entryReplaced: (target: string, kind: string, source: string) =>
+    `${target} ${kind} – merge it into ${source}, delete it, run ccprofile link`,
+  entryElsewhere: (target: string, detail: string) => `${target} ${detail}`,
+  entryWrongSource: (target: string, detail: string) => `${target}: ${detail}`,
+  noSources: (names: readonly string[]) => `no source for ${names.join(', ')}`,
 
   noHook: 'no shell hook installed – run ccprofile setup',
   hookFileOk: (label: string, file: string, version: number) =>

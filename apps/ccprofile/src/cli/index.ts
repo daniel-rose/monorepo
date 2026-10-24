@@ -8,8 +8,11 @@ import config from './commands/config'
 import doctor from './commands/doctor'
 import hook from './commands/hook'
 import init from './commands/init'
+import link from './commands/link'
+import type { LinkOptions } from './commands/link/types'
 import list from './commands/list'
 import resolve from './commands/resolve'
+import type { ResolveCommandOptions } from './commands/resolve/types'
 import setup from './commands/setup'
 import status from './commands/status'
 
@@ -74,6 +77,17 @@ const registerCommands = (
     )
 
   program
+    .command('link')
+    .description(
+      'link the shared config of a profile into its further accounts'
+    )
+    .argument('[profile]', 'profile to link (default: all)')
+    .option('--yes', 'apply without asking')
+    .action(async (profile: string | undefined, options: LinkOptions) =>
+      setExitCode(await link(ctx, profile, options))
+    )
+
+  program
     .command('doctor')
     .description('check config, claude, logins and hook installation')
     .action(async () => setExitCode(await doctor(ctx)))
@@ -84,10 +98,13 @@ const registerCommands = (
     .command('resolve')
     .description('print the profile for claude arguments (used by the hooks)')
     .argument('[args...]', 'claude arguments, after --')
+    .option('--protocol <version>', 'line format the hook reads')
     .helpOption(false)
     .allowUnknownOption()
     .passThroughOptions()
-    .action(async (args: string[]) => setExitCode(await resolve(ctx, args)))
+    .action(async (args: string[], options: ResolveCommandOptions) =>
+      setExitCode(await resolve(ctx, args, options))
+    )
 }
 
 // Without a subcommand the root action runs `status`. It is not commander's

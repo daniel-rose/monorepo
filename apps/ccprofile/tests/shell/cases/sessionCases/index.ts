@@ -7,7 +7,7 @@ import toShellPath from '../../helpers/toShellPath'
 import type { HookCase } from '../../types'
 
 const AFTER_UNSET =
-  'AFTER CCPROFILE=<unset> CLAUDE_CONFIG_DIR=<unset> CCPROFILE_ARGV=<unset>'
+  'AFTER CCPROFILE=<unset> CCPROFILE_ACCOUNT=<unset> CLAUDE_CONFIG_DIR=<unset> CCPROFILE_ARGV=<unset>'
 
 // What the interactive session sees around the hook.
 const sessionCases: readonly HookCase[] = [
@@ -116,7 +116,7 @@ const sessionCases: readonly HookCase[] = [
         { ccprofile: 'work', ccprofileArgv: 'keep' },
       ])
       expect(result.stdout).toContain(
-        'AFTER CCPROFILE=<unset> CLAUDE_CONFIG_DIR=<unset> CCPROFILE_ARGV=keep'
+        'AFTER CCPROFILE=<unset> CCPROFILE_ACCOUNT=<unset> CLAUDE_CONFIG_DIR=<unset> CCPROFILE_ARGV=keep'
       )
     },
   },

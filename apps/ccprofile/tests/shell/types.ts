@@ -15,6 +15,7 @@ export type ShellResult = {
 // One run of the fake claude, as reported in FAKE_CLAUDE_LOG.
 export type Invocation = {
   ccprofile: string
+  ccprofileAccount: string
   claudeConfigDir: string
   ccprofileArgv: string
   args: string[]

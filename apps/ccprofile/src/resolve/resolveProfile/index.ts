@@ -1,8 +1,11 @@
 import { stat } from 'node:fs/promises'
 
 import loadConfig from '../../config/loadConfig'
+import pathFlavor from '../../config/pathFlavor'
+import sharedSource from '../../config/sharedSource'
 import type { ResolvedConfig, ResolvedProfile } from '../../config/types'
 import {
+  CONFIG_FILE,
   DEFAULT_PASSTHROUGH,
   ENV_VAR,
   LOAD_STATUS,
@@ -15,7 +18,8 @@ import type { Context } from '../../context/types'
 import { selectProfile } from '../../prompt'
 import findProfile from '../findProfile'
 import isPassthrough from '../isPassthrough'
-import type { ResolveOptions, ResolveOutcome } from '../types'
+import selectAccount from '../selectAccount'
+import type { ResolveOptions, ResolveOutcome, SelectedAccount } from '../types'
 
 // Empty values count as unset.
 const readEnv = (ctx: Context, name: string): string | undefined => {
@@ -38,19 +42,51 @@ type ProfileReason =
   | typeof RESOLVE_REASON.onUnknown
   | typeof RESOLVE_REASON.prompt
 
-// Every profile outcome warns once if its configDir does not exist yet.
+const warnIfMissing = async (
+  profile: ResolvedProfile,
+  account: SelectedAccount,
+  ctx: Context
+): Promise<void> => {
+  const dir = account.configDir
+  if (dir === undefined || (await exists(dir))) return
+  ctx.stderr.write(
+    account.name === profile.name
+      ? RESOLVE_MESSAGE.creatingProfile(profile.name, dir)
+      : RESOLVE_MESSAGE.creatingAccount(account.name, profile.name, dir)
+  )
+}
+
+// Every profile outcome picks the account (CCPROFILE_ACCOUNT, else the
+// first) and warns once if its configDir does not exist yet.
 const useProfile = async (
   profile: ResolvedProfile,
   reason: ProfileReason,
   ctx: Context,
   match?: Extract<ResolveOutcome, { kind: 'profile' }>['match']
 ): Promise<ResolveOutcome> => {
-  if (profile.configDir !== undefined && !(await exists(profile.configDir))) {
-    ctx.stderr.write(
-      RESOLVE_MESSAGE.creatingProfile(profile.name, profile.configDir)
-    )
+  const requested = readEnv(ctx, ENV_VAR.account)
+  const account = selectAccount(profile, requested)
+  if (account === undefined) {
+    return {
+      kind: OUTCOME_KIND.error,
+      messages: [RESOLVE_MESSAGE.unknownAccount(requested ?? '', profile.name)],
+    }
   }
-  return { kind: OUTCOME_KIND.profile, profile, reason, match }
+
+  await warnIfMissing(profile, account, ctx)
+  const mcpPath = pathFlavor(ctx.platform).join(
+    sharedSource(profile, ctx),
+    CONFIG_FILE.mcpConfigName
+  )
+  const mcpConfig = (await exists(mcpPath)) ? mcpPath : undefined
+  return {
+    kind: OUTCOME_KIND.profile,
+    profile,
+    account,
+    mcpConfig,
+    reason,
+    match,
+  }
 }
 
 const fallback = (
@@ -107,7 +143,13 @@ const resolveProfile = async (
   }
 
   if (loaded.status === LOAD_STATUS.missing) {
-    return { kind: OUTCOME_KIND.unchanged, reason: RESOLVE_REASON.noConfig }
+    const account = readEnv(ctx, ENV_VAR.account)
+    return account === undefined
+      ? { kind: OUTCOME_KIND.unchanged, reason: RESOLVE_REASON.noConfig }
+      : {
+          kind: OUTCOME_KIND.error,
+          messages: [RESOLVE_MESSAGE.accountWithoutProfile(account)],
+        }
   }
   if (loaded.status === LOAD_STATUS.invalid) {
     return {

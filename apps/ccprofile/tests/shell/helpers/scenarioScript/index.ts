@@ -5,7 +5,7 @@ import type { Scenario } from '../../types'
 
 const HOOK = TEST_ENV.hook
 const AFTER_FORMAT =
-  'AFTER CCPROFILE=%s CLAUDE_CONFIG_DIR=%s CCPROFILE_ARGV=%s\\n'
+  'AFTER CCPROFILE=%s CCPROFILE_ACCOUNT=%s CLAUDE_CONFIG_DIR=%s CCPROFILE_ARGV=%s\\n'
 
 // zsh and bash; the claude arguments are the positional parameters.
 const POSIX_SCRIPT: Readonly<Record<Scenario, readonly string[]>> = {
@@ -32,7 +32,7 @@ const POSIX_SCRIPT: Readonly<Record<Scenario, readonly string[]>> = {
     'cd "$1" && claude',
     'cd "$2" && claude',
     'code=$?',
-    `printf '${AFTER_FORMAT}' "\${CCPROFILE-<unset>}" "\${CLAUDE_CONFIG_DIR-<unset>}" "\${CCPROFILE_ARGV-<unset>}"`,
+    `printf '${AFTER_FORMAT}' "\${CCPROFILE-<unset>}" "\${CCPROFILE_ACCOUNT-<unset>}" "\${CLAUDE_CONFIG_DIR-<unset>}" "\${CCPROFILE_ARGV-<unset>}"`,
     'exit $code',
   ],
 }
@@ -72,7 +72,7 @@ const FISH_SCRIPT: Readonly<Record<Scenario, readonly string[]>> = {
     "        echo '<unset>'",
     '    end',
     'end',
-    `printf '${AFTER_FORMAT}' (show CCPROFILE) (show CLAUDE_CONFIG_DIR) (show CCPROFILE_ARGV)`,
+    `printf '${AFTER_FORMAT}' (show CCPROFILE) (show CCPROFILE_ACCOUNT) (show CLAUDE_CONFIG_DIR) (show CCPROFILE_ARGV)`,
     'exit $code',
   ],
 }
@@ -105,7 +105,7 @@ const POWERSHELL_SCRIPT: Readonly<Record<Scenario, readonly string[]>> = {
     'Set-Location -LiteralPath $a[1]',
     'claude',
     '$code = $LASTEXITCODE',
-    "[Console]::Out.Write('AFTER CCPROFILE=' + (Show-Env 'CCPROFILE') + ' CLAUDE_CONFIG_DIR=' + (Show-Env 'CLAUDE_CONFIG_DIR') + ' CCPROFILE_ARGV=' + (Show-Env 'CCPROFILE_ARGV') + \"`n\")",
+    "[Console]::Out.Write('AFTER CCPROFILE=' + (Show-Env 'CCPROFILE') + ' CCPROFILE_ACCOUNT=' + (Show-Env 'CCPROFILE_ACCOUNT') + ' CLAUDE_CONFIG_DIR=' + (Show-Env 'CLAUDE_CONFIG_DIR') + ' CCPROFILE_ARGV=' + (Show-Env 'CCPROFILE_ARGV') + \"`n\")",
     'exit $code',
   ],
 }

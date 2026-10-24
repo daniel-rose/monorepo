@@ -7,6 +7,8 @@ const STATUS_TEXT = {
   matched: (name: string, via: string, entry: string) =>
     `${name} (${via} ${entry})`,
   onUnknown: (name: string) => `${name} (onUnknown)`,
+  account: (name: string, explicit: boolean) =>
+    `, account ${name}${explicit ? ' (CCPROFILE_ACCOUNT)' : ''}`,
 } as const
 
 export default STATUS_TEXT

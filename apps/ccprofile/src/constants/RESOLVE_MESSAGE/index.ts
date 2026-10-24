@@ -4,6 +4,10 @@ const PREFIX = 'ccprofile:'
 
 const RESOLVE_MESSAGE = {
   unknownProfile: (name: string) => `${PREFIX} unknown profile "${name}"`,
+  unknownAccount: (name: string, profile: string) =>
+    `${PREFIX} unknown account "${name}" in profile "${profile}"`,
+  accountWithoutProfile: (name: string) =>
+    `${PREFIX} CCPROFILE_ACCOUNT="${name}" is set, but no profile applies`,
   invalidConfig: (path: string) => `${PREFIX} invalid config ${path}`,
   issue: (issue: string) => `${PREFIX}   ${issue}`,
   aborted: `${PREFIX} aborted`,
@@ -12,6 +16,8 @@ const RESOLVE_MESSAGE = {
   promptHint: `${PREFIX} add a "paths" or "remotes" entry to skip this prompt\n`,
   creatingProfile: (name: string, dir: string) =>
     `${PREFIX} creating new profile "${name}" at ${dir}, first start will ask for login\n`,
+  creatingAccount: (name: string, profile: string, dir: string) =>
+    `${PREFIX} creating new account "${name}" of profile "${profile}" at ${dir}, first start will ask for login – run "ccprofile link" to share the profile config\n`,
 } as const
 
 export default RESOLVE_MESSAGE

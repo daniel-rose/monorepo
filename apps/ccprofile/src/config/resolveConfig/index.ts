@@ -7,6 +7,7 @@ import expandHome from '../expandHome'
 import formatPath from '../formatPath'
 import pathFlavor from '../pathFlavor'
 import type {
+  Account,
   ParsedConfig,
   ResolveConfigResult,
   ResolvedProfile,
@@ -40,6 +41,7 @@ const identify = async (
 
 // Everything that needs the home directory, the platform or the filesystem:
 // `~` expansion, absolute paths, remote normalization and configDir checks.
+// configDirs of profiles and accounts share one uniqueness check.
 const resolveConfig = async (
   parsed: ParsedConfig,
   ctx: Context
@@ -63,7 +65,38 @@ const resolveConfig = async (
     flavor.resolve(ctx.homedir, CONFIG_FILE.claudeDirName),
     fold
   )
-  const seenDirs: { index: number; keys: string[] }[] = []
+  const seenDirs: { owner: string; keys: string[] }[] = []
+
+  // `owner` is the config path without `.configDir`, e.g. `profiles[0]`.
+  const checkConfigDir = async (
+    value: string,
+    owner: readonly PropertyKey[]
+  ): Promise<string | undefined> => {
+    const at = [...owner, 'configDir']
+    const configDir = absolute(value)
+    if (configDir === undefined) {
+      report(at, CONFIG_REASON.notAbsolute)
+      return undefined
+    }
+
+    const identity = await identify(configDir, fold)
+    if (claudeHome.keys.some(key => identity.keys.includes(key))) {
+      report(at, CONFIG_REASON.claudeHome)
+    }
+    if (identity.isFile) {
+      report(at, CONFIG_REASON.notDirectory)
+    }
+
+    const twin = seenDirs.find(seen =>
+      seen.keys.some(key => identity.keys.includes(key))
+    )
+    if (twin) {
+      report(at, `same directory as ${twin.owner}`)
+    }
+    seenDirs.push({ owner: formatPath(owner), keys: identity.keys })
+    return configDir
+  }
+
   const profiles: ResolvedProfile[] = []
 
   for (const [index, profile] of parsed.profiles.entries()) {
@@ -87,33 +120,19 @@ const resolveConfig = async (
       return [normalized]
     })
 
-    let configDir: string | undefined
-    if (profile.configDir !== undefined) {
-      configDir = absolute(profile.configDir)
+    const configDir =
+      profile.configDir === undefined
+        ? undefined
+        : await checkConfigDir(profile.configDir, at())
 
-      if (configDir === undefined) {
-        report(at('configDir'), CONFIG_REASON.notAbsolute)
-      } else {
-        const identity = await identify(configDir, fold)
-
-        if (claudeHome.keys.some(key => identity.keys.includes(key))) {
-          report(at('configDir'), CONFIG_REASON.claudeHome)
-        }
-        if (identity.isFile) {
-          report(at('configDir'), CONFIG_REASON.notDirectory)
-        }
-
-        const twin = seenDirs.find(seen =>
-          seen.keys.some(key => identity.keys.includes(key))
-        )
-        if (twin) {
-          report(at('configDir'), `same directory as profiles[${twin.index}]`)
-        }
-        seenDirs.push({ index, keys: identity.keys })
-      }
+    const accounts: Account[] = []
+    for (const [entry, account] of profile.accounts.entries()) {
+      const dir = await checkConfigDir(account.configDir, at('accounts', entry))
+      if (dir !== undefined)
+        accounts.push({ name: account.name, configDir: dir })
     }
 
-    profiles.push({ name: profile.name, configDir, paths, remotes })
+    profiles.push({ name: profile.name, configDir, paths, remotes, accounts })
   }
 
   return {

@@ -38,6 +38,7 @@ const priv = {
   configDir: '~/.claude-private',
   paths: ['~/Projects/private'],
 }
+const seat = { name: 'seat-2', configDir: '/p/seat-2' }
 
 const writeConfig = (content: unknown): string => {
   counter += 1
@@ -107,15 +108,58 @@ describe('loadConfig', () => {
               configDir: undefined,
               paths: [],
               remotes: ['gitlab.example.com', 'github.com/acme/app'],
+              accounts: [],
             },
             {
               name: 'private',
               configDir: join(home, '.claude-private'),
               paths: [join(home, 'Projects', 'private')],
               remotes: ['github.com/jane'],
+              accounts: [],
             },
           ],
         },
+      })
+    })
+
+    it('resolves accounts with expanded configDirs', async () => {
+      const result = await load({
+        profiles: [
+          {
+            ...priv,
+            accounts: [{ name: 'seat-2', configDir: '~/.claude-private-2' }],
+          },
+        ],
+      })
+
+      expect(result).toMatchObject({
+        status: 'ok',
+        config: {
+          profiles: [
+            {
+              name: 'private',
+              accounts: [
+                {
+                  name: 'seat-2',
+                  configDir: join(home, '.claude-private-2'),
+                },
+              ],
+            },
+          ],
+        },
+      })
+    })
+
+    it('accepts accounts on the default profile', async () => {
+      const result = await load({
+        profiles: [
+          { ...work, accounts: [{ name: 'seat-2', configDir: '/p/work-2' }] },
+        ],
+      })
+
+      expect(result).toMatchObject({
+        status: 'ok',
+        config: { profiles: [{ configDir: undefined }] },
       })
     })
 
@@ -391,6 +435,102 @@ describe('loadConfig', () => {
         'no profiles',
         { profiles: [] },
         'profiles: must contain at least one profile',
+      ],
+      [
+        'unknown account key',
+        { profiles: [{ ...priv, accounts: [{ ...seat, dir: 'x' }] }] },
+        'profiles[0].accounts[0].dir: unknown key',
+      ],
+      [
+        'account without configDir',
+        { profiles: [{ ...priv, accounts: [{ name: 'seat-2' }] }] },
+        'profiles[0].accounts[0].configDir: Invalid input: expected string, received undefined',
+      ],
+      [
+        'bad account name',
+        { profiles: [{ ...priv, accounts: [{ ...seat, name: 'a b' }] }] },
+        'profiles[0].accounts[0].name: must match [A-Za-z0-9_.-]+',
+      ],
+      [
+        'account named like its profile',
+        { profiles: [{ ...priv, accounts: [{ ...seat, name: 'private' }] }] },
+        'profiles[0].accounts[0].name: must differ from the profile name',
+      ],
+      [
+        'duplicate account name',
+        {
+          profiles: [
+            {
+              ...priv,
+              accounts: [seat, { name: 'seat-2', configDir: '/p/other' }],
+            },
+          ],
+        },
+        'profiles[0].accounts[1].name: duplicate account name "seat-2"',
+      ],
+      [
+        'relative account configDir',
+        { profiles: [{ ...priv, accounts: [{ ...seat, configDir: 'rel' }] }] },
+        'profiles[0].accounts[0].configDir: must be an absolute path',
+      ],
+      [
+        'account configDir with a line break',
+        {
+          profiles: [
+            { ...priv, accounts: [{ ...seat, configDir: '/p/a\nb' }] },
+          ],
+        },
+        'profiles[0].accounts[0].configDir: must not contain TAB or line breaks',
+      ],
+      [
+        'account configDir ~/.claude',
+        {
+          profiles: [
+            { ...priv, accounts: [{ ...seat, configDir: '~/.claude' }] },
+          ],
+        },
+        'profiles[0].accounts[0].configDir: must not be ~/.claude (omit configDir for the default profile)',
+      ],
+      [
+        'account configDir pointing at a file',
+        {
+          profiles: [
+            { ...priv, accounts: [{ ...seat, configDir: '~/a-file' }] },
+          ],
+        },
+        'profiles[0].accounts[0].configDir: exists but is not a directory',
+      ],
+      [
+        'account configDir equal to its profile',
+        {
+          profiles: [
+            {
+              ...priv,
+              accounts: [{ ...seat, configDir: '~/.claude-private' }],
+            },
+          ],
+        },
+        'profiles[0].accounts[0].configDir: same directory as profiles[0]',
+      ],
+      [
+        'account configDir equal to another profile via symlink',
+        {
+          profiles: [
+            { ...work, configDir: '~/real-dir' },
+            { ...priv, accounts: [{ ...seat, configDir: '~/link-dir' }] },
+          ],
+        },
+        'profiles[1].accounts[0].configDir: same directory as profiles[0]',
+      ],
+      [
+        'profile configDir equal to an earlier account',
+        {
+          profiles: [
+            { ...priv, accounts: [seat] },
+            { ...work, configDir: '/p/seat-2' },
+          ],
+        },
+        'profiles[1].configDir: same directory as profiles[0].accounts[0]',
       ],
     ])('rejects %s', async (_label, content, expected) => {
       expect(await issuesOf(content)).toEqual([expected])

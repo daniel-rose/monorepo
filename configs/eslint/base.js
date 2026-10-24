@@ -4,6 +4,7 @@ import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 import tseslint from 'typescript-eslint'
 import { arrowFunctionRestrictions } from './restrictions.js'
 
+/** @type {import('eslint').Linter.RulesRecord} */
 export const sharedRules = {
   'no-console': ['error', { allow: ['warn', 'error'] }],
   '@typescript-eslint/consistent-type-imports': [
@@ -24,6 +25,8 @@ export const declarationFilesConfig = {
   },
 }
 
+// Typed as ESLint's own config, so it passes eslint/config's defineConfig
+/** @type {import('eslint').Linter.Config[]} */
 export const baseConfig = tseslint.config(
   { ignores: ['dist'] },
   {

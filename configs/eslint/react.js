@@ -7,6 +7,8 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import { declarationFilesConfig, sharedRules } from './base.js'
 
+// Typed as ESLint's own config, so it passes eslint/config's defineConfig
+/** @type {import('eslint').Linter.Config[]} */
 export const reactConfig = tseslint.config(
   { ignores: ['dist'] },
   {

@@ -10,7 +10,7 @@ import {
   STATUS_TEXT,
 } from '../../../constants'
 import type { Context } from '../../../context/types'
-import type { AccountPlan, ApplyResult } from '../../../link'
+import type { ApplyResult, LinkPlan } from '../../../link'
 import { applyLinks, planLinks } from '../../../link'
 import confirm from '../../../prompt/confirm'
 import failWith from '../failWith'
@@ -21,12 +21,12 @@ const say = (ctx: Context, line: string): void => {
   ctx.stderr.write(`${line}\n`)
 }
 
-const hasWork = (plan: AccountPlan): boolean =>
-  plan.createAccountDir ||
+const hasWork = (plan: LinkPlan): boolean =>
+  plan.createDir ||
   plan.createSourceDirs.length > 0 ||
   plan.steps.some(step => step.kind === LINK_STEP.create)
 
-const hasConflict = (plan: AccountPlan): boolean =>
+const hasConflict = (plan: LinkPlan): boolean =>
   plan.steps.some(step => step.kind === LINK_STEP.conflict)
 
 const reportFailures = (ctx: Context, { failures }: ApplyResult): void => {
@@ -40,7 +40,7 @@ const reportFailures = (ctx: Context, { failures }: ApplyResult): void => {
   }
 }
 
-// The profiles to link: the named one, or all; only those with accounts.
+// The profiles to link: the named one, or all.
 const pickProfiles = (
   config: ResolvedConfig,
   name: string | undefined
@@ -48,13 +48,13 @@ const pickProfiles = (
   const named = config.profiles.filter(
     profile => name === undefined || profile.name === name
   )
-  if (named.length === 0) return RESOLVE_MESSAGE.unknownProfile(name ?? '')
-  return named.filter(profile => profile.accounts.length > 0)
+  return named.length === 0 ? RESOLVE_MESSAGE.unknownProfile(name ?? '') : named
 }
 
 // `ccprofile link [profile] [--yes]`: links the shared config of each
-// profile into its further accounts (spec §3.4). Only adds links and dirs,
-// never deletes or overwrites; conflicts are listed and left alone.
+// profile into its further accounts, for claude and codex, and creates
+// missing Codex homes (spec §3.4, §4). Only adds links and dirs, never
+// deletes or overwrites; conflicts are listed and left alone.
 const link = async (
   ctx: Context,
   profileName: string | undefined,
@@ -74,12 +74,12 @@ const link = async (
 
   const profiles = pickProfiles(loaded.config, profileName)
   if (typeof profiles === 'string') return failWith(ctx, [profiles])
-  if (profiles.length === 0) {
+
+  const plans = await planLinks(profiles, ctx)
+  if (plans.length === 0) {
     say(ctx, LINK_TEXT.noAccounts)
     return EXIT_CODE.ok
   }
-
-  const plans = await planLinks(profiles, ctx)
   for (const plan of plans) formatPlan(plan).forEach(line => say(ctx, line))
   const conflicts = plans.some(hasConflict)
   if (conflicts) say(ctx, LINK_TEXT.conflictHint)

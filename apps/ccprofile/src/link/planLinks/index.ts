@@ -1,17 +1,24 @@
 import { stat } from 'node:fs/promises'
 
-import sharedSource from '../../config/sharedSource'
 import type { ResolvedProfile } from '../../config/types'
+import type { Tool } from '../../constants'
 import {
   ENTRY_KIND,
   ENTRY_STATE,
   LINK_STEP,
   LINK_TEXT,
-  SHARED_ENTRY,
+  TOOL,
 } from '../../constants'
 import type { Context } from '../../context/types'
 import inspectEntry from '../inspectEntry'
-import type { AccountPlan, EntryInspection, LinkStep } from '../types'
+import linkGroups from '../linkGroups'
+import type {
+  EntryInspection,
+  LinkGroup,
+  LinkPlan,
+  LinkStep,
+  LinkTarget,
+} from '../types'
 
 const exists = (path: string): Promise<boolean> =>
   stat(path).then(
@@ -63,32 +70,68 @@ const needsSourceDir = ({ kind, inspection }: LinkStep): boolean =>
   (kind === LINK_STEP.create || kind === LINK_STEP.ok) &&
   inspection.sourceState === ENTRY_STATE.source.missing
 
-// What `link` would do for every further account of the given profiles.
-// Reads only; nothing is written here.
+const planTarget = async (
+  group: LinkGroup,
+  target: LinkTarget
+): Promise<LinkPlan> => {
+  const steps: LinkStep[] = []
+  for (const entry of group.entries) {
+    steps.push(decide(await inspectEntry(entry, group.source, target.dir)))
+  }
+  return {
+    tool: group.tool,
+    profile: group.profile,
+    account: target.account,
+    dir: target.dir,
+    createDir: !(await exists(target.dir)),
+    createSourceDirs: steps
+      .filter(needsSourceDir)
+      .map(({ inspection }) => inspection.source),
+    steps,
+  }
+}
+
+const planGroup = async (group: LinkGroup): Promise<LinkPlan[]> => {
+  const plans: LinkPlan[] = []
+  for (const target of group.targets) {
+    plans.push(await planTarget(group, target))
+  }
+  return plans
+}
+
+// Codex refuses to start without its CODEX_HOME, so `link` creates the
+// profile's even without further accounts.
+const planCodexHome = async (profile: ResolvedProfile): Promise<LinkPlan[]> =>
+  profile.codexHome === undefined || (await exists(profile.codexHome))
+    ? []
+    : [
+        {
+          tool: TOOL.codex,
+          profile: profile.name,
+          account: profile.name,
+          dir: profile.codexHome,
+          createDir: true,
+          createSourceDirs: [],
+          steps: [],
+        },
+      ]
+
+// What `link` would do for the given profiles: per profile the Claude
+// accounts, the profile's Codex home, the Codex accounts. Reads only;
+// nothing is written here.
 const planLinks = async (
   profiles: readonly ResolvedProfile[],
   ctx: Context
-): Promise<AccountPlan[]> => {
-  const plans: AccountPlan[] = []
+): Promise<LinkPlan[]> => {
+  const plans: LinkPlan[] = []
   for (const profile of profiles) {
-    const sourceDir = sharedSource(profile, ctx)
-    for (const account of profile.accounts) {
-      const steps: LinkStep[] = []
-      for (const entry of SHARED_ENTRY) {
-        steps.push(
-          decide(await inspectEntry(entry, sourceDir, account.configDir))
-        )
-      }
-      plans.push({
-        profile: profile.name,
-        account,
-        createAccountDir: !(await exists(account.configDir)),
-        createSourceDirs: steps
-          .filter(needsSourceDir)
-          .map(({ inspection }) => inspection.source),
-        steps,
-      })
-    }
+    const groups = await linkGroups(profile, ctx)
+    const ofTool = (tool: Tool) => groups.filter(group => group.tool === tool)
+    for (const group of ofTool(TOOL.claude))
+      plans.push(...(await planGroup(group)))
+    plans.push(...(await planCodexHome(profile)))
+    for (const group of ofTool(TOOL.codex))
+      plans.push(...(await planGroup(group)))
   }
   return plans
 }

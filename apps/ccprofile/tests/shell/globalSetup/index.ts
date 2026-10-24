@@ -106,17 +106,25 @@ const createNodeDir = (tmp: string): string => {
 const fixture = (name: string): string =>
   join(findPackageRoot(), 'tests', 'shell', 'fixtures', name)
 
+// The same fake answers as `claude` and as `codex`.
+const TOOLS = ['claude', 'codex'] as const
+
 const createPosixFake = (dir: string): void => {
-  const target = join(dir, 'claude')
-  copyFileSync(fixture('fake-claude.sh'), target)
-  chmodSync(target, EXECUTABLE_MODE)
+  for (const tool of TOOLS) {
+    const target = join(dir, tool)
+    copyFileSync(fixture('fake-claude.sh'), target)
+    chmodSync(target, EXECUTABLE_MODE)
+  }
 }
 
+// node sees only the .mjs, so the .cmd names the tool.
 const createCmdFake = (dir: string): void => {
-  writeFileSync(
-    join(dir, 'claude.cmd'),
-    `@"${process.execPath}" "${fixture('fake-claude.mjs')}" %*\r\n`
-  )
+  for (const tool of TOOLS) {
+    writeFileSync(
+      join(dir, `${tool}.cmd`),
+      `@set "FAKE_CLAUDE_TOOL=${tool}"\r\n@"${process.execPath}" "${fixture('fake-claude.mjs')}" %*\r\n`
+    )
+  }
 }
 
 // Windows PowerShell 5.1 with the curated env: the inherited PSModulePath of
@@ -142,6 +150,7 @@ const createExeFake = (dir: string): void => {
     ],
     { stdio: 'inherit', env, windowsHide: true }
   )
+  copyFileSync(target, join(dir, 'codex.exe'))
 }
 
 const FAKE_FACTORY: Readonly<Record<FakeVariant, (dir: string) => void>> = {

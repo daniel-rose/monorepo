@@ -8,6 +8,8 @@ const CLI_MESSAGE = {
   hookOutdated: 'ccprofile: hook outdated – run "ccprofile setup"',
   unsupportedProtocol: (version: string) =>
     `ccprofile: unsupported protocol "${version}" – run "ccprofile setup"`,
+  unsupportedTool: (tool: string) =>
+    `ccprofile: unsupported tool "${tool}" – run "ccprofile setup"`,
   argvNotJson: 'not valid JSON',
   argvNotStringArray: 'not an array of strings',
   unknownShell: (name: string, valid: readonly string[]) =>

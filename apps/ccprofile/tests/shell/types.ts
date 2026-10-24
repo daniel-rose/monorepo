@@ -12,12 +12,14 @@ export type ShellResult = {
   exitCode: number
 }
 
-// One run of the fake claude, as reported in FAKE_CLAUDE_LOG.
+// One run of the fake claude (or codex), as reported in FAKE_CLAUDE_LOG.
 export type Invocation = {
   ccprofile: string
   ccprofileAccount: string
   claudeConfigDir: string
+  codexHome: string
   ccprofileArgv: string
+  tool: string
   args: string[]
 }
 

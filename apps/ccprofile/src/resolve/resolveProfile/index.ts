@@ -1,11 +1,12 @@
-import { stat } from 'node:fs/promises'
-
 import loadConfig from '../../config/loadConfig'
-import pathFlavor from '../../config/pathFlavor'
-import sharedSource from '../../config/sharedSource'
-import type { ResolvedConfig, ResolvedProfile } from '../../config/types'
+import type {
+  LoadConfigResult,
+  ResolvedConfig,
+  ResolvedProfile,
+} from '../../config/types'
+import type { Tool } from '../../constants'
 import {
-  CONFIG_FILE,
+  CODEX_PASSTHROUGH,
   DEFAULT_PASSTHROUGH,
   ENV_VAR,
   LOAD_STATUS,
@@ -13,27 +14,44 @@ import {
   OUTCOME_KIND,
   RESOLVE_MESSAGE,
   RESOLVE_REASON,
+  TOOL,
 } from '../../constants'
 import type { Context } from '../../context/types'
 import { selectProfile } from '../../prompt'
 import findProfile from '../findProfile'
 import isPassthrough from '../isPassthrough'
 import selectAccount from '../selectAccount'
-import type { ResolveOptions, ResolveOutcome, SelectedAccount } from '../types'
+import toolTarget from '../toolTarget'
+import type { ResolveOptions, ResolveOutcome } from '../types'
+
+// The dir variable of each tool: set, it wins over everything (spec §3.5).
+const OVERRIDE = {
+  [TOOL.claude]: {
+    env: ENV_VAR.claudeConfigDir,
+    reason: RESOLVE_REASON.explicitConfigDir,
+  },
+  [TOOL.codex]: {
+    env: ENV_VAR.codexHome,
+    reason: RESOLVE_REASON.explicitCodexHome,
+  },
+} as const
+
+// claude: the config's list, or the default for a missing or broken config
+// (so `claude --version` always works); codex: a fixed list.
+const passthroughFor = (
+  tool: Tool,
+  loaded: LoadConfigResult
+): readonly string[] => {
+  if (tool === TOOL.codex) return CODEX_PASSTHROUGH
+  return loaded.status === LOAD_STATUS.ok
+    ? loaded.config.passthrough
+    : DEFAULT_PASSTHROUGH
+}
 
 // Empty values count as unset.
 const readEnv = (ctx: Context, name: string): string | undefined => {
   const value = ctx.env[name]
   return value === undefined || value === '' ? undefined : value
-}
-
-const exists = async (path: string): Promise<boolean> => {
-  try {
-    await stat(path)
-    return true
-  } catch {
-    return false
-  }
 }
 
 type ProfileReason =
@@ -42,57 +60,43 @@ type ProfileReason =
   | typeof RESOLVE_REASON.onUnknown
   | typeof RESOLVE_REASON.prompt
 
-const warnIfMissing = async (
-  profile: ResolvedProfile,
-  account: SelectedAccount,
-  ctx: Context
-): Promise<void> => {
-  const dir = account.configDir
-  if (dir === undefined || (await exists(dir))) return
-  ctx.stderr.write(
-    account.name === profile.name
-      ? RESOLVE_MESSAGE.creatingProfile(profile.name, dir)
-      : RESOLVE_MESSAGE.creatingAccount(account.name, profile.name, dir)
-  )
-}
-
-// Every profile outcome picks the account (CCPROFILE_ACCOUNT, else the
-// first) and warns once if its configDir does not exist yet.
-const useProfile = async (
+type UseProfile = (
   profile: ResolvedProfile,
   reason: ProfileReason,
-  ctx: Context,
   match?: Extract<ResolveOutcome, { kind: 'profile' }>['match']
-): Promise<ResolveOutcome> => {
-  const requested = readEnv(ctx, ENV_VAR.account)
-  const account = selectAccount(profile, requested)
-  if (account === undefined) {
+) => Promise<ResolveOutcome>
+
+// Every profile outcome picks the account (CCPROFILE_ACCOUNT, else the
+// first), then adds what the tool needs.
+const createUseProfile =
+  (ctx: Context, tool: Tool): UseProfile =>
+  async (profile, reason, match) => {
+    const requested = readEnv(ctx, ENV_VAR.account)
+    const account = selectAccount(profile, requested)
+    if (account === undefined) {
+      return {
+        kind: OUTCOME_KIND.error,
+        messages: [
+          RESOLVE_MESSAGE.unknownAccount(requested ?? '', profile.name),
+        ],
+      }
+    }
+
     return {
-      kind: OUTCOME_KIND.error,
-      messages: [RESOLVE_MESSAGE.unknownAccount(requested ?? '', profile.name)],
+      kind: OUTCOME_KIND.profile,
+      profile,
+      account,
+      reason,
+      match,
+      ...(await toolTarget({ tool, profile, account }, ctx)),
     }
   }
-
-  await warnIfMissing(profile, account, ctx)
-  const mcpPath = pathFlavor(ctx.platform).join(
-    sharedSource(profile, ctx),
-    CONFIG_FILE.mcpConfigName
-  )
-  const mcpConfig = (await exists(mcpPath)) ? mcpPath : undefined
-  return {
-    kind: OUTCOME_KIND.profile,
-    profile,
-    account,
-    mcpConfig,
-    reason,
-    match,
-  }
-}
 
 const fallback = (
   config: ResolvedConfig,
   ctx: Context,
-  options: ResolveOptions
+  options: ResolveOptions,
+  useProfile: UseProfile
 ): Promise<ResolveOutcome> | ResolveOutcome => {
   if (config.onUnknown !== ON_UNKNOWN_PROMPT) {
     const profile = config.profiles.find(
@@ -100,7 +104,7 @@ const fallback = (
     )
     if (profile !== undefined) {
       ctx.stderr.write(RESOLVE_MESSAGE.usingOnUnknown(profile.name))
-      return useProfile(profile, RESOLVE_REASON.onUnknown, ctx)
+      return useProfile(profile, RESOLVE_REASON.onUnknown)
     }
   }
   if (!options.interactive) return { kind: OUTCOME_KIND.noMatch }
@@ -110,32 +114,27 @@ const fallback = (
       return { kind: OUTCOME_KIND.error, messages: [RESOLVE_MESSAGE.aborted] }
     }
     ctx.stderr.write(RESOLVE_MESSAGE.promptHint)
-    return useProfile(picked, RESOLVE_REASON.prompt, ctx)
+    return useProfile(picked, RESOLVE_REASON.prompt)
   })
 }
 
 // Decision order of spec §3. Prints only informational stderr lines; the
-// messages of an `error` outcome are left to the caller.
+// messages of an `error` outcome are left to the caller. Each tool checks
+// only its own dir variable: codex inside a claude session (CLAUDE_CONFIG_DIR
+// set) still follows the inherited CCPROFILE.
 const resolveProfile = async (
   args: readonly string[],
   ctx: Context,
   options: ResolveOptions
 ): Promise<ResolveOutcome> => {
-  if (readEnv(ctx, ENV_VAR.claudeConfigDir) !== undefined) {
-    return {
-      kind: OUTCOME_KIND.unchanged,
-      reason: RESOLVE_REASON.explicitConfigDir,
-    }
+  const tool = options.tool ?? TOOL.claude
+  const override = OVERRIDE[tool]
+  if (readEnv(ctx, override.env) !== undefined) {
+    return { kind: OUTCOME_KIND.unchanged, reason: override.reason }
   }
 
-  // The config only supplies a custom passthrough list; a missing or broken
-  // one falls back to the default so `claude --version` always works.
   const loaded = await loadConfig(ctx)
-  const passthrough =
-    loaded.status === LOAD_STATUS.ok
-      ? loaded.config.passthrough
-      : DEFAULT_PASSTHROUGH
-  if (isPassthrough(args, passthrough)) {
+  if (isPassthrough(args, passthroughFor(tool, loaded))) {
     return {
       kind: OUTCOME_KIND.unchanged,
       reason: RESOLVE_REASON.passthrough,
@@ -162,6 +161,7 @@ const resolveProfile = async (
   }
 
   const { config } = loaded
+  const useProfile = createUseProfile(ctx, tool)
   const explicit = readEnv(ctx, ENV_VAR.profile)
   if (explicit !== undefined) {
     const profile = config.profiles.find(({ name }) => name === explicit)
@@ -170,15 +170,15 @@ const resolveProfile = async (
           kind: OUTCOME_KIND.error,
           messages: [RESOLVE_MESSAGE.unknownProfile(explicit)],
         }
-      : useProfile(profile, RESOLVE_REASON.explicitProfile, ctx)
+      : useProfile(profile, RESOLVE_REASON.explicitProfile)
   }
 
   const match = await findProfile(config, ctx)
   if (match !== null) {
-    return useProfile(match.profile, RESOLVE_REASON.match, ctx, match)
+    return useProfile(match.profile, RESOLVE_REASON.match, match)
   }
 
-  return fallback(config, ctx, options)
+  return fallback(config, ctx, options, useProfile)
 }
 
 export default resolveProfile

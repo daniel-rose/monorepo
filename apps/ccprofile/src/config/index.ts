@@ -1,3 +1,4 @@
+export { default as codexSource } from './codexSource'
 export { default as expandHome } from './expandHome'
 export { default as loadConfig } from './loadConfig'
 export { default as locateConfig } from './locateConfig'
@@ -11,3 +12,4 @@ export type {
   ResolvedConfig,
   ResolvedProfile,
 } from './types'
+export { default as usesCodex } from './usesCodex'

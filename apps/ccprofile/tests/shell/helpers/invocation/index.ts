@@ -12,7 +12,9 @@ const invocation = (
   ccprofile,
   ccprofileAccount,
   claudeConfigDir,
+  codexHome: '',
   ccprofileArgv: '',
+  tool: 'claude',
   args,
 })
 

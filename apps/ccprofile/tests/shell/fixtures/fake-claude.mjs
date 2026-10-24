@@ -1,5 +1,6 @@
-// Fake claude behind `claude.cmd` on Windows (`node fake-claude.mjs %*`).
-// Same report as fake-claude.sh: stdout plus $FAKE_CLAUDE_LOG, exit code from
+// Fake claude behind `claude.cmd` and `codex.cmd` on Windows (`node
+// fake-claude.mjs %*`; the .cmd names the tool in FAKE_CLAUDE_TOOL). Same
+// report as fake-claude.sh: stdout plus $FAKE_CLAUDE_LOG, exit code from
 // $FAKE_CLAUDE_EXIT.
 import { appendFileSync, writeFileSync } from 'node:fs'
 
@@ -9,7 +10,9 @@ const report = [
   `CCPROFILE=${read('CCPROFILE')}`,
   `CCPROFILE_ACCOUNT=${read('CCPROFILE_ACCOUNT')}`,
   `CLAUDE_CONFIG_DIR=${read('CLAUDE_CONFIG_DIR')}`,
+  `CODEX_HOME=${read('CODEX_HOME')}`,
   `CCPROFILE_ARGV=${read('CCPROFILE_ARGV')}`,
+  `TOOL=${read('FAKE_CLAUDE_TOOL') || 'claude'}`,
   ...process.argv.slice(2).map(arg => `ARG<<${arg}>>`),
 ]
   .map(line => `${line}\n`)

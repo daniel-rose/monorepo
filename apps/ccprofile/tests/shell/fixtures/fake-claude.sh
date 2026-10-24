@@ -1,13 +1,15 @@
 #!/bin/sh
-# Fake claude for the shell tests (installed as `claude`). Reports its
-# environment and arguments on stdout and appends the same report to
-# $FAKE_CLAUDE_LOG, then exits with $FAKE_CLAUDE_EXIT.
+# Fake claude for the shell tests (installed as `claude` and as `codex`).
+# Reports its environment, its name and arguments on stdout and appends the
+# same report to $FAKE_CLAUDE_LOG, then exits with $FAKE_CLAUDE_EXIT.
 
 report() {
   printf 'CCPROFILE=%s\n' "${CCPROFILE-}"
   printf 'CCPROFILE_ACCOUNT=%s\n' "${CCPROFILE_ACCOUNT-}"
   printf 'CLAUDE_CONFIG_DIR=%s\n' "${CLAUDE_CONFIG_DIR-}"
+  printf 'CODEX_HOME=%s\n' "${CODEX_HOME-}"
   printf 'CCPROFILE_ARGV=%s\n' "${CCPROFILE_ARGV-}"
+  printf 'TOOL=%s\n' "$(basename "$0")"
   for arg in "$@"; do
     printf 'ARG<<%s>>\n' "$arg"
   done

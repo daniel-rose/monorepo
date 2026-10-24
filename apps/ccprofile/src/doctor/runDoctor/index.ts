@@ -5,6 +5,7 @@ import type { Context } from '../../context/types'
 import checkAccountLinks from '../checks/accountLinks'
 import checkBashProfile from '../checks/bashProfile'
 import checkClaudeOnPath from '../checks/claudeOnPath'
+import checkCodexLogin from '../checks/codexLogin'
 import checkConfig from '../checks/config'
 import checkEnvOverride from '../checks/envOverride'
 import checkHook from '../checks/hook'
@@ -14,10 +15,12 @@ import checkSchemaMajor from '../checks/schemaMajor'
 import checkShadowedSelectors from '../checks/shadowedSelectors'
 import type { Check, CheckResult } from '../types'
 
-// Output order: config, claude, logins, hook, hygiene.
+// Output order: config, claude, logins (claude, then codex), links, hook,
+// hygiene.
 const CHECKS: readonly Check[] = [
   checkClaudeOnPath,
   checkLogin,
+  checkCodexLogin,
   checkAccountLinks,
   checkHook,
   checkBashProfile,

@@ -1,12 +1,7 @@
 import { mkdir, symlink } from 'node:fs/promises'
 
 import { ENTRY_KIND, LINK_STEP } from '../../constants'
-import type {
-  AccountPlan,
-  ApplyResult,
-  LinkFailure,
-  SharedEntry,
-} from '../types'
+import type { ApplyResult, LinkFailure, LinkPlan, SharedEntry } from '../types'
 
 const errorCode = (error: unknown): string | undefined =>
   error instanceof Error && 'code' in error ? String(error.code) : undefined
@@ -50,7 +45,7 @@ const createDirs = async (
 // Creates the missing dirs, then the links. Never removes or overwrites: an
 // entry that appeared since planning fails with EEXIST and is reported.
 const applyLinks = async (
-  plans: readonly AccountPlan[],
+  plans: readonly LinkPlan[],
   platform: NodeJS.Platform
 ): Promise<ApplyResult> => {
   let created = 0
@@ -58,7 +53,7 @@ const applyLinks = async (
 
   for (const plan of plans) {
     const dirFailure = await createDirs(
-      [plan.account.configDir, ...plan.createSourceDirs],
+      [plan.dir, ...plan.createSourceDirs],
       platform
     )
     if (dirFailure !== null) {

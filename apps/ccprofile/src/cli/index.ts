@@ -99,6 +99,7 @@ const registerCommands = (
     .description('print the profile for claude arguments (used by the hooks)')
     .argument('[args...]', 'claude arguments, after --')
     .option('--protocol <version>', 'line format the hook reads')
+    .option('--tool <tool>', 'claude (default) or codex')
     .helpOption(false)
     .allowUnknownOption()
     .passThroughOptions()

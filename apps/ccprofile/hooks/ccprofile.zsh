@@ -1,31 +1,44 @@
-# ccprofile hook v2
-# Starts Claude Code with the profile and account `ccprofile resolve` picks for
-# the current directory. CCPROFILE, CCPROFILE_ACCOUNT and CLAUDE_CONFIG_DIR are
-# set for claude only, never in this shell. Bypass with `command claude`.
+# ccprofile hook v3
+# Starts Claude Code and the Codex CLI with the profile and account
+# `ccprofile resolve` picks for the current directory. CCPROFILE,
+# CCPROFILE_ACCOUNT and CLAUDE_CONFIG_DIR (claude) or CODEX_HOME (codex) are
+# set for the tool only, never in this shell. Bypass with `command claude` or
+# `command codex`.
 
 function claude {
+  _ccprofile_run claude "$@"
+}
+
+function codex {
+  _ccprofile_run codex "$@"
+}
+
+# _ccprofile_run <tool> <args...>
+function _ccprofile_run {
   emulate -L zsh
+  local ccprofile_tool=$1
+  shift
 
   if ! whence -p ccprofile >/dev/null; then
-    print -ru2 -- 'ccprofile: ccprofile not found – run "command claude" to bypass'
+    print -ru2 -- "ccprofile: ccprofile not found – run \"command $ccprofile_tool\" to bypass"
     return 127
   fi
 
   # The locals carry a prefix: a zsh `local` hides an exported variable of the
-  # same name from claude, so a plain `out` or `name` would drop the user's
-  # variable from claude's environment.
+  # same name from the tool, so a plain `out` or `name` would drop the user's
+  # variable from its environment.
   #
   # stdout is the profile line; prompts and messages go to stderr.
   local ccprofile_out
-  ccprofile_out=$(command ccprofile resolve --protocol 2 -- "$@") || return
+  ccprofile_out=$(command ccprofile resolve --protocol 2 --tool $ccprofile_tool -- "$@") || return
 
   if [[ -z $ccprofile_out ]]; then
-    command claude "$@"
+    command $ccprofile_tool "$@"
     return
   fi
 
-  # `name<TAB>account<TAB>configDir<TAB>mcpConfig`, split field by field so
-  # empty fields keep their place.
+  # `name<TAB>account<TAB>dir<TAB>mcpConfig`, split field by field so empty
+  # fields keep their place. codex never gets an mcpConfig.
   local ccprofile_tab=$'\t'
   local ccprofile_rest=$ccprofile_out
   local ccprofile_name=${ccprofile_rest%%$ccprofile_tab*}
@@ -43,7 +56,10 @@ function claude {
 
   if [[ -z $ccprofile_dir ]]; then
     CCPROFILE=$ccprofile_name CCPROFILE_ACCOUNT=$ccprofile_account \
-      command claude "$@"
+      command $ccprofile_tool "$@"
+  elif [[ $ccprofile_tool == codex ]]; then
+    CCPROFILE=$ccprofile_name CCPROFILE_ACCOUNT=$ccprofile_account \
+      CODEX_HOME=$ccprofile_dir command codex "$@"
   else
     CCPROFILE=$ccprofile_name CCPROFILE_ACCOUNT=$ccprofile_account \
       CLAUDE_CONFIG_DIR=$ccprofile_dir command claude "$@"

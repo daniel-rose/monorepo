@@ -21,8 +21,23 @@ const DOCTOR_TEXT = {
 
   sharedSource: (profile: string, dir: string | undefined) =>
     `profile ${profile}: shared source ${dir ?? '~/.claude (default)'}`,
-  accountLinksOk: (profile: string, account: string) =>
-    `profile ${profile}, account ${account}: links ok`,
+  codexSharedSource: (profile: string, dir: string | undefined) =>
+    `profile ${profile}: codex shared source ${dir ?? '~/.codex (default)'}`,
+  // Prefix of the codex link details of an account.
+  codexDetail: (detail: string) => `codex ${detail}`,
+
+  codexMissing: 'codex not found on PATH',
+  codexDefaultLogin: (state: string) => `codex ~/.codex (default): ${state}`,
+  codexLogin: (owner: string, state: string) => `${owner}: codex ${state}`,
+  codexHomeMissing: (owner: string, dir: string) =>
+    `${owner}: codex home ${dir} does not exist – run ccprofile link`,
+  codexFromProfile: (owner: string) => `${owner}: codex from profile`,
+  profileOwner: (profile: string) => `profile ${profile}`,
+  accountOwner: (profile: string, account: string) =>
+    `profile ${profile}, account ${account}`,
+  codexSharedDefault: (profiles: readonly string[]) =>
+    `profiles ${profiles.join(', ')} share ~/.codex – give each its own codex.home`,
+  linksOk: 'links ok',
   accountDirMissing: (profile: string, account: string, dir: string) =>
     `profile ${profile}, account ${account}: ${dir} does not exist – run ccprofile link`,
   accountEntry: (profile: string, account: string, detail: string) =>

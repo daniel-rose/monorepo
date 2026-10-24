@@ -1,6 +1,7 @@
-// Config of the shell tests. `work` is the default profile (no configDir);
-// path entries use forward slashes on every platform. `work` and `private`
-// have a second account each.
+// Config of the shell tests. `work` is the default profile (no configDir,
+// no codex: ~/.codex); path entries use forward slashes on every platform.
+// `work` and `private` have a second account each; `private` and its
+// `seat-2` have their own Codex homes.
 const HOOK_CONFIG = {
   profiles: [
     {
@@ -11,8 +12,15 @@ const HOOK_CONFIG = {
     {
       name: 'private',
       configDir: '~/.claude-private',
+      codex: { home: '~/.codex-private' },
       paths: ['~/Projects/private'],
-      accounts: [{ name: 'seat-2', configDir: '~/.claude-private-2' }],
+      accounts: [
+        {
+          name: 'seat-2',
+          configDir: '~/.claude-private-2',
+          codex: { home: '~/.codex-private-2' },
+        },
+      ],
     },
     {
       name: 'unicode',

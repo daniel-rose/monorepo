@@ -39,6 +39,7 @@ const createBaseEnv = (home: string): NodeJS.ProcessEnv => {
     GIT_CONFIG_NOSYSTEM: '1',
     // Keep the host's variables out of the resolve run.
     CLAUDE_CONFIG_DIR: undefined,
+    CODEX_HOME: undefined,
     CCPROFILE: undefined,
     CCPROFILE_ACCOUNT: undefined,
     CCPROFILE_CONFIG: undefined,

@@ -9,6 +9,11 @@ const STATUS_TEXT = {
   onUnknown: (name: string) => `${name} (onUnknown)`,
   account: (name: string, explicit: boolean) =>
     `, account ${name}${explicit ? ' (CCPROFILE_ACCOUNT)' : ''}`,
+  // The second line, for `codex` (spec §4.3, P16).
+  codex: (dir: string) => `codex: ${dir}`,
+  codexFromProfile: (dir: string) => `codex: ${dir} (from profile)`,
+  codexDefault: 'codex: ~/.codex (default)',
+  codexExplicit: (value: string) => `codex: explicit (CODEX_HOME=${value})`,
 } as const
 
 export default STATUS_TEXT

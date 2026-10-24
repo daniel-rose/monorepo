@@ -1,1 +1,1 @@
-export type ResolveCommandOptions = { protocol?: string }
+export type ResolveCommandOptions = { protocol?: string; tool?: string }

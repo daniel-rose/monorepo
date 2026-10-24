@@ -96,6 +96,34 @@ describe('checkLogin', () => {
     expect(await checkLogin(ctx, config)).toEqual([])
   })
 
+  it('reports every further account with its own CLAUDE_CONFIG_DIR', async () => {
+    const dirs: (string | undefined)[] = []
+    const ctx = createTestContext({
+      runCommand: (_file, _args, options) => {
+        dirs.push(options?.env?.CLAUDE_CONFIG_DIR)
+        return Promise.resolve(result({ stdout: '{"loggedIn":true}' }))
+      },
+    })
+    const withAccounts = createConfig([
+      {
+        name: 'private',
+        configDir: '/home/jane/.claude-private',
+        accounts: [{ name: 'seat-2', configDir: '/home/jane/.claude-p2' }],
+      },
+    ])
+
+    const results = await checkLogin(ctx, withAccounts)
+
+    expect(dirs).toEqual([
+      '/home/jane/.claude-private',
+      '/home/jane/.claude-p2',
+    ])
+    expect(results.map(check => check.message)).toEqual([
+      'profile private: logged in',
+      'profile private, account seat-2: logged in',
+    ])
+  })
+
   it('queries every profile in parallel with its own CLAUDE_CONFIG_DIR', async () => {
     const started: (string | undefined)[] = []
     const releases: (() => void)[] = []

@@ -2,6 +2,7 @@ import { loadConfig } from '../../config'
 import type { ExitCode } from '../../constants'
 import { CHECK_STATUS, EXIT_CODE, LOAD_STATUS } from '../../constants'
 import type { Context } from '../../context/types'
+import checkAccountLinks from '../checks/accountLinks'
 import checkBashProfile from '../checks/bashProfile'
 import checkClaudeOnPath from '../checks/claudeOnPath'
 import checkConfig from '../checks/config'
@@ -17,6 +18,7 @@ import type { Check, CheckResult } from '../types'
 const CHECKS: readonly Check[] = [
   checkClaudeOnPath,
   checkLogin,
+  checkAccountLinks,
   checkHook,
   checkBashProfile,
   checkMissingPaths,

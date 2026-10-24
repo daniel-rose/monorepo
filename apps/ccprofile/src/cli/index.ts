@@ -8,6 +8,8 @@ import config from './commands/config'
 import doctor from './commands/doctor'
 import hook from './commands/hook'
 import init from './commands/init'
+import link from './commands/link'
+import type { LinkOptions } from './commands/link/types'
 import list from './commands/list'
 import resolve from './commands/resolve'
 import type { ResolveCommandOptions } from './commands/resolve/types'
@@ -72,6 +74,17 @@ const registerCommands = (
         shell: string | undefined,
         options: { yes?: boolean; remove?: boolean }
       ) => setExitCode(await setup(ctx, shell, options))
+    )
+
+  program
+    .command('link')
+    .description(
+      'link the shared config of a profile into its further accounts'
+    )
+    .argument('[profile]', 'profile to link (default: all)')
+    .option('--yes', 'apply without asking')
+    .action(async (profile: string | undefined, options: LinkOptions) =>
+      setExitCode(await link(ctx, profile, options))
     )
 
   program

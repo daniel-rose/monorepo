@@ -1,3 +1,10 @@
+# @daniel-rose/eslint-config [5.3.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/eslint-config@5.2.0...@daniel-rose/eslint-config@5.3.0) (2026-10-24)
+
+
+### Features
+
+* **eslint-config:** ship type declarations ([#186](https://github.com/daniel-rose/monorepo/issues/186)) ([95c2ba3](https://github.com/daniel-rose/monorepo/commit/95c2ba301d7ca207cd8a661a6e61a4dc915b6295))
+
 # @daniel-rose/eslint-config [5.2.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/eslint-config@5.1.0...@daniel-rose/eslint-config@5.2.0) (2026-10-24)
 
 

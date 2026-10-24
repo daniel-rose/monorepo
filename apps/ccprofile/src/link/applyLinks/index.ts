@@ -1,12 +1,7 @@
 import { mkdir, symlink } from 'node:fs/promises'
 
 import { ENTRY_KIND, LINK_STEP } from '../../constants'
-import type {
-  AccountPlan,
-  ApplyResult,
-  LinkFailure,
-  SharedEntry,
-} from '../types'
+import type { ApplyResult, LinkFailure, LinkPlan, SharedEntry } from '../types'
 
 const errorCode = (error: unknown): string | undefined =>
   error instanceof Error && 'code' in error ? String(error.code) : undefined
@@ -18,19 +13,52 @@ const linkType = (entry: SharedEntry, platform: NodeJS.Platform) => {
   return entry.kind === ENTRY_KIND.directory ? 'junction' : 'file'
 }
 
+const failure = (
+  target: string,
+  error: unknown,
+  platform: NodeJS.Platform
+): LinkFailure => {
+  const code = errorCode(error) ?? 'unknown error'
+  return {
+    target,
+    unsupported: platform === 'win32' && code === 'EPERM',
+    reason: code,
+  }
+}
+
+// The dirs a plan needs; the first one that cannot be created is reported
+// and the plan's links are skipped, the other plans still run.
+const createDirs = async (
+  dirs: readonly string[],
+  platform: NodeJS.Platform
+): Promise<LinkFailure | null> => {
+  for (const dir of dirs) {
+    try {
+      await mkdir(dir, { recursive: true })
+    } catch (error) {
+      return failure(dir, error, platform)
+    }
+  }
+  return null
+}
+
 // Creates the missing dirs, then the links. Never removes or overwrites: an
 // entry that appeared since planning fails with EEXIST and is reported.
 const applyLinks = async (
-  plans: readonly AccountPlan[],
+  plans: readonly LinkPlan[],
   platform: NodeJS.Platform
 ): Promise<ApplyResult> => {
   let created = 0
   const failures: LinkFailure[] = []
 
   for (const plan of plans) {
-    await mkdir(plan.account.configDir, { recursive: true })
-    for (const dir of plan.createSourceDirs) {
-      await mkdir(dir, { recursive: true })
+    const dirFailure = await createDirs(
+      [plan.dir, ...plan.createSourceDirs],
+      platform
+    )
+    if (dirFailure !== null) {
+      failures.push(dirFailure)
+      continue
     }
 
     for (const step of plan.steps) {
@@ -40,12 +68,7 @@ const applyLinks = async (
         await symlink(source, target, linkType(entry, platform))
         created += 1
       } catch (error) {
-        const code = errorCode(error) ?? 'unknown error'
-        failures.push({
-          target,
-          unsupported: platform === 'win32' && code === 'EPERM',
-          reason: code,
-        })
+        failures.push(failure(target, error, platform))
       }
     }
   }

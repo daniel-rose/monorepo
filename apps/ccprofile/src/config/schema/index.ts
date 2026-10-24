@@ -19,6 +19,15 @@ const configDirText = (description: string) =>
     CONFIG_REASON.lineControl
   )
 
+const codexSchema = (description: string) =>
+  z
+    .strictObject({
+      home: configDirText(
+        'CODEX_HOME (`~` is expanded); must not be ~/.codex, the default. `ccprofile link` creates it.'
+      ),
+    })
+    .describe(description)
+
 const accountSchema = z
   .strictObject({
     name: z
@@ -30,6 +39,9 @@ const accountSchema = z
     configDir: configDirText(
       'CLAUDE_CONFIG_DIR of this account (its own login); `~` is expanded. `ccprofile link` links the shared config of the profile into it.'
     ),
+    codex: codexSchema(
+      'Codex CLI login of this account. `ccprofile link` links the Codex config of the profile into it. Omit it to use the Codex home of the profile.'
+    ).optional(),
   })
   .describe(
     'A further login of the profile. It shares the config of the profile configDir.'
@@ -46,6 +58,9 @@ const profileSchema = z
       ),
     configDir: configDirText(
       'CLAUDE_CONFIG_DIR of this profile; `~` is expanded. Omit it for the default profile (~/.claude). At most one profile may omit it. It is the first account and the shared config of all accounts.'
+    ).optional(),
+    codex: codexSchema(
+      'Codex CLI of this profile: the first Codex account and the shared Codex config of all accounts. Omit it to use ~/.codex.'
     ).optional(),
     paths: z
       .array(

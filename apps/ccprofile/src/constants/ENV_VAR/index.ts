@@ -4,6 +4,7 @@ const ENV_VAR = {
   config: 'CCPROFILE_CONFIG',
   argv: 'CCPROFILE_ARGV',
   claudeConfigDir: 'CLAUDE_CONFIG_DIR',
+  codexHome: 'CODEX_HOME',
   xdgConfigHome: 'XDG_CONFIG_HOME',
   appData: 'APPDATA',
   shell: 'SHELL',

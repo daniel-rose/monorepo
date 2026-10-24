@@ -22,6 +22,15 @@ describe('checkEnvOverride', () => {
     expect(results[0]?.message).toContain('CCPROFILE')
   })
 
+  it('warns when CODEX_HOME is set', async () => {
+    const ctx = createTestContext({ env: { CODEX_HOME: '/x' } })
+
+    const [check] = await checkEnvOverride(ctx, null)
+
+    expect(check?.status).toBe('warn')
+    expect(check?.message).toContain('CODEX_HOME')
+  })
+
   it('names both variables when both are set', async () => {
     const ctx = createTestContext({
       env: { CCPROFILE: 'work', CLAUDE_CONFIG_DIR: '/x' },

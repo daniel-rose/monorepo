@@ -1,5 +1,6 @@
-// Fake claude as a real Windows executable (`claude.exe`), compiled by the
-// shell test setup with Windows PowerShell's Add-Type. A copy of node.exe
+// Fake claude as a real Windows executable (`claude.exe`, copied to
+// `codex.exe`), compiled by the shell test setup with Windows PowerShell's
+// Add-Type. The process name tells which one ran. A copy of node.exe
 // cannot stand in: node parses leading options itself (`-p`, unknown
 // `--model=x` fails) and resolves its first argument to an absolute path.
 // Same report as fake-claude.sh: stdout plus FAKE_CLAUDE_LOG, exit code from
@@ -21,7 +22,9 @@ public static class FakeClaude
         report.Append("CCPROFILE=").Append(Read("CCPROFILE")).Append('\n');
         report.Append("CCPROFILE_ACCOUNT=").Append(Read("CCPROFILE_ACCOUNT")).Append('\n');
         report.Append("CLAUDE_CONFIG_DIR=").Append(Read("CLAUDE_CONFIG_DIR")).Append('\n');
+        report.Append("CODEX_HOME=").Append(Read("CODEX_HOME")).Append('\n');
         report.Append("CCPROFILE_ARGV=").Append(Read("CCPROFILE_ARGV")).Append('\n');
+        report.Append("TOOL=").Append(System.Diagnostics.Process.GetCurrentProcess().ProcessName).Append('\n');
         foreach (var arg in args)
         {
             report.Append("ARG<<").Append(arg).Append(">>\n");

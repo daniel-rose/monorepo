@@ -1,19 +1,33 @@
-# ccprofile hook v2
-# Starts Claude Code with the profile and account `ccprofile resolve` picks for
-# the current directory. CCPROFILE, CCPROFILE_ACCOUNT and CLAUDE_CONFIG_DIR are
-# set for claude only and restored afterwards. Bypass with
-# `& (Get-Command claude -CommandType Application)[0]`.
+# ccprofile hook v3
+# Starts Claude Code and the Codex CLI with the profile and account
+# `ccprofile resolve` picks for the current directory. CCPROFILE,
+# CCPROFILE_ACCOUNT and CLAUDE_CONFIG_DIR (claude) or CODEX_HOME (codex) are
+# set for the tool only and restored afterwards. Bypass with
+# `& (Get-Command claude -CommandType Application)[0]` (codex alike).
 #
 # Keep this file ASCII: Windows PowerShell 5.1 reads files without a BOM as
 # ANSI, so non-ASCII text is built from char codes.
 
 function claude {
+    __ccprofile_run 'claude' $args
+}
+
+function codex {
+    __ccprofile_run 'codex' $args
+}
+
+# __ccprofile_run <tool> <args array>
+function __ccprofile_run {
+    param([string]$ccprofileTool, [object[]]$ccprofileArgs)
+    # @($null) would be one argument, so no arguments stay none.
+    $toolArgs = if ($null -eq $ccprofileArgs) { @() } else { @($ccprofileArgs) }
+
     $ccprofile = Get-Command -Name ccprofile -CommandType ExternalScript, Application -ErrorAction SilentlyContinue |
         Select-Object -First 1
     if ($null -eq $ccprofile) {
         [Console]::Error.WriteLine(
             'ccprofile: ccprofile not found ' + [char]0x2013 +
-            ' run "& (Get-Command claude -CommandType Application)[0]" to bypass')
+            ' run "& (Get-Command ' + $ccprofileTool + ' -CommandType Application)[0]" to bypass')
         $global:LASTEXITCODE = 127
         return
     }
@@ -21,7 +35,7 @@ function claude {
     # The npm shims lose `--` (.ps1) or empty strings (.cmd), so the
     # arguments travel as a JSON array in CCPROFILE_ARGV, set only for this
     # call. Fresh strings keep PowerShell's extra properties out of the JSON.
-    $argv = @(foreach ($arg in $args) { [string]::new(([string]$arg).ToCharArray()) })
+    $argv = @(foreach ($arg in $toolArgs) { [string]::new(([string]$arg).ToCharArray()) })
     $previousArgv = $env:CCPROFILE_ARGV
     $previousEncoding = $null
     try {
@@ -33,7 +47,7 @@ function claude {
             $previousEncoding = [Console]::OutputEncoding
             [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
         } catch { }
-        $out = & $ccprofile resolve --protocol 2 --
+        $out = & $ccprofile resolve --protocol 2 --tool $ccprofileTool --
         $code = $LASTEXITCODE
     } finally {
         $env:CCPROFILE_ARGV = $previousArgv
@@ -46,49 +60,56 @@ function claude {
         return
     }
 
-    $claudeCommand = Get-Command -Name claude -CommandType Application -ErrorAction SilentlyContinue |
+    $toolCommand = Get-Command -Name $ccprofileTool -CommandType Application -ErrorAction SilentlyContinue |
         Select-Object -First 1
-    if ($null -eq $claudeCommand) {
-        [Console]::Error.WriteLine('ccprofile: claude not found')
+    if ($null -eq $toolCommand) {
+        [Console]::Error.WriteLine("ccprofile: $ccprofileTool not found")
         $global:LASTEXITCODE = 127
         return
     }
 
-    # Empty output: start claude unchanged. Otherwise
-    # `name<TAB>account<TAB>configDir<TAB>mcpConfig`; -split keeps empty
-    # fields.
+    # Empty output: start the tool unchanged. Otherwise
+    # `name<TAB>account<TAB>dir<TAB>mcpConfig`; -split keeps empty fields.
+    # codex never gets an mcpConfig.
     $line = [string]($out | Select-Object -First 1)
-    $name, $account, $configDir, $mcpConfig = $line -split "`t", 4
+    $name, $account, $dir, $mcpConfig = $line -split "`t", 4
 
     # Legacy argument passing (Windows PowerShell 5.1, and .cmd/.bat under
     # the default `Windows` mode of PowerShell 7.3+) drops empty strings, so
     # they are passed as a literal "".
     $passing = Get-Variable -Name PSNativeCommandArgumentPassing -ValueOnly -ErrorAction SilentlyContinue
     $legacy = $PSVersionTable.PSVersion.Major -lt 7 -or "$passing" -eq 'Legacy' -or
-        ("$passing" -eq 'Windows' -and $claudeCommand.Extension -in '.bat', '.cmd')
-    $claudeArgs = @(foreach ($arg in $args) {
+        ("$passing" -eq 'Windows' -and $toolCommand.Extension -in '.bat', '.cmd')
+    $nativeArgs = @(foreach ($arg in $toolArgs) {
         if ($legacy -and [string]$arg -eq '') { '""' } else { $arg }
     })
     # The `=` form: --mcp-config is variadic and would eat the next
     # arguments. Before the user's arguments, or a user `--` would swallow it.
-    if ($mcpConfig) { $claudeArgs = @("--mcp-config=$mcpConfig") + $claudeArgs }
+    if ($mcpConfig) { $nativeArgs = @("--mcp-config=$mcpConfig") + $nativeArgs }
 
+    # `$env:X = $null` removes the variable. [Environment]::SetEnvironmentVariable
+    # would not: PowerShell passes $null to a string parameter as "", which
+    # .NET (PowerShell 7) keeps as an empty value.
     $previousProfile = $env:CCPROFILE
     $previousAccount = $env:CCPROFILE_ACCOUNT
     $previousConfigDir = $env:CLAUDE_CONFIG_DIR
+    $previousCodexHome = $env:CODEX_HOME
     $exitCode = 0
     try {
         if ($name) {
             $env:CCPROFILE = $name
             $env:CCPROFILE_ACCOUNT = $account
-            if ($configDir) { $env:CLAUDE_CONFIG_DIR = $configDir }
+            if ($dir) {
+                if ($ccprofileTool -eq 'codex') { $env:CODEX_HOME = $dir } else { $env:CLAUDE_CONFIG_DIR = $dir }
+            }
         }
-        & $claudeCommand @claudeArgs
+        & $toolCommand @nativeArgs
         $exitCode = $LASTEXITCODE
     } finally {
         $env:CCPROFILE = $previousProfile
         $env:CCPROFILE_ACCOUNT = $previousAccount
         $env:CLAUDE_CONFIG_DIR = $previousConfigDir
+        $env:CODEX_HOME = $previousCodexHome
     }
     $global:LASTEXITCODE = $exitCode
 }

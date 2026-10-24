@@ -10,6 +10,13 @@ const AFTER_FORMAT =
 // zsh and bash; the claude arguments are the positional parameters.
 const POSIX_SCRIPT: Readonly<Record<Scenario, readonly string[]>> = {
   [SCENARIO.call]: [`. "$${HOOK}"`, 'claude "$@"'],
+  [SCENARIO.codex]: [
+    `. "$${HOOK}"`,
+    'codex "$@"',
+    'code=$?',
+    `printf 'AFTER CODEX_HOME=%s\\n' "\${CODEX_HOME-<unset>}"`,
+    'exit $code',
+  ],
   [SCENARIO.capture]: [
     `. "$${HOOK}"`,
     'out=$(claude "$@")',
@@ -40,6 +47,17 @@ const POSIX_SCRIPT: Readonly<Record<Scenario, readonly string[]>> = {
 // fish; the claude arguments are $argv.
 const FISH_SCRIPT: Readonly<Record<Scenario, readonly string[]>> = {
   [SCENARIO.call]: [`source $${HOOK}`, 'claude $argv'],
+  [SCENARIO.codex]: [
+    `source $${HOOK}`,
+    'codex $argv',
+    'set -l code $status',
+    'if set -q CODEX_HOME',
+    '    echo "AFTER CODEX_HOME=$CODEX_HOME"',
+    'else',
+    "    echo 'AFTER CODEX_HOME=<unset>'",
+    'end',
+    'exit $code',
+  ],
   [SCENARIO.capture]: [
     `source $${HOOK}`,
     'set -l out (claude $argv)',
@@ -81,6 +99,14 @@ const FISH_SCRIPT: Readonly<Record<Scenario, readonly string[]>> = {
 // goes through [Console]::Out so PowerShell adds no CRLF or formatting.
 const POWERSHELL_SCRIPT: Readonly<Record<Scenario, readonly string[]>> = {
   [SCENARIO.call]: ['claude @a', 'exit $LASTEXITCODE'],
+  [SCENARIO.codex]: [
+    'codex @a',
+    '$code = $LASTEXITCODE',
+    "$codexHome = [Environment]::GetEnvironmentVariable('CODEX_HOME')",
+    "if ($null -eq $codexHome) { $codexHome = '<unset>' }",
+    '[Console]::Out.Write(\'AFTER CODEX_HOME=\' + $codexHome + "`n")',
+    'exit $code',
+  ],
   [SCENARIO.capture]: [
     '$out = claude @a',
     '$code = $LASTEXITCODE',

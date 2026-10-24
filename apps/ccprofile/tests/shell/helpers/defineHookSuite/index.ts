@@ -4,6 +4,7 @@ import type { Shell } from '../../../../src/constants'
 import { SHELL } from '../../../../src/constants'
 import accountCases from '../../cases/accountCases'
 import argumentCases from '../../cases/argumentCases'
+import codexCases from '../../cases/codexCases'
 import failureCases from '../../cases/failureCases'
 import profileCases from '../../cases/profileCases'
 import sessionCases from '../../cases/sessionCases'
@@ -19,6 +20,7 @@ const CASES: readonly HookCase[] = [
   ...argumentCases,
   ...failureCases,
   ...sessionCases,
+  ...codexCases,
 ]
 
 // PowerShell on Windows runs claude.cmd and claude.exe; every other shell

@@ -6,7 +6,9 @@ const formatReport = (invocation: Invocation): string =>
     `CCPROFILE=${invocation.ccprofile}`,
     `CCPROFILE_ACCOUNT=${invocation.ccprofileAccount}`,
     `CLAUDE_CONFIG_DIR=${invocation.claudeConfigDir}`,
+    `CODEX_HOME=${invocation.codexHome}`,
     `CCPROFILE_ARGV=${invocation.ccprofileArgv}`,
+    `TOOL=${invocation.tool}`,
     ...invocation.args.map(arg => `ARG<<${arg}>>`),
   ]
     .map(line => `${line}\n`)

@@ -3,26 +3,33 @@ import type { z } from 'zod'
 import type { LOAD_STATUS } from '../constants'
 import type configSchema from './schema'
 
+type CodexEntry = { home: string }
+
+// A further account, resolved. `codexHome` undefined: the account uses the
+// Codex home of its profile.
 export type Account = {
   name: string
   configDir: string
+  codexHome?: string
 }
 
 // Raw profile as written in the config file (after defaults).
 export type Profile = {
   name: string
   configDir?: string
+  codex?: CodexEntry
   paths: string[]
   remotes: string[]
-  accounts: Account[]
+  accounts: { name: string; configDir: string; codex?: CodexEntry }[]
 }
 
 // Expanded absolute paths and normalized remotes. `configDir` undefined is
 // the default profile (~/.claude); it is also the first account, `accounts`
-// holds the further ones.
+// holds the further ones. `codexHome` undefined is ~/.codex.
 export type ResolvedProfile = {
   name: string
   configDir: string | undefined
+  codexHome?: string
   paths: string[]
   remotes: string[]
   accounts: Account[]

@@ -1,10 +1,11 @@
 import { locateConfig } from '../../../config'
-import type { ExitCode } from '../../../constants'
+import type { ExitCode, Tool } from '../../../constants'
 import {
   CLI_MESSAGE,
   EXIT_CODE,
   OUTCOME_KIND,
   RESOLVE_PROTOCOL,
+  TOOL,
 } from '../../../constants'
 import createSilentContext from '../../../context/createSilentContext'
 import type { Context } from '../../../context/types'
@@ -13,17 +14,25 @@ import failWith from '../failWith'
 import parseArgv from './parseArgv'
 import type { ResolveCommandOptions } from './types'
 
-// `ccprofile resolve --protocol 2 [--] <claude args>`: the protocol of spec
-// §3.5. stdout is empty or exactly one profile line; everything else goes to
-// stderr. A v1 hook (no --protocol) cannot read the 4-field line, so every
-// outcome that would print one, or prompt for one, fails instead.
+const TOOLS: readonly string[] = Object.values(TOOL)
+
+const isTool = (value: string): value is Tool => TOOLS.includes(value)
+
+// `ccprofile resolve --protocol 2 [--tool codex] [--] <args>`: the protocol
+// of spec §3.5. stdout is empty or exactly one profile line; everything else
+// goes to stderr. A v1 hook (no --protocol) cannot read the 4-field line, so
+// every outcome that would print one, or prompt for one, fails instead.
+// Without --tool the args are claude's (every v2 hook).
 const resolve = async (
   ctx: Context,
   args: readonly string[],
-  { protocol }: ResolveCommandOptions = {}
+  { protocol, tool = TOOL.claude }: ResolveCommandOptions = {}
 ): Promise<ExitCode> => {
   if (protocol !== undefined && protocol !== RESOLVE_PROTOCOL) {
     return failWith(ctx, [CLI_MESSAGE.unsupportedProtocol(protocol)])
+  }
+  if (!isTool(tool)) {
+    return failWith(ctx, [CLI_MESSAGE.unsupportedTool(tool)])
   }
   const current = protocol === RESOLVE_PROTOCOL
 
@@ -35,7 +44,7 @@ const resolve = async (
   const outcome = await resolveProfile(
     argv.args,
     current ? ctx : createSilentContext(ctx),
-    { interactive: current && ctx.stdin.isTTY === true }
+    { interactive: current && ctx.stdin.isTTY === true, tool }
   )
 
   switch (outcome.kind) {

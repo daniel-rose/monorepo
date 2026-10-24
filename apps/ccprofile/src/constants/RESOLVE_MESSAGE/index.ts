@@ -18,6 +18,9 @@ const RESOLVE_MESSAGE = {
     `${PREFIX} creating new profile "${name}" at ${dir}, first start will ask for login\n`,
   creatingAccount: (name: string, profile: string, dir: string) =>
     `${PREFIX} creating new account "${name}" of profile "${profile}" at ${dir}, first start will ask for login – run "ccprofile link" to share the profile config\n`,
+  // Codex never creates its CODEX_HOME; `link` does.
+  codexHomeMissing: (dir: string, account: string) =>
+    `${PREFIX} codex home ${dir} of account "${account}" does not exist – run "ccprofile link"\n`,
 } as const
 
 export default RESOLVE_MESSAGE

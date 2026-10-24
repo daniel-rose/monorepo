@@ -1,18 +1,17 @@
 import { stat } from 'node:fs/promises'
 
-import sharedSource from '../../../config/sharedSource'
-import type { Account, ResolvedProfile } from '../../../config/types'
+import type { ResolvedProfile } from '../../../config/types'
 import {
   CHECK_STATUS,
   DOCTOR_TEXT,
   ENTRY_KIND,
   ENTRY_STATE,
   LINK_TEXT,
-  SHARED_ENTRY,
+  TOOL,
 } from '../../../constants'
 import type { Context } from '../../../context/types'
-import type { EntryInspection } from '../../../link'
-import { inspectEntry } from '../../../link'
+import type { EntryInspection, LinkGroup, LinkTarget } from '../../../link'
+import { inspectEntry, linkGroups } from '../../../link'
 import type { Check, CheckResult } from '../../types'
 
 const exists = (path: string): Promise<boolean> =>
@@ -67,30 +66,49 @@ const describeEntry = (inspection: EntryInspection): string | null => {
   }
 }
 
-const checkAccount = async (
-  profile: ResolvedProfile,
-  account: Account,
-  sourceDir: string
+// codex details carry a `codex` prefix; a missing Codex home is already the
+// codex login check's warning, so it is not repeated here.
+const TOOL_LABEL = {
+  [TOOL.claude]: {
+    detail: (detail: string) => detail,
+    reportsMissingDir: true,
+  },
+  [TOOL.codex]: {
+    detail: DOCTOR_TEXT.codexDetail,
+    reportsMissingDir: false,
+  },
+} as const
+
+const checkTarget = async (
+  group: LinkGroup,
+  target: LinkTarget
 ): Promise<CheckResult[]> => {
+  const label = TOOL_LABEL[group.tool]
   const say = (status: CheckResult['status'], detail: string) => ({
     status,
-    message: DOCTOR_TEXT.accountEntry(profile.name, account.name, detail),
+    message: DOCTOR_TEXT.accountEntry(
+      group.profile,
+      target.account,
+      label.detail(detail)
+    ),
   })
-  if (!(await exists(account.configDir))) {
-    return [
-      {
-        status: CHECK_STATUS.warn,
-        message: DOCTOR_TEXT.accountDirMissing(
-          profile.name,
-          account.name,
-          account.configDir
-        ),
-      },
-    ]
+  if (!(await exists(target.dir))) {
+    return label.reportsMissingDir
+      ? [
+          {
+            status: CHECK_STATUS.warn,
+            message: DOCTOR_TEXT.accountDirMissing(
+              group.profile,
+              target.account,
+              target.dir
+            ),
+          },
+        ]
+      : []
   }
 
   const inspections = await Promise.all(
-    SHARED_ENTRY.map(entry => inspectEntry(entry, sourceDir, account.configDir))
+    group.entries.map(entry => inspectEntry(entry, group.source, target.dir))
   )
   const problems = inspections.flatMap(inspection => {
     const problem = describeEntry(inspection)
@@ -106,12 +124,7 @@ const checkAccount = async (
 
   return [
     ...(problems.length === 0
-      ? [
-          {
-            status: CHECK_STATUS.ok,
-            message: DOCTOR_TEXT.accountLinksOk(profile.name, account.name),
-          },
-        ]
+      ? [say(CHECK_STATUS.ok, DOCTOR_TEXT.linksOk)]
       : problems),
     ...(noSources.length === 0
       ? []
@@ -119,29 +132,39 @@ const checkAccount = async (
   ]
 }
 
-// Profiles with accounts: the shared source (first account), then per
-// further account whether its entries are links to it (spec §3.4).
+const sourceLine = (
+  group: LinkGroup,
+  profile: ResolvedProfile
+): CheckResult => ({
+  status: CHECK_STATUS.ok,
+  message:
+    group.tool === TOOL.codex
+      ? DOCTOR_TEXT.codexSharedSource(profile.name, profile.codexHome)
+      : DOCTOR_TEXT.sharedSource(profile.name, profile.configDir),
+})
+
+// Per profile and tool with further accounts: the shared source (first
+// account), then per further account whether its entries are links to it
+// (spec §3.4, §4). The codex entries include the `*.config.toml` files
+// found now.
 const checkAccountLinks: Check = async (ctx: Context, config) => {
   if (config === null) return []
 
   const perProfile = await Promise.all(
-    config.profiles
-      .filter(profile => profile.accounts.length > 0)
-      .map(async profile => {
-        const sourceDir = sharedSource(profile, ctx)
-        const accounts = await Promise.all(
-          profile.accounts.map(account =>
-            checkAccount(profile, account, sourceDir)
-          )
-        )
-        return [
-          {
-            status: CHECK_STATUS.ok,
-            message: DOCTOR_TEXT.sharedSource(profile.name, profile.configDir),
-          },
-          ...accounts.flat(),
-        ]
-      })
+    config.profiles.map(async profile => {
+      const groups = await linkGroups(profile, ctx)
+      const perGroup = await Promise.all(
+        groups.map(async group => [
+          sourceLine(group, profile),
+          ...(
+            await Promise.all(
+              group.targets.map(target => checkTarget(group, target))
+            )
+          ).flat(),
+        ])
+      )
+      return perGroup.flat()
+    })
   )
   return perProfile.flat()
 }

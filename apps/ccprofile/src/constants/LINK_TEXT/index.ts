@@ -3,6 +3,8 @@
 const LINK_TEXT = {
   header: (profile: string, account: string, dir: string) =>
     `[${profile}] account ${account} (${dir})`,
+  codexHeader: (profile: string, account: string, dir: string) =>
+    `[${profile}] codex account ${account} (${dir})`,
   mkdir: (dir: string) => `  mkdir ${dir}`,
   create: (target: string, source: string) => `  link ${target} -> ${source}`,
   noSource: (target: string) => `  skip ${target} (no source)`,

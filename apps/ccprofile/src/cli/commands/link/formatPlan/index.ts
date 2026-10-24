@@ -1,5 +1,5 @@
-import { LINK_STEP, LINK_TEXT } from '../../../../constants'
-import type { AccountPlan, LinkStep } from '../../../../link'
+import { LINK_STEP, LINK_TEXT, TOOL } from '../../../../constants'
+import type { LinkPlan, LinkStep } from '../../../../link'
 
 // Already correct links print nothing.
 const formatStep = (step: LinkStep): string[] => {
@@ -16,9 +16,14 @@ const formatStep = (step: LinkStep): string[] => {
   }
 }
 
-const formatPlan = (plan: AccountPlan): string[] => [
-  LINK_TEXT.header(plan.profile, plan.account.name, plan.account.configDir),
-  ...(plan.createAccountDir ? [LINK_TEXT.mkdir(plan.account.configDir)] : []),
+const HEADER = {
+  [TOOL.claude]: LINK_TEXT.header,
+  [TOOL.codex]: LINK_TEXT.codexHeader,
+} as const
+
+const formatPlan = (plan: LinkPlan): string[] => [
+  HEADER[plan.tool](plan.profile, plan.account, plan.dir),
+  ...(plan.createDir ? [LINK_TEXT.mkdir(plan.dir)] : []),
   ...plan.createSourceDirs.map(LINK_TEXT.mkdir),
   ...plan.steps.flatMap(formatStep),
 ]

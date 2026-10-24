@@ -7,7 +7,9 @@ const FIELDS = {
   'CCPROFILE=': 'ccprofile',
   'CCPROFILE_ACCOUNT=': 'ccprofileAccount',
   'CLAUDE_CONFIG_DIR=': 'claudeConfigDir',
+  'CODEX_HOME=': 'codexHome',
   'CCPROFILE_ARGV=': 'ccprofileArgv',
+  'TOOL=': 'tool',
 } as const
 
 // Parses FAKE_CLAUDE_LOG: every `CCPROFILE=` line starts the report of one
@@ -22,7 +24,9 @@ const readInvocations = (logPath: string): Invocation[] => {
         ccprofile: '',
         ccprofileAccount: '',
         claudeConfigDir: '',
+        codexHome: '',
         ccprofileArgv: '',
+        tool: '',
         args: [],
       })
     }

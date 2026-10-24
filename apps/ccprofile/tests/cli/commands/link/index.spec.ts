@@ -158,6 +158,31 @@ describe('link', () => {
     expect(linkTarget(join(account, 'skills'))).toBe(join(source, 'skills'))
   })
 
+  it('reports a directory it cannot create and links the rest', async () => {
+    writeFileSync(join(sandbox.home, 'blocker'), '')
+    await sandbox.writeConfig({
+      profiles: [
+        {
+          ...CONFIG.profiles[1],
+          accounts: [
+            { name: 'seat-2', configDir: '~/blocker/acct' },
+            { name: 'seat-3', configDir: '~/.claude-private-3' },
+          ],
+        },
+      ],
+    })
+
+    const result = await link(['--yes'])
+
+    expect(result.code).toBe(1)
+    expect(result.err).toContain(
+      `failed ${join(sandbox.home, 'blocker', 'acct')}: ENOTDIR`
+    )
+    expect(
+      linkTarget(join(sandbox.home, '.claude-private-3', 'settings.json'))
+    ).toBe(join(source, 'settings.json'))
+  })
+
   it('rejects an unknown profile', async () => {
     const result = await link(['nope', '--yes'])
 

@@ -1,5 +1,12 @@
 import type { ResolvedProfile } from '../config/types'
-import type { MATCH_VIA, OUTCOME_KIND, RESOLVE_REASON } from '../constants'
+import type {
+  CODEX_HOME_SOURCE,
+  MATCH_VIA,
+  OUTCOME_KIND,
+  RESOLVE_REASON,
+  TOOL,
+  Tool,
+} from '../constants'
 
 export type ProfileMatch = {
   profile: ResolvedProfile
@@ -8,7 +15,8 @@ export type ProfileMatch = {
   entry: string
 }
 
-export type ResolveOptions = { interactive: boolean }
+// `tool` defaults to claude.
+export type ResolveOptions = { interactive: boolean; tool?: Tool }
 
 // The account `resolve` starts claude with. The first account carries the
 // profile name and configDir (undefined for the default profile).
@@ -17,27 +25,42 @@ export type SelectedAccount = {
   configDir: string | undefined
 }
 
+// The CODEX_HOME of the selected account; `dir` undefined is ~/.codex.
+export type CodexHome =
+  | { dir: undefined; source: typeof CODEX_HOME_SOURCE.default }
+  | {
+      dir: string
+      source: typeof CODEX_HOME_SOURCE.own | typeof CODEX_HOME_SOURCE.profile
+    }
+
+// What the selected account needs to start its tool.
+export type ToolTarget =
+  | { tool: typeof TOOL.claude; mcpConfig: string | undefined }
+  | { tool: typeof TOOL.codex; codexHome: CodexHome }
+
+type ProfileOutcomeBase = {
+  kind: typeof OUTCOME_KIND.profile
+  profile: ResolvedProfile
+  account: SelectedAccount
+  reason:
+    | typeof RESOLVE_REASON.explicitProfile
+    | typeof RESOLVE_REASON.match
+    | typeof RESOLVE_REASON.onUnknown
+    | typeof RESOLVE_REASON.prompt
+  match?: ProfileMatch
+}
+
 export type ResolveOutcome =
   | {
       kind: typeof OUTCOME_KIND.unchanged
       reason:
         | typeof RESOLVE_REASON.explicitConfigDir
+        | typeof RESOLVE_REASON.explicitCodexHome
         | typeof RESOLVE_REASON.passthrough
         | typeof RESOLVE_REASON.noConfig
     }
-  | {
-      kind: typeof OUTCOME_KIND.profile
-      profile: ResolvedProfile
-      account: SelectedAccount
-      // <shared source>/.mcp.json when it exists.
-      mcpConfig: string | undefined
-      reason:
-        | typeof RESOLVE_REASON.explicitProfile
-        | typeof RESOLVE_REASON.match
-        | typeof RESOLVE_REASON.onUnknown
-        | typeof RESOLVE_REASON.prompt
-      match?: ProfileMatch
-    }
+  // claude: mcpConfig is <shared source>/.mcp.json when it exists.
+  | (ProfileOutcomeBase & ToolTarget)
   | { kind: typeof OUTCOME_KIND.noMatch }
   // Every message starts with `ccprofile: `; the caller prints them.
   | { kind: typeof OUTCOME_KIND.error; messages: string[] }

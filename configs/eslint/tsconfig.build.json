@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "skipLibCheck": true,
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "dist"
+  },
+  "files": [
+    "index.js",
+    "base.js",
+    "react.js",
+    "restrictions.js",
+    "tailwind.js",
+    "vitest.js"
+  ]
+}

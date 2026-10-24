@@ -77,6 +77,7 @@ export const defaultExportRestrictions = [
 
 // Opt-in: append after baseConfig or reactConfig. Not suited for files whose
 // framework requires named exports (Next.js App Router files, 'use server').
+/** @type {import('eslint').Linter.Config[]} */
 export const defaultExportConfig = [
   {
     files: ['**/*.ts', '**/*.tsx'],

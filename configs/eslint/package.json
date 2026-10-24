@@ -9,12 +9,13 @@
   ],
   "type": "module",
   "scripts": {
-    "build": "mkdir -p ./dist && cp index.js base.js react.js restrictions.js tailwind.js vitest.js ./dist/",
+    "build": "mkdir -p ./dist && cp index.js base.js react.js restrictions.js tailwind.js vitest.js ./dist/ && tsc -p tsconfig.build.json",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "lint": "eslint .",
+    "test:types": "pnpm run build && tsc -p tests/types/tsconfig.json",
     "test:unit": "vitest",
-    "test:unit:ci": "vitest run"
+    "test:unit:ci": "vitest run && pnpm test:types"
   },
   "files": [
     "dist"
@@ -24,15 +25,19 @@
   },
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
     "./react": {
+      "types": "./dist/react.d.ts",
       "import": "./dist/react.js"
     },
     "./tailwind": {
+      "types": "./dist/tailwind.d.ts",
       "import": "./dist/tailwind.js"
     },
     "./vitest": {
+      "types": "./dist/vitest.d.ts",
       "import": "./dist/vitest.js"
     }
   },

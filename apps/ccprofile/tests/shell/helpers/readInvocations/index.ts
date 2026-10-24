@@ -5,6 +5,7 @@ import type { Invocation } from '../../types'
 const ARG_PATTERN = /^ARG<<(.*)>>$/s
 const FIELDS = {
   'CCPROFILE=': 'ccprofile',
+  'CCPROFILE_ACCOUNT=': 'ccprofileAccount',
   'CLAUDE_CONFIG_DIR=': 'claudeConfigDir',
   'CCPROFILE_ARGV=': 'ccprofileArgv',
 } as const
@@ -19,6 +20,7 @@ const readInvocations = (logPath: string): Invocation[] => {
     if (line.startsWith('CCPROFILE=')) {
       invocations.push({
         ccprofile: '',
+        ccprofileAccount: '',
         claudeConfigDir: '',
         ccprofileArgv: '',
         args: [],

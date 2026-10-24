@@ -1,7 +1,7 @@
-# ccprofile hook v1
-# Starts Claude Code with the profile `ccprofile resolve` picks for the current
-# directory. CCPROFILE and CLAUDE_CONFIG_DIR are set for claude only and
-# restored afterwards. Bypass with
+# ccprofile hook v2
+# Starts Claude Code with the profile and account `ccprofile resolve` picks for
+# the current directory. CCPROFILE, CCPROFILE_ACCOUNT and CLAUDE_CONFIG_DIR are
+# set for claude only and restored afterwards. Bypass with
 # `& (Get-Command claude -CommandType Application)[0]`.
 #
 # Keep this file ASCII: Windows PowerShell 5.1 reads files without a BOM as
@@ -33,7 +33,7 @@ function claude {
             $previousEncoding = [Console]::OutputEncoding
             [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
         } catch { }
-        $out = & $ccprofile resolve --
+        $out = & $ccprofile resolve --protocol 2 --
         $code = $LASTEXITCODE
     } finally {
         $env:CCPROFILE_ARGV = $previousArgv
@@ -54,9 +54,11 @@ function claude {
         return
     }
 
-    # Empty output: start claude unchanged. Otherwise `name<TAB>configDir`.
+    # Empty output: start claude unchanged. Otherwise
+    # `name<TAB>account<TAB>configDir<TAB>mcpConfig`; -split keeps empty
+    # fields.
     $line = [string]($out | Select-Object -First 1)
-    $name, $configDir = $line -split "`t", 2
+    $name, $account, $configDir, $mcpConfig = $line -split "`t", 4
 
     # Legacy argument passing (Windows PowerShell 5.1, and .cmd/.bat under
     # the default `Windows` mode of PowerShell 7.3+) drops empty strings, so
@@ -67,19 +69,25 @@ function claude {
     $claudeArgs = @(foreach ($arg in $args) {
         if ($legacy -and [string]$arg -eq '') { '""' } else { $arg }
     })
+    # The `=` form: --mcp-config is variadic and would eat the next
+    # arguments. Before the user's arguments, or a user `--` would swallow it.
+    if ($mcpConfig) { $claudeArgs = @("--mcp-config=$mcpConfig") + $claudeArgs }
 
     $previousProfile = $env:CCPROFILE
+    $previousAccount = $env:CCPROFILE_ACCOUNT
     $previousConfigDir = $env:CLAUDE_CONFIG_DIR
     $exitCode = 0
     try {
         if ($name) {
             $env:CCPROFILE = $name
+            $env:CCPROFILE_ACCOUNT = $account
             if ($configDir) { $env:CLAUDE_CONFIG_DIR = $configDir }
         }
         & $claudeCommand @claudeArgs
         $exitCode = $LASTEXITCODE
     } finally {
         $env:CCPROFILE = $previousProfile
+        $env:CCPROFILE_ACCOUNT = $previousAccount
         $env:CLAUDE_CONFIG_DIR = $previousConfigDir
     }
     $global:LASTEXITCODE = $exitCode

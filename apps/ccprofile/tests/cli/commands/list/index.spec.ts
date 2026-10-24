@@ -40,6 +40,35 @@ describe('list', () => {
     expect(ctx.err()).toBe('')
   })
 
+  it('lists the accounts after the first one', async () => {
+    const sandbox = await createSandbox()
+    await sandbox.writeConfig({
+      profiles: [
+        {
+          name: 'work',
+          remotes: ['gitlab.example.com'],
+          accounts: [{ name: 'work-2', configDir: '~/.claude-work-2' }],
+        },
+      ],
+    })
+    const ctx = sandbox.ctx(sandbox.dir('x'))
+
+    await run(['list'], ctx)
+    await sandbox.cleanup()
+
+    expect(ctx.out()).toBe(
+      [
+        '[work]',
+        '  configDir: ~/.claude (default)',
+        '  shared source: ~/.claude (default)',
+        `  account: work-2 (${join(sandbox.home, '.claude-work-2')})`,
+        '  remote: gitlab.example.com',
+        'onUnknown: prompt',
+        '',
+      ].join('\n')
+    )
+  })
+
   it('prints the configured onUnknown', async () => {
     const sandbox = await createSandbox()
     await sandbox.writeConfig({

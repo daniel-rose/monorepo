@@ -7,6 +7,7 @@ const read = name => process.env[name] ?? ''
 
 const report = [
   `CCPROFILE=${read('CCPROFILE')}`,
+  `CCPROFILE_ACCOUNT=${read('CCPROFILE_ACCOUNT')}`,
   `CLAUDE_CONFIG_DIR=${read('CLAUDE_CONFIG_DIR')}`,
   `CCPROFILE_ARGV=${read('CCPROFILE_ARGV')}`,
   ...process.argv.slice(2).map(arg => `ARG<<${arg}>>`),

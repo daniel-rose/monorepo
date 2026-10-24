@@ -1,7 +1,8 @@
-# ccprofile hook v1
-# Starts Claude Code with the profile `ccprofile resolve` picks for the current
-# directory. CCPROFILE and CLAUDE_CONFIG_DIR are set for claude only, never in
-# this shell. Bypass with `command claude`. Works with bash 3.2 (macOS).
+# ccprofile hook v2
+# Starts Claude Code with the profile and account `ccprofile resolve` picks for
+# the current directory. CCPROFILE, CCPROFILE_ACCOUNT and CLAUDE_CONFIG_DIR are
+# set for claude only, never in this shell. Bypass with `command claude`.
+# Works with bash 3.2 (macOS).
 
 function claude {
   if ! type -P ccprofile >/dev/null; then
@@ -18,17 +19,35 @@ function claude {
   # ${1+"$@"}: no "unbound variable" for zero arguments under `set -u` in
   # old bash versions.
   local ccprofile_out
-  ccprofile_out=$(command ccprofile resolve -- ${1+"$@"}) || return
-
-  local ccprofile_tab=$'\t'
-  local ccprofile_name=${ccprofile_out%%"$ccprofile_tab"*}
-  local ccprofile_dir=${ccprofile_out#*"$ccprofile_tab"}
+  ccprofile_out=$(command ccprofile resolve --protocol 2 -- ${1+"$@"}) || return
 
   if [ -z "$ccprofile_out" ]; then
     command claude ${1+"$@"}
-  elif [ -z "$ccprofile_dir" ]; then
-    CCPROFILE=$ccprofile_name command claude ${1+"$@"}
+    return
+  fi
+
+  # `name<TAB>account<TAB>configDir<TAB>mcpConfig`, split field by field so
+  # empty fields keep their place (`read` would merge empty TAB fields).
+  local ccprofile_tab=$'\t'
+  local ccprofile_rest=$ccprofile_out
+  local ccprofile_name=${ccprofile_rest%%"$ccprofile_tab"*}
+  ccprofile_rest=${ccprofile_rest#*"$ccprofile_tab"}
+  local ccprofile_account=${ccprofile_rest%%"$ccprofile_tab"*}
+  ccprofile_rest=${ccprofile_rest#*"$ccprofile_tab"}
+  local ccprofile_dir=${ccprofile_rest%%"$ccprofile_tab"*}
+  local ccprofile_mcp=${ccprofile_rest#*"$ccprofile_tab"}
+
+  # The `=` form: --mcp-config is variadic and would eat the next arguments.
+  # Before the user's arguments, or a user `--` would swallow it.
+  if [ -n "$ccprofile_mcp" ]; then
+    set -- "--mcp-config=$ccprofile_mcp" ${1+"$@"}
+  fi
+
+  if [ -z "$ccprofile_dir" ]; then
+    CCPROFILE=$ccprofile_name CCPROFILE_ACCOUNT=$ccprofile_account \
+      command claude ${1+"$@"}
   else
-    CCPROFILE=$ccprofile_name CLAUDE_CONFIG_DIR=$ccprofile_dir command claude ${1+"$@"}
+    CCPROFILE=$ccprofile_name CCPROFILE_ACCOUNT=$ccprofile_account \
+      CLAUDE_CONFIG_DIR=$ccprofile_dir command claude ${1+"$@"}
   fi
 }

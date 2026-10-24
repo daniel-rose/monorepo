@@ -3,7 +3,9 @@ export { default as loadConfig } from './loadConfig'
 export { default as locateConfig } from './locateConfig'
 export { default as locateConfigHome } from './locateConfigHome'
 export { default as configSchema } from './schema'
+export { default as sharedSource } from './sharedSource'
 export type {
+  Account,
   LoadConfigResult,
   Profile,
   ResolvedConfig,

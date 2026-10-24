@@ -5,6 +5,7 @@
 
 report() {
   printf 'CCPROFILE=%s\n' "${CCPROFILE-}"
+  printf 'CCPROFILE_ACCOUNT=%s\n' "${CCPROFILE_ACCOUNT-}"
   printf 'CLAUDE_CONFIG_DIR=%s\n' "${CLAUDE_CONFIG_DIR-}"
   printf 'CCPROFILE_ARGV=%s\n' "${CCPROFILE_ARGV-}"
   for arg in "$@"; do

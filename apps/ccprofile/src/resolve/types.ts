@@ -10,6 +10,13 @@ export type ProfileMatch = {
 
 export type ResolveOptions = { interactive: boolean }
 
+// The account `resolve` starts claude with. The first account carries the
+// profile name and configDir (undefined for the default profile).
+export type SelectedAccount = {
+  name: string
+  configDir: string | undefined
+}
+
 export type ResolveOutcome =
   | {
       kind: typeof OUTCOME_KIND.unchanged
@@ -21,6 +28,9 @@ export type ResolveOutcome =
   | {
       kind: typeof OUTCOME_KIND.profile
       profile: ResolvedProfile
+      account: SelectedAccount
+      // <shared source>/.mcp.json when it exists.
+      mcpConfig: string | undefined
       reason:
         | typeof RESOLVE_REASON.explicitProfile
         | typeof RESOLVE_REASON.match

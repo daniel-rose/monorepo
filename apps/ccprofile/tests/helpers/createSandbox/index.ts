@@ -40,6 +40,7 @@ const createBaseEnv = (home: string): NodeJS.ProcessEnv => {
     // Keep the host's variables out of the resolve run.
     CLAUDE_CONFIG_DIR: undefined,
     CCPROFILE: undefined,
+    CCPROFILE_ACCOUNT: undefined,
     CCPROFILE_CONFIG: undefined,
     XDG_CONFIG_HOME: undefined,
   }

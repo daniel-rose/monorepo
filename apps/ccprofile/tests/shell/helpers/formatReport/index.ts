@@ -4,6 +4,7 @@ import type { Invocation } from '../../types'
 const formatReport = (invocation: Invocation): string =>
   [
     `CCPROFILE=${invocation.ccprofile}`,
+    `CCPROFILE_ACCOUNT=${invocation.ccprofileAccount}`,
     `CLAUDE_CONFIG_DIR=${invocation.claudeConfigDir}`,
     `CCPROFILE_ARGV=${invocation.ccprofileArgv}`,
     ...invocation.args.map(arg => `ARG<<${arg}>>`),

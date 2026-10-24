@@ -10,6 +10,7 @@ import hook from './commands/hook'
 import init from './commands/init'
 import list from './commands/list'
 import resolve from './commands/resolve'
+import type { ResolveCommandOptions } from './commands/resolve/types'
 import setup from './commands/setup'
 import status from './commands/status'
 
@@ -84,10 +85,13 @@ const registerCommands = (
     .command('resolve')
     .description('print the profile for claude arguments (used by the hooks)')
     .argument('[args...]', 'claude arguments, after --')
+    .option('--protocol <version>', 'line format the hook reads')
     .helpOption(false)
     .allowUnknownOption()
     .passThroughOptions()
-    .action(async (args: string[]) => setExitCode(await resolve(ctx, args)))
+    .action(async (args: string[], options: ResolveCommandOptions) =>
+      setExitCode(await resolve(ctx, args, options))
+    )
 }
 
 // Without a subcommand the root action runs `status`. It is not commander's

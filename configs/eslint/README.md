@@ -73,7 +73,8 @@ Don't apply it to files whose framework requires named exports — Next.js App R
 - `@typescript-eslint/consistent-type-imports` — enforces `type` imports
 - `no-restricted-syntax` — arrow functions only: no function declarations, function expressions, overloads or object method shorthand. Class members and getters/setters stay allowed; `.d.ts` files are exempt.
 - Prettier integration via `eslint-plugin-prettier`
-- React preset: accessibility checks via the `recommended` rules of `eslint-plugin-jsx-a11y-x`
+- React preset: the `recommended` rules of `eslint-plugin-react-hooks` in `.ts` and `.tsx` files, so custom hooks in their own `.ts` file are checked too
+- React preset: accessibility checks via the `recommended` rules of `eslint-plugin-jsx-a11y-x` and `react-refresh/only-export-components`, both in `.tsx` files only
 
 ### Customizing `no-restricted-syntax`
 

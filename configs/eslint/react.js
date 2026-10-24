@@ -22,7 +22,14 @@ export const reactConfig = tseslint.config(
       js.configs.recommended,
       ...tseslint.configs.recommendedTypeChecked,
     ],
-    rules: sharedRules,
+    // Custom hooks usually live in their own .ts file
+    plugins: {
+      'react-hooks': reactHooks,
+    },
+    rules: {
+      ...sharedRules,
+      ...reactHooks.configs.recommended.rules,
+    },
   },
   {
     files: ['**/*.tsx'],

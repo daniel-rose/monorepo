@@ -170,6 +170,8 @@ describe('existing rules', () => {
     ],
     ['react', 'existing/a11y.tsx', [[1, 'jsx-a11y-x/alt-text']]],
     ['react', 'existing/hooks.tsx', [[8, 'react-hooks/rules-of-hooks']]],
+    // Custom hooks usually live in their own .ts file
+    ['react', 'existing/custom-hook.ts', [[8, 'react-hooks/rules-of-hooks']]],
     [
       'react',
       'existing/refresh.tsx',

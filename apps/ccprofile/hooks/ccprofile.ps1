@@ -87,23 +87,29 @@ function __ccprofile_run {
     # arguments. Before the user's arguments, or a user `--` would swallow it.
     if ($mcpConfig) { $nativeArgs = @("--mcp-config=$mcpConfig") + $nativeArgs }
 
-    $dirVariable = if ($ccprofileTool -eq 'codex') { 'CODEX_HOME' } else { 'CLAUDE_CONFIG_DIR' }
+    # `$env:X = $null` removes the variable. [Environment]::SetEnvironmentVariable
+    # would not: PowerShell passes $null to a string parameter as "", which
+    # .NET (PowerShell 7) keeps as an empty value.
     $previousProfile = $env:CCPROFILE
     $previousAccount = $env:CCPROFILE_ACCOUNT
-    $previousDir = [Environment]::GetEnvironmentVariable($dirVariable)
+    $previousConfigDir = $env:CLAUDE_CONFIG_DIR
+    $previousCodexHome = $env:CODEX_HOME
     $exitCode = 0
     try {
         if ($name) {
             $env:CCPROFILE = $name
             $env:CCPROFILE_ACCOUNT = $account
-            if ($dir) { [Environment]::SetEnvironmentVariable($dirVariable, $dir) }
+            if ($dir) {
+                if ($ccprofileTool -eq 'codex') { $env:CODEX_HOME = $dir } else { $env:CLAUDE_CONFIG_DIR = $dir }
+            }
         }
         & $toolCommand @nativeArgs
         $exitCode = $LASTEXITCODE
     } finally {
         $env:CCPROFILE = $previousProfile
         $env:CCPROFILE_ACCOUNT = $previousAccount
-        [Environment]::SetEnvironmentVariable($dirVariable, $previousDir)
+        $env:CLAUDE_CONFIG_DIR = $previousConfigDir
+        $env:CODEX_HOME = $previousCodexHome
     }
     $global:LASTEXITCODE = $exitCode
 }

@@ -18,6 +18,35 @@ const linkType = (entry: SharedEntry, platform: NodeJS.Platform) => {
   return entry.kind === ENTRY_KIND.directory ? 'junction' : 'file'
 }
 
+const failure = (
+  target: string,
+  error: unknown,
+  platform: NodeJS.Platform
+): LinkFailure => {
+  const code = errorCode(error) ?? 'unknown error'
+  return {
+    target,
+    unsupported: platform === 'win32' && code === 'EPERM',
+    reason: code,
+  }
+}
+
+// The dirs a plan needs; the first one that cannot be created is reported
+// and the plan's links are skipped, the other plans still run.
+const createDirs = async (
+  dirs: readonly string[],
+  platform: NodeJS.Platform
+): Promise<LinkFailure | null> => {
+  for (const dir of dirs) {
+    try {
+      await mkdir(dir, { recursive: true })
+    } catch (error) {
+      return failure(dir, error, platform)
+    }
+  }
+  return null
+}
+
 // Creates the missing dirs, then the links. Never removes or overwrites: an
 // entry that appeared since planning fails with EEXIST and is reported.
 const applyLinks = async (
@@ -28,9 +57,13 @@ const applyLinks = async (
   const failures: LinkFailure[] = []
 
   for (const plan of plans) {
-    await mkdir(plan.account.configDir, { recursive: true })
-    for (const dir of plan.createSourceDirs) {
-      await mkdir(dir, { recursive: true })
+    const dirFailure = await createDirs(
+      [plan.account.configDir, ...plan.createSourceDirs],
+      platform
+    )
+    if (dirFailure !== null) {
+      failures.push(dirFailure)
+      continue
     }
 
     for (const step of plan.steps) {
@@ -40,12 +73,7 @@ const applyLinks = async (
         await symlink(source, target, linkType(entry, platform))
         created += 1
       } catch (error) {
-        const code = errorCode(error) ?? 'unknown error'
-        failures.push({
-          target,
-          unsupported: platform === 'win32' && code === 'EPERM',
-          reason: code,
-        })
+        failures.push(failure(target, error, platform))
       }
     }
   }

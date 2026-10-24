@@ -1,3 +1,10 @@
+## @daniel-rose/ccprofile [2.0.1](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/ccprofile@2.0.0...@daniel-rose/ccprofile@2.0.1) (2026-10-24)
+
+
+### Bug Fixes
+
+* **ccprofile:** write the $schema of the installed major ([#187](https://github.com/daniel-rose/monorepo/issues/187)) ([914661a](https://github.com/daniel-rose/monorepo/commit/914661ac0a861a8c5b6b1d08b76e7fd2b3d70af5))
+
 # @daniel-rose/ccprofile [2.0.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/ccprofile@1.0.0...@daniel-rose/ccprofile@2.0.0) (2026-10-24)
 
 

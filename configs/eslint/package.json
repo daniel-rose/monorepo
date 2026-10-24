@@ -13,7 +13,7 @@
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "lint": "eslint .",
-    "test:types": "tsc -p tests/types/tsconfig.json",
+    "test:types": "pnpm run build && tsc -p tests/types/tsconfig.json",
     "test:unit": "vitest",
     "test:unit:ci": "vitest run && pnpm test:types"
   },

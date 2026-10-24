@@ -27,7 +27,7 @@ Optional peer (for Tailwind CSS v4): `eslint-plugin-tailwindcss` (`^4.4.0`)
 
 Still on ESLint 9? Stay on `@daniel-rose/eslint-config@2`.
 
-Type declarations are included: every export is typed as ESLint's `Linter.Config[]`, so the configs also work in an `eslint.config.ts` with `defineConfig` from `eslint/config`.
+Type declarations are included and use ESLint's own types, so the configs also work in an `eslint.config.ts` with `defineConfig` from `eslint/config`: `baseConfig`, `reactConfig`, `vitestConfig` and `defaultExportConfig` are `Linter.Config[]`, `tailwindConfig` is a function returning `Linter.Config[]`, and `sharedRules` is `Linter.RulesRecord`.
 
 ## Usage
 

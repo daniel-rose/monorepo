@@ -3,6 +3,7 @@ import { fileURLToPath, URL } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { baseConfig, defaultExportConfig } from '../index.js'
 import { reactConfig } from '../react.js'
+import { tailwindConfig } from '../tailwind.js'
 import { vitestConfig } from '../vitest.js'
 
 const fixturesDir = fileURLToPath(new URL('./fixtures/', import.meta.url))
@@ -43,6 +44,10 @@ const linters = {
   baseDefaultExports: createLinter([...baseConfig, ...defaultExportConfig]),
   reactDefaultExports: createLinter([...reactConfig, ...defaultExportConfig]),
   baseVitest: createLinter([...baseConfig, ...vitestConfig]),
+  reactTailwind: createLinter([
+    ...reactConfig,
+    ...tailwindConfig({ cssConfigPath: `${fixturesDir}tailwind/tailwind.css` }),
+  ]),
 }
 
 // Plugin-owned messages are matched by rule id only; our own selectors all
@@ -194,5 +199,26 @@ describe('vitest (vitestConfig)', () => {
 
   it('stays off without the opt-in', async () => {
     expect(await lint('base', 'vitest/focused.test.ts')).toEqual([])
+  })
+})
+
+describe('tailwind (tailwindConfig)', () => {
+  it.each([
+    [
+      'reactTailwind',
+      'tailwind/contradicting.tsx',
+      // Reported once per conflicting class (p-2, p-4)
+      [
+        [1, 'tailwindcss/no-contradicting-classname'],
+        [1, 'tailwindcss/no-contradicting-classname'],
+      ],
+    ],
+    ['reactTailwind', 'tailwind/unsorted.tsx', []],
+  ])('%s: %s', async (linter, file, expected) => {
+    expect(await lint(linter, file)).toEqual(expected)
+  })
+
+  it('stays off without the opt-in', async () => {
+    expect(await lint('react', 'tailwind/contradicting.tsx')).toEqual([])
   })
 })

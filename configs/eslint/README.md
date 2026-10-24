@@ -22,6 +22,8 @@ pnpm add @daniel-rose/eslint-config
 
 Peer dependencies: `eslint ^10`
 Optional peers (for React): `eslint-plugin-react-hooks` (`^7.1.0`), `eslint-plugin-react-refresh`, `eslint-plugin-jsx-a11y-x` (`^0.2.0`)
+Optional peer (for Vitest): `@vitest/eslint-plugin` (`^1.6.0`)
+Optional peer (for Tailwind CSS v4): `eslint-plugin-tailwindcss` (`^4.4.0`)
 
 Still on ESLint 9? Stay on `@daniel-rose/eslint-config@2`.
 
@@ -44,6 +46,35 @@ import { reactConfig } from '@daniel-rose/eslint-config/react'
 
 export default [...reactConfig]
 ```
+
+### Vitest (opt-in)
+
+Append `vitestConfig` after `baseConfig` or `reactConfig`. It applies the `recommended` rules of `@vitest/eslint-plugin` (`no-focused-tests`, `expect-expect`, `valid-expect`, …) to `*.test.ts(x)` and `*.spec.ts(x)` files:
+
+```js
+// eslint.config.js
+import { reactConfig } from '@daniel-rose/eslint-config/react'
+import { vitestConfig } from '@daniel-rose/eslint-config/vitest'
+
+export default [...reactConfig, ...vitestConfig]
+```
+
+### Tailwind CSS v4 (opt-in)
+
+Append `tailwindConfig({ cssConfigPath })` after `baseConfig` or `reactConfig`. `cssConfigPath` is the CSS entry file that contains `@import 'tailwindcss'` (absolute or relative to the working directory). It applies the `recommended` rules of `eslint-plugin-tailwindcss` (`no-contradicting-classname`, `no-custom-classname`, `enforces-shorthand`, …):
+
+```js
+// eslint.config.js
+import { reactConfig } from '@daniel-rose/eslint-config/react'
+import { tailwindConfig } from '@daniel-rose/eslint-config/tailwind'
+
+export default [
+  ...reactConfig,
+  ...tailwindConfig({ cssConfigPath: './src/styles/main.css' }),
+]
+```
+
+`tailwindcss/classnames-order` is off: class order is left to `prettier-plugin-tailwindcss`, and two sorters fight each other. Without that Prettier plugin, turn the rule back on in a later block.
 
 ### Default exports only (opt-in)
 
@@ -73,7 +104,8 @@ Don't apply it to files whose framework requires named exports — Next.js App R
 - `@typescript-eslint/consistent-type-imports` — enforces `type` imports
 - `no-restricted-syntax` — arrow functions only: no function declarations, function expressions, overloads or object method shorthand. Class members and getters/setters stay allowed; `.d.ts` files are exempt.
 - Prettier integration via `eslint-plugin-prettier`
-- React preset: accessibility checks via the `recommended` rules of `eslint-plugin-jsx-a11y-x`
+- React preset: the `recommended` rules of `eslint-plugin-react-hooks` in `.ts` and `.tsx` files, so custom hooks in their own `.ts` file are checked too
+- React preset: accessibility checks via the `recommended` rules of `eslint-plugin-jsx-a11y-x` and `react-refresh/only-export-components`, both in `.tsx` files only
 
 ### Customizing `no-restricted-syntax`
 

@@ -1,3 +1,10 @@
+# @daniel-rose/ccprofile [2.1.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/ccprofile@2.0.1...@daniel-rose/ccprofile@2.1.0) (2026-10-24)
+
+
+### Features
+
+* **ccprofile:** codex per profile and account ([#188](https://github.com/daniel-rose/monorepo/issues/188)) ([1918497](https://github.com/daniel-rose/monorepo/commit/1918497eea87f5ed6e42c0cf3271b59cc4775993))
+
 ## @daniel-rose/ccprofile [2.0.1](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/ccprofile@2.0.0...@daniel-rose/ccprofile@2.0.1) (2026-10-24)
 
 

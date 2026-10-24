@@ -78,7 +78,8 @@ describe('runInit', () => {
 
     const text = readFileSync(configPath, 'utf8')
     expect(code).toBe(0)
-    expect(JSON.parse(text)).toEqual({ $schema: SCHEMA, ...EXAMPLE_CONFIG })
+    // SCHEMA last: a stale $schema in EXAMPLE_CONFIG must not win here too.
+    expect(JSON.parse(text)).toEqual({ ...EXAMPLE_CONFIG, $schema: SCHEMA })
     expect(text.endsWith('}\n')).toBe(true)
     expect(Object.keys(JSON.parse(text) as object)[0]).toBe('$schema')
     expect((await loadConfig(ctx)).status).toBe('ok')

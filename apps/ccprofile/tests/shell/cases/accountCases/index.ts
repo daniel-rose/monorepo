@@ -90,7 +90,7 @@ const accountCases: readonly HookCase[] = [
     },
   },
   {
-    // Line `work<TAB>work<TAB><TAB><file>`: empty field in the middle.
+    // Line `work<TAB><TAB><TAB><file>`: empty fields in the middle.
     title: 'keeps an empty configDir field before the mcpConfig field',
     test: async t => {
       t.writeConfig()

@@ -6,6 +6,7 @@ import {
   OUTCOME_KIND,
   RESOLVE_PROTOCOL,
 } from '../../../constants'
+import createSilentContext from '../../../context/createSilentContext'
 import type { Context } from '../../../context/types'
 import { formatResolveLine, resolveProfile } from '../../../resolve'
 import failWith from '../failWith'
@@ -29,9 +30,13 @@ const resolve = async (
   const argv = parseArgv(ctx, args)
   if ('error' in argv) return failWith(ctx, [argv.error])
 
-  const outcome = await resolveProfile(argv.args, ctx, {
-    interactive: current && ctx.stdin.isTTY === true,
-  })
+  // For a v1 hook the outcome only decides between passthrough and "hook
+  // outdated", so its informational lines (onUnknown, creating) stay quiet.
+  const outcome = await resolveProfile(
+    argv.args,
+    current ? ctx : createSilentContext(ctx),
+    { interactive: current && ctx.stdin.isTTY === true }
+  )
 
   switch (outcome.kind) {
     case OUTCOME_KIND.profile:

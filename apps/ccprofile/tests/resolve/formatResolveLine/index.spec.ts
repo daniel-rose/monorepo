@@ -21,6 +21,18 @@ describe('formatResolveLine', () => {
     )
   })
 
+  // An inherited CCPROFILE_ACCOUNT of the first account would otherwise
+  // block `CCPROFILE=<other> claude` in a nested call.
+  it('leaves the account empty for the first account', () => {
+    expect(
+      formatResolveLine({
+        profile: privateProfile,
+        account: { name: 'private', configDir: '/home/jane/.claude-private' },
+        mcpConfig: undefined,
+      })
+    ).toBe('private\t\t/home/jane/.claude-private\t\n')
+  })
+
   it('keeps empty middle and trailing fields for the default profile', () => {
     expect(
       formatResolveLine({
@@ -28,6 +40,6 @@ describe('formatResolveLine', () => {
         account: { name: 'work', configDir: undefined },
         mcpConfig: undefined,
       })
-    ).toBe('work\twork\t\t\n')
+    ).toBe('work\t\t\t\n')
   })
 })

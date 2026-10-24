@@ -123,7 +123,7 @@ An empty value counts as unset.
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `CLAUDE_CONFIG_DIR` | Already set: ccprofile does nothing and `claude` uses it.                                                                                                                  |
 | `CCPROFILE`         | Use this profile by name (unknown name: exit 1). Nested `claude` calls inherit the parent's decision this way, because Claude Code's Bash tool also loads shell functions. |
-| `CCPROFILE_ACCOUNT` | Use this account of the resolved profile (unknown name: exit 1). Set by the hook for `claude`, so nested calls inherit it like `CCPROFILE`.                                |
+| `CCPROFILE_ACCOUNT` | Use this account of the resolved profile (unknown name: exit 1). Set by the hook for `claude` (empty for the first account), so nested calls inherit it like `CCPROFILE`.  |
 | `CCPROFILE_CONFIG`  | Path of the config file.                                                                                                                                                   |
 | `CCPROFILE_ARGV`    | Used by the PowerShell hook to hand the arguments to `ccprofile` as a JSON array. Not for manual use.                                                                      |
 
@@ -138,7 +138,7 @@ Decision order of `resolve`: `CLAUDE_CONFIG_DIR` set, passthrough argument, no c
 | `ccprofile config`                           | Print the config path                                                                                                                                                          |
 | `ccprofile hook <shell>`                     | Print the hook (`zsh`, `bash`, `fish`, `pwsh`, `powershell`)                                                                                                                   |
 | `ccprofile link [profile] [--yes]`           | Link the shared config of a profile (default: all) into its further accounts; never overwrites                                                                                 |
-| `ccprofile resolve --protocol 2 [--] <args>` | What the hook calls; prints `name<TAB>account<TAB>configDir<TAB>mcpConfig` or nothing                                                                                          |
+| `ccprofile resolve --protocol 2 [--] <args>` | What the hook calls; prints `name<TAB>account<TAB>configDir<TAB>mcpConfig` (account empty for the first) or nothing                                                            |
 | `ccprofile setup [shell] [--yes] [--remove]` | Install or update the hook; `--remove` removes the block and the hook file, never your config                                                                                  |
 | `ccprofile init [--example]`                 | Create the config; never overwrites. Without a terminal `--example` is required                                                                                                |
 | `ccprofile doctor`                           | Check config, `claude` on PATH, logins, account links, hook and shell startup file; exit 1 on any `fail`                                                                       |

@@ -14,7 +14,8 @@ let sandbox: Sandbox
 let workRepo = ''
 let plain = ''
 let configDir = ''
-// The protocol 2 line of the first account, without .mcp.json.
+// The protocol 2 line of the first account (empty account field), without
+// .mcp.json.
 let line = ''
 
 beforeAll(async () => {
@@ -22,7 +23,7 @@ beforeAll(async () => {
   workRepo = await sandbox.repo('w/app', 'git@gitlab.example.com:acme/app.git')
   plain = sandbox.dir('plain')
   configDir = join(sandbox.home, '.claude-work')
-  line = `work\twork\t${configDir}\t\n`
+  line = `work\t\t${configDir}\t\n`
   sandbox.dir('.claude-work')
   sandbox.dir('.claude-work-2')
   await sandbox.writeConfig({
@@ -89,6 +90,17 @@ describe('resolve from a v1 hook (no --protocol)', () => {
 
     expect(code).toBe(1)
     expect(ctx.out()).toBe('')
+    expect(ctx.err()).toBe(outdated)
+  })
+
+  it('prints only the outdated message, no resolve chatter', async () => {
+    const ctx = sandbox.ctx(workRepo, { CCPROFILE_ACCOUNT: 'work-2' })
+    rmSync(join(sandbox.home, '.claude-work-2'), { recursive: true })
+
+    const code = await run(['resolve', '--', 'hi'], ctx)
+    sandbox.dir('.claude-work-2')
+
+    expect(code).toBe(1)
     expect(ctx.err()).toBe(outdated)
   })
 

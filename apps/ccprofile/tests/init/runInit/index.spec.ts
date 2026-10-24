@@ -10,6 +10,15 @@ import runInit from '../../../src/init/runInit'
 import createSandbox from '../../helpers/createSandbox'
 import installFakeClaude from '../../helpers/installFakeClaude'
 
+// The $schema of a new config pins the installed major, read independently
+// of the code under test, so a major release cannot leave it behind.
+const PACKAGE_MAJOR = (
+  JSON.parse(
+    readFileSync(new URL('../../../package.json', import.meta.url), 'utf8')
+  ) as { version: string }
+).version.split('.')[0]
+const SCHEMA = `https://unpkg.com/@daniel-rose/ccprofile@${PACKAGE_MAJOR}/schema.json`
+
 type Sandbox = Awaited<ReturnType<typeof createSandbox>>
 let sandbox: Sandbox
 let configPath = ''
@@ -69,7 +78,8 @@ describe('runInit', () => {
 
     const text = readFileSync(configPath, 'utf8')
     expect(code).toBe(0)
-    expect(JSON.parse(text)).toEqual(EXAMPLE_CONFIG)
+    // SCHEMA last: a stale $schema in EXAMPLE_CONFIG must not win here too.
+    expect(JSON.parse(text)).toEqual({ ...EXAMPLE_CONFIG, $schema: SCHEMA })
     expect(text.endsWith('}\n')).toBe(true)
     expect(Object.keys(JSON.parse(text) as object)[0]).toBe('$schema')
     expect((await loadConfig(ctx)).status).toBe('ok')
@@ -101,7 +111,7 @@ describe('runInit', () => {
     if (loaded.status !== 'ok') return
     expect(loaded.config.profiles).toHaveLength(2)
     expect(JSON.parse(readFileSync(configPath, 'utf8'))).toEqual({
-      $schema: EXAMPLE_CONFIG.$schema,
+      $schema: SCHEMA,
       onUnknown: 'prompt',
       profiles: [
         { name: 'default', remotes: ['gitlab.example.com'] },

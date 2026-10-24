@@ -1,8 +1,6 @@
-import SCHEMA_URL from '../SCHEMA_URL'
-
-// The example of the design spec, section 5.
+// The example of the design spec, section 5. `init` puts the `$schema` of
+// the installed major in front.
 const EXAMPLE_CONFIG = {
-  $schema: SCHEMA_URL,
   onUnknown: 'prompt',
   passthrough: ['--version', '-v', '--help', '-h', 'update'],
   profiles: [

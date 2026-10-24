@@ -22,6 +22,7 @@ pnpm add @daniel-rose/eslint-config
 
 Peer dependencies: `eslint ^10`
 Optional peers (for React): `eslint-plugin-react-hooks` (`^7.1.0`), `eslint-plugin-react-refresh`, `eslint-plugin-jsx-a11y-x` (`^0.2.0`)
+Optional peer (for Vitest): `@vitest/eslint-plugin` (`^1.6.0`)
 
 Still on ESLint 9? Stay on `@daniel-rose/eslint-config@2`.
 
@@ -43,6 +44,18 @@ export default [...baseConfig]
 import { reactConfig } from '@daniel-rose/eslint-config/react'
 
 export default [...reactConfig]
+```
+
+### Vitest (opt-in)
+
+Append `vitestConfig` after `baseConfig` or `reactConfig`. It applies the `recommended` rules of `@vitest/eslint-plugin` (`no-focused-tests`, `expect-expect`, `valid-expect`, …) to `*.test.ts(x)` and `*.spec.ts(x)` files:
+
+```js
+// eslint.config.js
+import { reactConfig } from '@daniel-rose/eslint-config/react'
+import { vitestConfig } from '@daniel-rose/eslint-config/vitest'
+
+export default [...reactConfig, ...vitestConfig]
 ```
 
 ### Default exports only (opt-in)

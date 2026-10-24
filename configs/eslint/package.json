@@ -9,7 +9,7 @@
   ],
   "type": "module",
   "scripts": {
-    "build": "mkdir -p ./dist && cp index.js base.js react.js restrictions.js ./dist/",
+    "build": "mkdir -p ./dist && cp index.js base.js react.js restrictions.js vitest.js ./dist/",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "lint": "eslint .",
@@ -28,6 +28,9 @@
     },
     "./react": {
       "import": "./dist/react.js"
+    },
+    "./vitest": {
+      "import": "./dist/vitest.js"
     }
   },
   "dependencies": {
@@ -37,12 +40,16 @@
     "typescript-eslint": "catalog:prod"
   },
   "peerDependencies": {
+    "@vitest/eslint-plugin": "^1.6.0",
     "eslint": "^10",
     "eslint-plugin-jsx-a11y-x": "^0.2.0",
     "eslint-plugin-react-hooks": "^7.1.0",
     "eslint-plugin-react-refresh": "^0.5.0"
   },
   "peerDependenciesMeta": {
+    "@vitest/eslint-plugin": {
+      "optional": true
+    },
     "eslint-plugin-jsx-a11y-x": {
       "optional": true
     },
@@ -57,6 +64,7 @@
     "@daniel-rose/prettier-config": "^2.0.0",
     "@daniel-rose/semantic-release-config": "^2.0.0",
     "@types/react": "catalog:",
+    "@vitest/eslint-plugin": "catalog:",
     "eslint": "catalog:",
     "eslint-plugin-jsx-a11y-x": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",

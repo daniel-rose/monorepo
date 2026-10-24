@@ -26,6 +26,7 @@ catalog:
   '@vitest/browser': ^5.0.5
   '@vitest/browser-playwright': ^5.0.5
   '@vitest/coverage-v8': ^5.0.5
+  '@vitest/eslint-plugin': ^1.6.28
   commander: ^15.0.0
   eslint: ^10.13.0
   eslint-config-next: ^16.4.2
@@ -82,6 +83,10 @@ peerDependencyRules:
     eslint-plugin-import>eslint: '10'
     eslint-plugin-jsx-a11y>eslint: '10'
     eslint-plugin-react>eslint: '10'
+    # @vitest/eslint-plugin 1.6.28 raised its typescript peer to >= 6; the fixture
+    # tests of configs/eslint pass on typescript 5.9. Drop once the catalog moves to
+    # typescript 6.
+    '@vitest/eslint-plugin>typescript': '5'
 overrides:
   '@daniel-rose/envex': 'workspace:^'
   '@daniel-rose/eslint-config': 'workspace:^'

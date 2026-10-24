@@ -3,6 +3,7 @@ import { fileURLToPath, URL } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { baseConfig, defaultExportConfig } from '../index.js'
 import { reactConfig } from '../react.js'
+import { vitestConfig } from '../vitest.js'
 
 const fixturesDir = fileURLToPath(new URL('./fixtures/', import.meta.url))
 
@@ -41,6 +42,7 @@ const linters = {
   react: createLinter(reactConfig),
   baseDefaultExports: createLinter([...baseConfig, ...defaultExportConfig]),
   reactDefaultExports: createLinter([...reactConfig, ...defaultExportConfig]),
+  baseVitest: createLinter([...baseConfig, ...vitestConfig]),
 }
 
 // Plugin-owned messages are matched by rule id only; our own selectors all
@@ -179,5 +181,18 @@ describe('existing rules', () => {
     ],
   ])('%s: %s', async (linter, file, expected) => {
     expect(await lint(linter, file)).toEqual(expected)
+  })
+})
+
+describe('vitest (vitestConfig)', () => {
+  it.each([
+    ['baseVitest', 'vitest/focused.test.ts', [[3, 'vitest/no-focused-tests']]],
+    ['baseVitest', 'vitest/clean.test.ts', []],
+  ])('%s: %s', async (linter, file, expected) => {
+    expect(await lint(linter, file)).toEqual(expected)
+  })
+
+  it('stays off without the opt-in', async () => {
+    expect(await lint('base', 'vitest/focused.test.ts')).toEqual([])
   })
 })

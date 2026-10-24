@@ -31,7 +31,7 @@ Location: `$CCPROFILE_CONFIG`, else `${XDG_CONFIG_HOME:-~/.config}/ccprofile/con
 
 ```json
 {
-  "$schema": "https://unpkg.com/@daniel-rose/ccprofile@1/schema.json",
+  "$schema": "https://unpkg.com/@daniel-rose/ccprofile@2/schema.json",
   "onUnknown": "prompt",
   "passthrough": ["--version", "-v", "--help", "-h", "update"],
   "profiles": [

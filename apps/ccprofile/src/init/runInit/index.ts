@@ -5,7 +5,8 @@ import failWith from '../../cli/commands/failWith'
 import status from '../../cli/commands/status'
 import { locateConfig } from '../../config'
 import type { ExitCode } from '../../constants'
-import { EXAMPLE_CONFIG, INIT_TEXT, SCHEMA_URL } from '../../constants'
+import { EXAMPLE_CONFIG, INIT_TEXT } from '../../constants'
+import readSchemaUrl from '../../context/readSchemaUrl'
 import type { Context } from '../../context/types'
 import findCandidates from '../findCandidates'
 import runWizard from '../runWizard'
@@ -71,7 +72,9 @@ const runInit = async (
   // Checked up front so the wizard is not run for nothing.
   if (await pathExists(path)) return failWith(ctx, [INIT_TEXT.exists(path)])
 
-  if (options.example) return writeNew(path, EXAMPLE_CONFIG, ctx)
+  if (options.example) {
+    return writeNew(path, { $schema: readSchemaUrl(), ...EXAMPLE_CONFIG }, ctx)
+  }
   if (ctx.stdin.isTTY !== true) return failWith(ctx, [INIT_TEXT.needsTerminal])
 
   const candidates = await findCandidates(ctx)
@@ -84,7 +87,7 @@ const runInit = async (
   return writeNew(
     path,
     {
-      $schema: SCHEMA_URL,
+      $schema: readSchemaUrl(),
       onUnknown: result.onUnknown,
       profiles: result.profiles.map(toConfigProfile),
     },

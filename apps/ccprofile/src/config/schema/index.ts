@@ -4,6 +4,7 @@ import {
   CONFIG_PATTERN,
   CONFIG_REASON,
   DEFAULT_PASSTHROUGH,
+  LIMITS,
   ON_UNKNOWN_PROMPT,
 } from '../../constants'
 
@@ -132,6 +133,15 @@ const configSchema = z
       .default([...DEFAULT_PASSTHROUGH])
       .describe(
         'Arguments that start `claude` without a profile. Entries starting with `-` match any argument before a literal `--`; other entries match only the first argument. Replaces the default list.'
+      ),
+    accountThreshold: z
+      .number()
+      .int()
+      .min(LIMITS.minThreshold)
+      .max(LIMITS.maxThreshold)
+      .default(LIMITS.defaultThreshold)
+      .describe(
+        'Percent of a rate-limit window at which an account counts as full. With the ccprofile mod installed, `claude` starts with the first account of the profile that is not full.'
       ),
     profiles: z
       .array(profileSchema)

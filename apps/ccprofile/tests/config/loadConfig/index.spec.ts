@@ -102,6 +102,7 @@ describe('loadConfig', () => {
           schema: 'https://unpkg.com/@daniel-rose/ccprofile@1/schema.json',
           onUnknown: 'prompt',
           passthrough: ['--version'],
+          accountThreshold: 90,
           profiles: [
             {
               name: 'work',
@@ -171,6 +172,7 @@ describe('loadConfig', () => {
         config: {
           onUnknown: 'prompt',
           passthrough: ['--version', '-v', '--help', '-h', 'update'],
+          accountThreshold: 90,
           schema: undefined,
         },
       })
@@ -321,6 +323,26 @@ describe('loadConfig', () => {
 
   describe('rules', () => {
     it.each<[string, unknown, string]>([
+      [
+        'threshold below 1',
+        { profiles: [work], accountThreshold: 0 },
+        'accountThreshold: Too small: expected number to be >=1',
+      ],
+      [
+        'threshold above 100',
+        { profiles: [work], accountThreshold: 101 },
+        'accountThreshold: Too big: expected number to be <=100',
+      ],
+      [
+        'fractional threshold',
+        { profiles: [work], accountThreshold: 90.5 },
+        'accountThreshold: Invalid input: expected int, received number',
+      ],
+      [
+        'threshold as text',
+        { profiles: [work], accountThreshold: '90' },
+        'accountThreshold: Invalid input: expected number, received string',
+      ],
       [
         'unknown key',
         { profiles: [{ ...work, remote: 'x' }] },

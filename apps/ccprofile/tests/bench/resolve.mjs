@@ -34,7 +34,14 @@ try {
     configPath,
     JSON.stringify({
       profiles: [
-        { name: 'work', remotes: ['gitlab.example.com', 'github.com/acme'] },
+        {
+          name: 'work',
+          remotes: ['gitlab.example.com', 'github.com/acme'],
+          accounts: [
+            { name: 'work-2', configDir: join(home, '.claude-work-2') },
+            { name: 'work-3', configDir: join(home, '.claude-work-3') },
+          ],
+        },
         {
           name: 'private',
           configDir: join(home, '.claude-private'),
@@ -43,6 +50,28 @@ try {
       ],
     })
   )
+
+  // Limit data of the account pool: the first account below the threshold,
+  // work-2 with a file, work-3 without one. Every run reads all three.
+  const writeLimits = (dir, percentUsed) => {
+    mkdirSync(join(dir, 'ccprofile'), { recursive: true })
+    writeFileSync(
+      join(dir, 'ccprofile', 'limits.json'),
+      JSON.stringify({
+        version: 1,
+        seenAt: new Date().toISOString(),
+        rateLimits: [
+          {
+            kind: 'five_hour',
+            percentUsed,
+            resetsAt: new Date(Date.now() + 3_600_000).toISOString(),
+          },
+        ],
+      })
+    )
+  }
+  writeLimits(join(home, '.claude'), 40)
+  writeLimits(join(home, '.claude-work-2'), 10)
 
   // Git hooks export GIT_DIR and friends; they must not reach the sandbox.
   const env = { ...process.env }
@@ -57,7 +86,10 @@ try {
   })
   delete env.CLAUDE_CONFIG_DIR
   delete env.CCPROFILE
+  delete env.CCPROFILE_ACCOUNT
   delete env.CCPROFILE_ARGV
+  // Set inside a Claude session; it would skip the choice by limits.
+  delete env.CLAUDECODE
   delete env.XDG_CONFIG_HOME
 
   const git = (...args) =>

@@ -17,6 +17,7 @@ const claude = (
   ({
     kind: 'profile',
     reason: 'match',
+    selection: { kind: 'first' },
     tool: 'claude',
     profile,
     account,
@@ -64,6 +65,7 @@ describe('formatResolveLine', () => {
       formatResolveLine({
         kind: 'profile',
         reason: 'match',
+        selection: { kind: 'first' },
         tool: 'codex',
         profile: privateProfile,
         account: { name: 'seat-2', configDir: '/home/jane/.claude-private-2' },
@@ -77,6 +79,7 @@ describe('formatResolveLine', () => {
       formatResolveLine({
         kind: 'profile',
         reason: 'match',
+        selection: { kind: 'first' },
         tool: 'codex',
         profile: workProfile,
         account: { name: 'work', configDir: undefined },

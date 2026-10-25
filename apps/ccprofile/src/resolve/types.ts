@@ -7,6 +7,7 @@ import type {
   TOOL,
   Tool,
 } from '../constants'
+import type { AccountSelection } from '../limits'
 
 export type ProfileMatch = {
   profile: ResolvedProfile
@@ -23,6 +24,12 @@ export type ResolveOptions = { interactive: boolean; tool?: Tool }
 export type SelectedAccount = {
   name: string
   configDir: string | undefined
+}
+
+// The account of a resolved profile and why it was taken.
+export type PickedAccount = {
+  account: SelectedAccount
+  selection: AccountSelection
 }
 
 // The CODEX_HOME of the selected account; `dir` undefined is ~/.codex.
@@ -42,6 +49,7 @@ type ProfileOutcomeBase = {
   kind: typeof OUTCOME_KIND.profile
   profile: ResolvedProfile
   account: SelectedAccount
+  selection: AccountSelection
   reason:
     | typeof RESOLVE_REASON.explicitProfile
     | typeof RESOLVE_REASON.match

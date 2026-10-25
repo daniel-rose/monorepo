@@ -8,6 +8,7 @@ const createContext = (): Context => ({
   env: process.env,
   platform: process.platform,
   homedir: homedir(),
+  now: Date.now,
   stdin: process.stdin,
   stdout: process.stdout,
   stderr: process.stderr,

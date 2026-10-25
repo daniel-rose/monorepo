@@ -3,9 +3,11 @@ import {
   ENV_VAR,
   OUTCOME_KIND,
   RESOLVE_REASON,
+  SELECTION_KIND,
   STATUS_TEXT,
 } from '../../../../constants'
 import type { Context } from '../../../../context/types'
+import { formatSelection } from '../../../../limits'
 import type { ResolveOutcome } from '../../../../resolve'
 
 type StatusOutcome = Exclude<ResolveOutcome, { kind: 'error' }>
@@ -20,15 +22,18 @@ const formatProfile = ({ profile, reason, match }: ProfileOutcome): string => {
     : STATUS_TEXT.matched(profile.name, match.via, match.entry)
 }
 
-// Only profiles with accounts name the account; CCPROFILE_ACCOUNT is the
-// only way to pick another than the first one (until automatic choice).
-const formatAccount = (outcome: ProfileOutcome, ctx: Context): string => {
-  if (outcome.profile.accounts.length === 0) return ''
-  const explicit = ctx.env[ENV_VAR.account]
-  return STATUS_TEXT.account(
-    outcome.account.name,
-    explicit !== undefined && explicit !== ''
-  )
+// Only profiles with accounts name the account, with why when it was not
+// simply the first one: CCPROFILE_ACCOUNT or the limit data.
+const formatAccount = (
+  { profile, account, selection }: ProfileOutcome,
+  ctx: Context
+): string => {
+  if (profile.accounts.length === 0) return ''
+  const detail =
+    selection.kind === SELECTION_KIND.explicit
+      ? ENV_VAR.account
+      : formatSelection(selection, ctx.now())
+  return STATUS_TEXT.account(account.name, detail)
 }
 
 const formatStatus = (outcome: StatusOutcome, ctx: Context): string => {

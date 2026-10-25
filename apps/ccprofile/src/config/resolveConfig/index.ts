@@ -185,6 +185,7 @@ const resolveConfig = async (
     config: {
       onUnknown: parsed.onUnknown,
       passthrough: parsed.passthrough,
+      accountThreshold: parsed.accountThreshold,
       profiles,
       schema: parsed.$schema,
     },

@@ -9,6 +9,7 @@ const createConfig = (
 ): ResolvedConfig => ({
   onUnknown: 'prompt',
   passthrough: [],
+  accountThreshold: 90,
   schema,
   profiles: profiles.map(profile => ({
     configDir: undefined,

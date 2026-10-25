@@ -20,7 +20,7 @@ import type { Context } from '../../context/types'
 import { selectProfile } from '../../prompt'
 import findProfile from '../findProfile'
 import isPassthrough from '../isPassthrough'
-import selectAccount from '../selectAccount'
+import pickProfileAccount from '../pickProfileAccount'
 import toolTarget from '../toolTarget'
 import type { ResolveOptions, ResolveOutcome } from '../types'
 
@@ -66,26 +66,30 @@ type UseProfile = (
   match?: Extract<ResolveOutcome, { kind: 'profile' }>['match']
 ) => Promise<ResolveOutcome>
 
-// Every profile outcome picks the account (CCPROFILE_ACCOUNT, else the
-// first), then adds what the tool needs.
+// Every profile outcome picks the account (CCPROFILE_ACCOUNT, the limit
+// data, else the first), then adds what the tool needs.
 const createUseProfile =
-  (ctx: Context, tool: Tool): UseProfile =>
+  (ctx: Context, tool: Tool, threshold: number): UseProfile =>
   async (profile, reason, match) => {
-    const requested = readEnv(ctx, ENV_VAR.account)
-    const account = selectAccount(profile, requested)
-    if (account === undefined) {
+    const picked = await pickProfileAccount(profile, ctx, { tool, threshold })
+    if (picked === undefined) {
       return {
         kind: OUTCOME_KIND.error,
         messages: [
-          RESOLVE_MESSAGE.unknownAccount(requested ?? '', profile.name),
+          RESOLVE_MESSAGE.unknownAccount(
+            readEnv(ctx, ENV_VAR.account) ?? '',
+            profile.name
+          ),
         ],
       }
     }
 
+    const { account, selection } = picked
     return {
       kind: OUTCOME_KIND.profile,
       profile,
       account,
+      selection,
       reason,
       match,
       ...(await toolTarget({ tool, profile, account }, ctx)),
@@ -161,7 +165,7 @@ const resolveProfile = async (
   }
 
   const { config } = loaded
-  const useProfile = createUseProfile(ctx, tool)
+  const useProfile = createUseProfile(ctx, tool, config.accountThreshold)
   const explicit = readEnv(ctx, ENV_VAR.profile)
   if (explicit !== undefined) {
     const profile = config.profiles.find(({ name }) => name === explicit)

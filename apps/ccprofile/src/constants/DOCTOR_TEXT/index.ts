@@ -19,6 +19,14 @@ const DOCTOR_TEXT = {
   accountLogin: (profile: string, account: string, state: string) =>
     `profile ${profile}, account ${account}: ${state}`,
 
+  noLimitData: (profile: string) =>
+    `profile ${profile}: no limit data from any account (ccprofile mod not installed?)`,
+  limitData: (profile: string, withData: number, total: number) =>
+    `profile ${profile}: limit data from ${withData} of ${total} accounts`,
+  limitsInvalid: (owner: string) => `${owner}: limits.json invalid`,
+  limitsUnsupported: (owner: string, version: number) =>
+    `${owner}: limits.json version ${version} unsupported – update ccprofile and the ccprofile mod`,
+
   sharedSource: (profile: string, dir: string | undefined) =>
     `profile ${profile}: shared source ${dir ?? '~/.claude (default)'}`,
   codexSharedSource: (profile: string, dir: string | undefined) =>

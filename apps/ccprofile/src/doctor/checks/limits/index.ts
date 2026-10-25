@@ -45,12 +45,14 @@ const checkProfile = async (
     ]
   }
 
+  // A file without windows is no data, as `list` shows it.
   const withData = limits.filter(
-    ({ reading }) => reading.status === LIMITS_STATUS.ok
+    ({ reading }) =>
+      reading.status === LIMITS_STATUS.ok && reading.windows.length > 0
   ).length
   return [
     {
-      // Only broken or newer files: no account has usable data.
+      // Only broken, newer or empty files: no account has usable data.
       status: withData > 0 ? CHECK_STATUS.ok : CHECK_STATUS.warn,
       message: DOCTOR_TEXT.limitData(profile.name, withData, limits.length),
     },

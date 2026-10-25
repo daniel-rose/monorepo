@@ -90,6 +90,17 @@ describe('checkLimits', () => {
     ])
   })
 
+  it('does not count a file without windows as data', async () => {
+    writeLimits(join(home, '.claude-work-2'), [])
+
+    expect(await check()).toEqual([
+      {
+        status: 'warn',
+        message: 'profile work: limit data from 0 of 3 accounts',
+      },
+    ])
+  })
+
   it('warns when the only files are broken', async () => {
     writeLimits(join(home, '.claude-work-2'), 'not json')
 

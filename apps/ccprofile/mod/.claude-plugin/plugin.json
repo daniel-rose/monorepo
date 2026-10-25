@@ -1,0 +1,7 @@
+{
+  "name": "ccprofile",
+  "description": "Records the rate limits of the account a session runs on, so ccprofile can start the next session with an account that is not full.",
+  "author": { "name": "Daniel Rose" },
+  "homepage": "https://github.com/daniel-rose/monorepo/tree/main/apps/ccprofile",
+  "license": "MIT"
+}

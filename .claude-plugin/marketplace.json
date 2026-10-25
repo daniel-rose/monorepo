@@ -1,0 +1,14 @@
+{
+  "name": "daniel-rose",
+  "owner": { "name": "Daniel Rose" },
+  "metadata": {
+    "description": "Claude Code plugins of the daniel-rose monorepo."
+  },
+  "plugins": [
+    {
+      "name": "ccprofile",
+      "source": "./apps/ccprofile/mod",
+      "description": "Records the rate limits of the account a session runs on, so ccprofile can start the next session with an account that is not full."
+    }
+  ]
+}

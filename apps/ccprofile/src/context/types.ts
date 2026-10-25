@@ -24,6 +24,8 @@ export type Context = {
   env: Readonly<Record<string, string | undefined>>
   platform: NodeJS.Platform
   homedir: string
+  // Milliseconds since the epoch; the limit data is judged against it.
+  now: () => number
   stdin: NodeJS.ReadableStream & { isTTY?: boolean }
   stdout: NodeJS.WritableStream
   stderr: NodeJS.WritableStream

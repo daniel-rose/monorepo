@@ -35,9 +35,14 @@ export type ResolvedProfile = {
   accounts: Account[]
 }
 
+// One account of a profile in order (`profileAccounts`): the profile itself
+// first (configDir undefined for the default profile), then `accounts`.
+export type ProfileAccount = { name: string; configDir: string | undefined }
+
 export type ResolvedConfig = {
   onUnknown: string
   passthrough: string[]
+  accountThreshold: number
   profiles: ResolvedProfile[]
   schema: string | undefined
 }

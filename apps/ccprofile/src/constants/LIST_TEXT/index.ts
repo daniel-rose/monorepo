@@ -5,7 +5,11 @@ const LIST_TEXT = {
     `  configDir: ${dir ?? '~/.claude (default)'}`,
   sharedSource: (dir: string | undefined) =>
     `  shared source: ${dir ?? '~/.claude (default)'}`,
-  account: (name: string, dir: string) => `  account: ${name} (${dir})`,
+  // `dir` undefined: the first account of the default profile.
+  account: (name: string, dir: string | undefined) =>
+    `  account: ${name} (${dir ?? '~/.claude (default)'})`,
+  // An account line with the last reading of its limit file.
+  accountLimits: (line: string, reading: string) => `${line} – ${reading}`,
   codex: (dir: string | undefined) => `  codex: ${dir ?? '~/.codex (default)'}`,
   codexAccount: (name: string, dir: string) =>
     `  codex account: ${name} (${dir})`,

@@ -9,17 +9,19 @@ import checkCodexLogin from '../checks/codexLogin'
 import checkConfig from '../checks/config'
 import checkEnvOverride from '../checks/envOverride'
 import checkHook from '../checks/hook'
+import checkLimits from '../checks/limits'
 import checkLogin from '../checks/login'
 import checkMissingPaths from '../checks/missingPaths'
 import checkSchemaMajor from '../checks/schemaMajor'
 import checkShadowedSelectors from '../checks/shadowedSelectors'
 import type { Check, CheckResult } from '../types'
 
-// Output order: config, claude, logins (claude, then codex), links, hook,
-// hygiene.
+// Output order: config, claude, claude logins, limit data, codex logins,
+// links, hook, hygiene.
 const CHECKS: readonly Check[] = [
   checkClaudeOnPath,
   checkLogin,
+  checkLimits,
   checkCodexLogin,
   checkAccountLinks,
   checkHook,

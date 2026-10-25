@@ -46,18 +46,19 @@ Location: `$CCPROFILE_CONFIG`, else `${XDG_CONFIG_HOME:-~/.config}/ccprofile/con
 }
 ```
 
-| Key                    | Type                            | Required / default                                                              |
-| ---------------------- | ------------------------------- | ------------------------------------------------------------------------------- |
-| `$schema`              | string                          | optional                                                                        |
-| `onUnknown`            | `"prompt"` or a profile name    | default `"prompt"`                                                              |
-| `passthrough`          | string[]                        | default `["--version", "-v", "--help", "-h", "update"]`                         |
-| `profiles`             | Profile[], at least 1           | required                                                                        |
-| `profiles[].name`      | `[A-Za-z0-9_.-]+`, not `prompt` | required                                                                        |
-| `profiles[].configDir` | string                          | optional; omit it for the default profile (`~/.claude`)                         |
-| `profiles[].paths`     | string[]                        | default `[]`                                                                    |
-| `profiles[].remotes`   | string[]                        | default `[]`                                                                    |
-| `profiles[].accounts`  | `{ name, configDir, codex? }[]` | default `[]`, see [Several accounts per profile](#several-accounts-per-profile) |
-| `profiles[].codex`     | `{ home }`                      | optional; omit it for `~/.codex`, see [Codex CLI](#codex-cli)                   |
+| Key                    | Type                            | Required / default                                                                            |
+| ---------------------- | ------------------------------- | --------------------------------------------------------------------------------------------- |
+| `$schema`              | string                          | optional                                                                                      |
+| `onUnknown`            | `"prompt"` or a profile name    | default `"prompt"`                                                                            |
+| `passthrough`          | string[]                        | default `["--version", "-v", "--help", "-h", "update"]`                                       |
+| `accountThreshold`     | integer 1–100 (percent)         | default `90`, see [Choosing the account by rate limits](#choosing-the-account-by-rate-limits) |
+| `profiles`             | Profile[], at least 1           | required                                                                                      |
+| `profiles[].name`      | `[A-Za-z0-9_.-]+`, not `prompt` | required                                                                                      |
+| `profiles[].configDir` | string                          | optional; omit it for the default profile (`~/.claude`)                                       |
+| `profiles[].paths`     | string[]                        | default `[]`                                                                                  |
+| `profiles[].remotes`   | string[]                        | default `[]`                                                                                  |
+| `profiles[].accounts`  | `{ name, configDir, codex? }[]` | default `[]`, see [Several accounts per profile](#several-accounts-per-profile)               |
+| `profiles[].codex`     | `{ home }`                      | optional; omit it for `~/.codex`, see [Codex CLI](#codex-cli)                                 |
 
 Rules (violations stop `claude` with exit 1 and a message `<json.path>: <reason>`):
 
@@ -107,7 +108,7 @@ A profile is a cost center: its matchers, one shared config (settings, plugins, 
 }
 ```
 
-- **Choosing an account:** the first account (named after the profile) is used unless `CCPROFILE_ACCOUNT=<name>` names another account of the resolved profile (`CCPROFILE_ACCOUNT=seat-2 claude`). An unknown name, or `CCPROFILE_ACCOUNT` without any profile, stops with exit 1. There is no automatic switching; crossing profiles stays explicit (`CCPROFILE=...`).
+- **Choosing an account:** the first account (named after the profile) is used unless `CCPROFILE_ACCOUNT=<name>` names another account of the resolved profile (`CCPROFILE_ACCOUNT=seat-2 claude`) or, with the ccprofile mod installed, the first account is full (see [Choosing the account by rate limits](#choosing-the-account-by-rate-limits)). An unknown name, or `CCPROFILE_ACCOUNT` without any profile, stops with exit 1. Crossing profiles stays explicit (`CCPROFILE=...`).
 - **Sharing the config:** `ccprofile link [profile]` links these entries of every further account to the shared source: `settings.json`, `CLAUDE.md`, `keybindings.json`, `rules/`, `skills/`, `agents/`, `commands/`, `output-styles/`, `workflows/`, `plugins/`, `themes/` and `projects/` (the history, so `claude --resume` works across the accounts). It shows the plan and asks `y/N` (`--yes` skips the question). Missing directories are created; a missing source file is skipped as `no source` rather than linked to nothing.
 - **What stays per account:** the login (`.claude.json`, credentials, on macOS a keychain entry per directory) and everything Claude caches. Log in once per account: `CCPROFILE_ACCOUNT=seat-2 claude`, then `/login`.
 - **MCP servers:** user-scope MCP servers live in `.claude.json` next to the login and cannot be shared by a link. Put the servers of a profile into a plugin or into `<shared source>/.mcp.json`; the hook passes that file as `--mcp-config=<file>` to every account of the profile, in addition to any `--mcp-config` you pass yourself.
@@ -116,6 +117,30 @@ A profile is a cost center: its matchers, one shared config (settings, plugins, 
 - **Windows:** directories are linked as junctions, files as symlinks; without the symlink privilege (Developer Mode) a file is reported as `unsupported`. ccprofile never copies or hard-links.
 
 Claude Code writes the user `settings.json` through a symlink, so changes made in any account (`/config`, `claude plugin install`) land in the shared file. Plugins record their install path under the account that installed them; removing that account dir can break the cache paths of plugins it installed.
+
+## Choosing the account by rate limits
+
+With the **ccprofile mod** installed, `claude` starts with the first account of the profile that is not full, so a second seat takes over when the first one hits its five-hour or weekly limit. The mod is a small Claude Code plugin: after every turn it writes the rate-limit windows the session saw into `<account configDir>/ccprofile/limits.json` (`~/.claude/ccprofile/limits.json` for the first account of the default profile). It writes nothing else and never sends anything anywhere.
+
+Install it once per profile, through the shared source (the first account), so every account of the profile gets it through the shared `plugins/` and `settings.json`:
+
+```sh
+CCPROFILE=private CCPROFILE_ACCOUNT=private claude plugin marketplace add daniel-rose/monorepo
+CCPROFILE=private CCPROFILE_ACCOUNT=private claude plugin install ccprofile@daniel-rose
+```
+
+Third-party marketplaces do not update on their own: enable auto-update in `/plugin` → **Marketplaces**, or run `claude plugin update ccprofile@daniel-rose` now and then. The plugin has no version number, so every change to it counts as an update.
+
+How `resolve` chooses (only for `claude`, only for profiles with `accounts`):
+
+- `CCPROFILE_ACCOUNT` always wins. Without it, the accounts are checked in order and the first one that is **not full** is used. An account is full when any window (`five_hour`, `seven_day`, a gateway's `spend_limit`) is at or above `accountThreshold` percent (default `90`) and has not reset yet. A window whose reset has passed counts as 0 %; a window without a reset time is ignored; an account without data counts as not full. Without any data the first account is used, as without the mod.
+- Every choice other than the first account is printed: `ccprofile: profile "private" → account "seat-2" (≥90%: private five_hour 97% until 14:30)`. When every account is full, the one that is free first is used, with a warning even if that is the first account: `… (all ≥90%, free at Tue 09:00)`. Times are local; a weekday means another day.
+- The choice happens only at start. A running session never switches, and a `claude` started inside a Claude Code session (`CLAUDECODE` set) does not choose by limits: it keeps the inherited `CCPROFILE_ACCOUNT`, else the first account, so it cannot jump away from the session it runs in.
+- `codex` never chooses by limits: it takes the first account or `CCPROFILE_ACCOUNT`.
+- The data is what **this machine** saw. Usage on claude.ai or another computer shows up only after the next session of that account here. Worst case, a session starts on an account that is already full.
+- The mod cannot write to a network path: a `configDir` on a UNC share (`\\server\share\...`) gets no limit file.
+
+`ccprofile status` names the reason after the account, `ccprofile list` shows the last reading of every account (`5h 42% · 7d 80%`, `5h reset`, `no data`) once one account of the profile has a file, and `ccprofile doctor` warns when no account of a profile has usable data (`ccprofile mod not installed?` when there is no file at all) and names broken or newer files.
 
 ## Codex CLI
 
@@ -138,7 +163,7 @@ The `codex` function uses the same profiles, matching and accounts as `claude`; 
 }
 ```
 
-- **Defaults:** a profile without `codex` starts `codex` without `CODEX_HOME`, so it uses `~/.codex`. An account without `codex` uses the Codex home of its profile and shares that login (here `seat-3`), so `CCPROFILE_ACCOUNT=seat-3 codex` works even with fewer Codex logins than Claude seats. Accounts are chosen as for `claude`, with the same `CCPROFILE_ACCOUNT`.
+- **Defaults:** a profile without `codex` starts `codex` without `CODEX_HOME`, so it uses `~/.codex`. An account without `codex` uses the Codex home of its profile and shares that login (here `seat-3`), so `CCPROFILE_ACCOUNT=seat-3 codex` works even with fewer Codex logins than Claude seats. Accounts are chosen with the same `CCPROFILE_ACCOUNT`, else the first one; `codex` never chooses by rate limits.
 - **Creating homes:** Codex refuses to start when `CODEX_HOME` does not exist. `ccprofile link` creates every configured Codex home, also that of a profile without further accounts; `resolve` only prints `codex home <dir> … does not exist – run "ccprofile link"`.
 - **Sharing the config:** `link` also links these entries of every account with its own `codex.home` to the Codex home of its profile (or `~/.codex`): `config.toml` (settings, MCP servers, trusted projects, features, plugins), `AGENTS.md`, `AGENTS.override.md`, `hooks.json`, `rules/`, `skills/`, `plugins/`, `themes/` and every Codex profile file `<name>.config.toml` found in the source at that time (run `link` again after adding one; `doctor` lists the missing ones). Codex writes `config.toml` through the link, so `codex mcp add` or `codex plugin add` in any account land in the shared file.
 - **What stays per Codex home:** the login (`auth.json`), MCP OAuth tokens, the session history and state (`sessions/`, `history.jsonl`, sqlite files) and caches. `codex resume` therefore does not cross accounts. Log in once per Codex home: `CCPROFILE_ACCOUNT=seat-2 codex login`.
@@ -158,23 +183,24 @@ An empty value counts as unset.
 | `CCPROFILE`         | Use this profile by name (unknown name: exit 1). Nested `claude` calls inherit the parent's decision this way, because Claude Code's Bash tool also loads shell functions.            |
 | `CCPROFILE_ACCOUNT` | Use this account of the resolved profile (unknown name: exit 1). Set by the hook for `claude` and `codex` (empty for the first account), so nested calls inherit it like `CCPROFILE`. |
 | `CCPROFILE_CONFIG`  | Path of the config file.                                                                                                                                                              |
+| `CLAUDECODE`        | Set by Claude Code in its child processes. A nested `claude` then does not choose by rate limits: the inherited `CCPROFILE_ACCOUNT`, else the first account.                          |
 | `CCPROFILE_ARGV`    | Used by the PowerShell hook to hand the arguments to `ccprofile` as a JSON array. Not for manual use.                                                                                 |
 
-Decision order of `resolve`: `CLAUDE_CONFIG_DIR` set (for `codex`: `CODEX_HOME` set), passthrough argument, no config file (no-op until you configure one), then config validation, `CCPROFILE`, matching, `onUnknown`, and last the account (`CCPROFILE_ACCOUNT`, else the first).
+Decision order of `resolve`: `CLAUDE_CONFIG_DIR` set (for `codex`: `CODEX_HOME` set), passthrough argument, no config file (no-op until you configure one), then config validation, `CCPROFILE`, matching, `onUnknown`, and last the account (`CCPROFILE_ACCOUNT`, else for `claude` the rate limits, else the first).
 
 ## Commands
 
-| Command                                                     | Description                                                                                                                                                                                                                                                                                                                                |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `ccprofile` / `ccprofile status`                            | The profile `claude` would use here and why (a match, `explicit (CCPROFILE=...)`, `no match (will prompt)`, `<name> (onUnknown)`), plus the account for profiles with accounts; once the config uses `codex` or `CODEX_HOME` is set, a second line `codex: <home>` (`(from profile)`, `~/.codex (default)` or `explicit (CODEX_HOME=...)`) |
-| `ccprofile list`                                            | Profiles in match order with `configDir`, accounts, Codex homes (once the config uses `codex`), `paths`, `remotes`, then `onUnknown`                                                                                                                                                                                                       |
-| `ccprofile config`                                          | Print the config path                                                                                                                                                                                                                                                                                                                      |
-| `ccprofile hook <shell>`                                    | Print the hook (`zsh`, `bash`, `fish`, `pwsh`, `powershell`)                                                                                                                                                                                                                                                                               |
-| `ccprofile link [profile] [--yes]`                          | Link the shared config of a profile (default: all) into its further accounts, for `claude` and `codex`, and create missing Codex homes; never overwrites                                                                                                                                                                                   |
-| `ccprofile resolve --protocol 2 [--tool codex] [--] <args>` | What the hook calls; prints `name<TAB>account<TAB>dir<TAB>mcpConfig` (account empty for the first; `dir` is the `configDir`, with `--tool codex` the `CODEX_HOME`, which never gets an `mcpConfig`) or nothing                                                                                                                             |
-| `ccprofile setup [shell] [--yes] [--remove]`                | Install or update the hook; `--remove` removes the block and the hook file, never your config                                                                                                                                                                                                                                              |
-| `ccprofile init [--example]`                                | Create the config; never overwrites. Without a terminal `--example` is required                                                                                                                                                                                                                                                            |
-| `ccprofile doctor`                                          | Check config, `claude` on PATH, logins (Claude and Codex), account links, hook and shell startup file; exit 1 on any `fail`                                                                                                                                                                                                                |
+| Command                                                     | Description                                                                                                                                                                                                                                                                                                                                                                                 |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ccprofile` / `ccprofile status`                            | The profile `claude` would use here and why (a match, `explicit (CCPROFILE=...)`, `no match (will prompt)`, `<name> (onUnknown)`), plus the account for profiles with accounts and why (`CCPROFILE_ACCOUNT` or the rate limits); once the config uses `codex` or `CODEX_HOME` is set, a second line `codex: <home>` (`(from profile)`, `~/.codex (default)` or `explicit (CODEX_HOME=...)`) |
+| `ccprofile list`                                            | Profiles in match order with `configDir`, accounts (with their last rate-limit reading once the mod wrote one), Codex homes (once the config uses `codex`), `paths`, `remotes`, then `onUnknown`                                                                                                                                                                                            |
+| `ccprofile config`                                          | Print the config path                                                                                                                                                                                                                                                                                                                                                                       |
+| `ccprofile hook <shell>`                                    | Print the hook (`zsh`, `bash`, `fish`, `pwsh`, `powershell`)                                                                                                                                                                                                                                                                                                                                |
+| `ccprofile link [profile] [--yes]`                          | Link the shared config of a profile (default: all) into its further accounts, for `claude` and `codex`, and create missing Codex homes; never overwrites                                                                                                                                                                                                                                    |
+| `ccprofile resolve --protocol 2 [--tool codex] [--] <args>` | What the hook calls; prints `name<TAB>account<TAB>dir<TAB>mcpConfig` (account empty for the first; `dir` is the `configDir`, with `--tool codex` the `CODEX_HOME`, which never gets an `mcpConfig`) or nothing                                                                                                                                                                              |
+| `ccprofile setup [shell] [--yes] [--remove]`                | Install or update the hook; `--remove` removes the block and the hook file, never your config                                                                                                                                                                                                                                                                                               |
+| `ccprofile init [--example]`                                | Create the config; never overwrites. Without a terminal `--example` is required                                                                                                                                                                                                                                                                                                             |
+| `ccprofile doctor`                                          | Check config, `claude` on PATH, Claude logins, rate-limit data, Codex logins, account links, hook and shell startup file; exit 1 on any `fail`                                                                                                                                                                                                                                              |
 
 `init` in a terminal is a wizard: it finds `~/.claude` and every `~/.claude-*` directory with a `.claude.json`, shows the login state from `claude auth status --json`, and asks for a name and at least one remote or path prefix per profile.
 
@@ -202,8 +228,8 @@ Bash on macOS and Windows starts as a login shell and reads `~/.bash_profile`, n
 
 - The hook only affects `claude` and `codex` started from your shell. **IDE extensions, GUI launchers and anything else that starts the binary directly bypass it** and use `CLAUDE_CONFIG_DIR` or `CODEX_HOME` from their own environment.
 - `doctor` warns when `CLAUDE_CONFIG_DIR`, `CODEX_HOME` or `CCPROFILE` is set in the current shell: such a shell bypasses detection.
-- ccprofile never touches credentials or the contents of Claude's or Codex's files; `link` only adds symlinks and empty directories. Login state is read through the tools' own CLIs (`claude auth status --json`, `codex login status`); directories are only listed to suggest candidates.
-- Claude Desktop, claude.ai, API keys and usage tracking are out of scope.
+- ccprofile never touches credentials or the contents of Claude's or Codex's files; `link` only adds symlinks and empty directories, and the mod writes only its own `ccprofile/limits.json`. Login state is read through the tools' own CLIs (`claude auth status --json`, `codex login status`); directories are only listed to suggest candidates.
+- Claude Desktop, claude.ai, API keys and usage tracking are out of scope; the rate limits come only from the sessions the mod sees.
 
 ## License
 

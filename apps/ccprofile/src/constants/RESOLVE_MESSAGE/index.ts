@@ -18,6 +18,10 @@ const RESOLVE_MESSAGE = {
     `${PREFIX} creating new profile "${name}" at ${dir}, first start will ask for login\n`,
   creatingAccount: (name: string, profile: string, dir: string) =>
     `${PREFIX} creating new account "${name}" of profile "${profile}" at ${dir}, first start will ask for login – run "ccprofile link" to share the profile config\n`,
+  // Automatic account choice (spec §5), only when the limit data led away
+  // from the first account (or all accounts are full).
+  accountChoice: (profile: string, account: string, detail: string) =>
+    `${PREFIX} profile "${profile}" → account "${account}" (${detail})\n`,
   // Codex never creates its CODEX_HOME; `link` does.
   codexHomeMissing: (dir: string, account: string) =>
     `${PREFIX} codex home ${dir} of account "${account}" does not exist – run "ccprofile link"\n`,

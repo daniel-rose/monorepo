@@ -7,8 +7,9 @@ const STATUS_TEXT = {
   matched: (name: string, via: string, entry: string) =>
     `${name} (${via} ${entry})`,
   onUnknown: (name: string) => `${name} (onUnknown)`,
-  account: (name: string, explicit: boolean) =>
-    `, account ${name}${explicit ? ' (CCPROFILE_ACCOUNT)' : ''}`,
+  // `detail`: CCPROFILE_ACCOUNT, or why the limit data chose this account.
+  account: (name: string, detail: string | undefined) =>
+    `, account ${name}${detail === undefined ? '' : ` (${detail})`}`,
   // The second line, for `codex` (spec §4.3, P16).
   codex: (dir: string) => `codex: ${dir}`,
   codexFromProfile: (dir: string) => `codex: ${dir} (from profile)`,

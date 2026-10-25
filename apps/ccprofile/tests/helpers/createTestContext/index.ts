@@ -24,6 +24,7 @@ const createTestContext = (
     env: {},
     platform: 'linux',
     homedir: '/home/jane',
+    now: Date.now,
     stdin: new PassThrough(),
     stdout: out.stream,
     stderr: err.stream,

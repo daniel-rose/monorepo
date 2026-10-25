@@ -1,6 +1,6 @@
 {
   "name": "@daniel-rose/ccprofile",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Starts Claude Code with the right CLAUDE_CONFIG_DIR per directory or git remote.",
   "license": "MIT",
   "author": "Daniel Rose",

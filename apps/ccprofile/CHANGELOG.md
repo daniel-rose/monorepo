@@ -1,3 +1,10 @@
+# @daniel-rose/ccprofile [2.2.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/ccprofile@2.1.0...@daniel-rose/ccprofile@2.2.0) (2026-10-25)
+
+
+### Features
+
+* **ccprofile:** pick the account by its rate limits ([#189](https://github.com/daniel-rose/monorepo/issues/189)) ([7ae1c02](https://github.com/daniel-rose/monorepo/commit/7ae1c028c7db601afc2f4106a0d2286875c7a63a))
+
 # @daniel-rose/ccprofile [2.1.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/ccprofile@2.0.1...@daniel-rose/ccprofile@2.1.0) (2026-10-24)
 
 

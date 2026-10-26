@@ -1,3 +1,10 @@
+# @daniel-rose/ccprofile [2.3.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/ccprofile@2.2.0...@daniel-rose/ccprofile@2.3.0) (2026-10-26)
+
+
+### Features
+
+* **ccprofile:** switch a running session to another account ([#190](https://github.com/daniel-rose/monorepo/issues/190)) ([7459899](https://github.com/daniel-rose/monorepo/commit/7459899b1153a59d40124b82c0e848db35f6916f))
+
 # @daniel-rose/ccprofile [2.2.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/ccprofile@2.1.0...@daniel-rose/ccprofile@2.2.0) (2026-10-25)
 
 

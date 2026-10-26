@@ -73,14 +73,18 @@ function __ccprofile_run
 
         set -l ccprofile_handoff (command mktemp "$ccprofile_tmp/ccprofile-handoff.XXXXXX" 2>/dev/null)
         or set ccprofile_handoff ''
+        # `set -lx` is local to its block (an `if` too), so each branch
+        # starts claude itself.
         begin
             set -lx CCPROFILE $ccprofile_parts[1]
             set -lx CCPROFILE_ACCOUNT $ccprofile_parts[2]
             set -lx CCPROFILE_HANDOFF "$ccprofile_handoff"
             if test -n "$ccprofile_parts[3]"
                 set -lx CLAUDE_CONFIG_DIR $ccprofile_parts[3]
+                command claude $ccprofile_args
+            else
+                command claude $ccprofile_args
             end
-            command claude $ccprofile_args
         end
         set -l ccprofile_status $status
 

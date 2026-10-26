@@ -7,6 +7,7 @@ const STATUS_TEXT = {
   matched: (name: string, via: string, entry: string) =>
     `${name} (${via} ${entry})`,
   onUnknown: (name: string) => `${name} (onUnknown)`,
+  onlyProfile: (name: string) => `${name} (only profile)`,
   // `detail`: CCPROFILE_ACCOUNT, or why the limit data chose this account.
   account: (name: string, detail: string | undefined) =>
     `, account ${name}${detail === undefined ? '' : ` (${detail})`}`,

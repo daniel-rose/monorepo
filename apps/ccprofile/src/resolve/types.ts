@@ -54,6 +54,7 @@ type ProfileOutcomeBase = {
     | typeof RESOLVE_REASON.explicitProfile
     | typeof RESOLVE_REASON.match
     | typeof RESOLVE_REASON.onUnknown
+    | typeof RESOLVE_REASON.onlyProfile
     | typeof RESOLVE_REASON.prompt
   match?: ProfileMatch
 }

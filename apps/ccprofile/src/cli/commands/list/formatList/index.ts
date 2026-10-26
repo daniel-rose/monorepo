@@ -1,5 +1,5 @@
 import type { ResolvedConfig, ResolvedProfile } from '../../../../config'
-import { usesCodex } from '../../../../config'
+import { onlyProfile, usesCodex } from '../../../../config'
 import { LIMITS_STATUS, LIST_TEXT } from '../../../../constants'
 import type { AccountLimits } from '../../../../limits'
 import { formatReading } from '../../../../limits'
@@ -51,6 +51,13 @@ const formatCodex = ({ codexHome, accounts }: ResolvedProfile): string[] => [
   ),
 ]
 
+const formatOnUnknown = (config: ResolvedConfig): string => {
+  const only = onlyProfile(config)
+  return only === undefined
+    ? LIST_TEXT.onUnknown(config.onUnknown)
+    : LIST_TEXT.onUnknownOnlyProfile(config.onUnknown, only.name)
+}
+
 const formatList = (
   config: ResolvedConfig,
   limits: ProfileLimits,
@@ -66,7 +73,7 @@ const formatList = (
       ...profile.remotes.map(LIST_TEXT.remote),
       ...profile.paths.map(LIST_TEXT.path),
     ]),
-    LIST_TEXT.onUnknown(config.onUnknown),
+    formatOnUnknown(config),
     '',
   ].join('\n')
 }

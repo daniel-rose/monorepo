@@ -34,6 +34,8 @@ beforeAll(async () => {
         remotes: ['gitlab.example.com'],
         accounts: [{ name: 'work-2', configDir: '~/.claude-work-2' }],
       },
+      // A second profile, so that no match prompts (one would be used).
+      { name: 'private', remotes: ['github.com/jane'] },
     ],
   })
 })

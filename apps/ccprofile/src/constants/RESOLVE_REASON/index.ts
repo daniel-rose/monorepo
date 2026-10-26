@@ -7,6 +7,7 @@ const RESOLVE_REASON = {
   explicitProfile: 'explicitProfile',
   match: 'match',
   onUnknown: 'onUnknown',
+  onlyProfile: 'onlyProfile',
   prompt: 'prompt',
 } as const
 

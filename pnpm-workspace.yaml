@@ -43,7 +43,7 @@ catalog:
   rolldown-plugin-dts: ^0.28.8
   semantic-release: ^25.0.9
   tailwindcss: ^4.3.3
-  typescript: ^5.9.3
+  typescript: ^7.0.2
   vite: ^8.3.5
   vitest: ^5.0.5
   vitest-browser-react: ^2.3.0

@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { Readable } from 'node:stream'
+import { PassThrough } from 'node:stream'
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -9,7 +9,10 @@ import type { ExitCode } from '../../../../src/constants'
 import { MARKER, PROFILE_QUERY_TIMEOUT_MS } from '../../../../src/constants'
 import type { Context, RunCommand } from '../../../../src/context/types'
 import { readHook } from '../../../../src/hook'
+import { confirm } from '../../../../src/prompt'
 import createSandbox from '../../../helpers/createSandbox'
+
+vi.mock('../../../../src/prompt')
 
 type Sandbox = Awaited<ReturnType<typeof createSandbox>>
 
@@ -24,6 +27,7 @@ describe('setup', () => {
     sandbox = await createSandbox()
     runInit = vi.fn<() => Promise<ExitCode>>(() => Promise.resolve(0))
     deps = { runInit }
+    vi.mocked(confirm).mockReset()
   })
 
   afterEach(async () => {
@@ -31,13 +35,15 @@ describe('setup', () => {
   })
 
   // Everything points into the sandbox: HOME, ZDOTDIR, XDG_CONFIG_HOME, APPDATA.
+  // `answer`: run in a terminal and answer the question with it.
   const makeCtx = (
     overrides: Partial<Context> & {
-      input?: string
+      answer?: boolean
       env?: Record<string, string>
     } = {}
   ) => {
-    const { input, env, ...rest } = overrides
+    const { answer, env, ...rest } = overrides
+    if (answer !== undefined) vi.mocked(confirm).mockResolvedValueOnce(answer)
     const base = sandbox.ctx(sandbox.home, {
       HOME: sandbox.home,
       ZDOTDIR: sandbox.home,
@@ -48,7 +54,9 @@ describe('setup', () => {
     return {
       ...base,
       platform: 'linux' as NodeJS.Platform,
-      ...(input !== undefined && { stdin: Readable.from([input]) }),
+      ...(answer !== undefined && {
+        stdin: Object.assign(new PassThrough(), { isTTY: true }),
+      }),
       ...rest,
     }
   }
@@ -91,12 +99,12 @@ describe('setup', () => {
     await withConfig()
     writeFileSync(zshrc(), 'export A=1\n')
 
-    const ctx = makeCtx({ input: 'y\n' })
+    const ctx = makeCtx({ answer: true })
     expect(await setup(ctx, 'zsh', {}, deps)).toBe(0)
 
     expect(ctx.err()).toContain(`+${MARKER.start}`)
     expect(ctx.err()).toContain(`+source '${hookFile('zsh')}'`)
-    expect(ctx.err()).toContain('[y/N]')
+    expect(confirm).toHaveBeenCalledWith('Apply these changes?', ctx)
     expect(read(zshrc())).toContain(MARKER.start)
     expect(existsSync(hookFile('zsh'))).toBe(true)
   })
@@ -105,7 +113,7 @@ describe('setup', () => {
     await withConfig()
     writeFileSync(zshrc(), 'export A=1\n')
 
-    const ctx = makeCtx({ input: 'n\n' })
+    const ctx = makeCtx({ answer: false })
     expect(await setup(ctx, 'zsh', {}, deps)).toBe(1)
 
     expect(read(zshrc())).toBe('export A=1\n')
@@ -113,11 +121,13 @@ describe('setup', () => {
     expect(runInit).not.toHaveBeenCalled()
   })
 
-  it('writes nothing and exits 1 on EOF', async () => {
+  it('needs --yes without a terminal', async () => {
     await withConfig()
-    const ctx = makeCtx({ input: '' })
+    const ctx = makeCtx()
     expect(await setup(ctx, 'zsh', {}, deps)).toBe(1)
     expect(existsSync(zshrc())).toBe(false)
+    expect(confirm).not.toHaveBeenCalled()
+    expect(ctx.err()).toContain('pass --yes')
   })
 
   it('creates a missing .zshrc', async () => {

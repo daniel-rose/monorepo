@@ -1,4 +1,5 @@
+export { default as checkbox } from './checkbox'
 export { default as confirm } from './confirm'
-export { default as createLineReader } from './createLineReader'
-export { default as selectProfile } from './selectProfile'
-export type { LineReader } from './types'
+export { default as input } from './input'
+export { default as select } from './select'
+export type { Choice } from './types'

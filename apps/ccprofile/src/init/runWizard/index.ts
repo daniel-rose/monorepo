@@ -1,167 +1,144 @@
 import { basename } from 'node:path'
 
-import { expandHome } from '../../config'
-import pathFlavor from '../../config/pathFlavor'
 import {
+  AUTH_STATE,
   CONFIG_FILE,
-  CONFIG_PATTERN,
   INIT_PATTERN,
   INIT_TEXT,
   ON_UNKNOWN_PROMPT,
 } from '../../constants'
 import type { Context } from '../../context/types'
-import { normalizeRemote } from '../../match'
-import type { LineReader } from '../../prompt'
-import { createLineReader } from '../../prompt'
+import type { Choice } from '../../prompt'
+import { checkbox, input, select } from '../../prompt'
 import formatAuth from '../formatAuth'
 import readAuthStatus from '../readAuthStatus'
+import splitMatchers from '../splitMatchers'
 import suggestRemote from '../suggestRemote'
 import type { Candidate, DraftProfile, WizardResult } from '../types'
+import validateMatchers from '../validateMatchers'
+import validateName from '../validateName'
 
 const toHomeForm = (configDir: string): string =>
   `${CONFIG_FILE.homeMarker}/${basename(configDir)}`
 
-const splitEntries = (answer: string): string[] =>
-  answer
-    .split(INIT_PATTERN.separator)
-    .map(entry => entry.trim())
-    .filter(entry => entry !== '')
+const labelOf = (candidate: Candidate): string =>
+  candidate.configDir === undefined
+    ? INIT_TEXT.defaultLabel
+    : toHomeForm(candidate.configDir)
 
-// Empty string = skip this candidate; null = end of input.
-const askName = async (
-  reader: LineReader,
+// Logged-in directories are preselected.
+const toChoice = async (
   candidate: Candidate,
-  taken: readonly string[],
   ctx: Context
-): Promise<string | null> => {
-  for (;;) {
-    const line = await reader.readLine(
-      INIT_TEXT.namePrompt(candidate.suggestedName)
-    )
-    if (line === null) return null
-    const name = line.trim()
-    if (
-      name === '' ||
-      (CONFIG_PATTERN.name.test(name) &&
-        name !== ON_UNKNOWN_PROMPT &&
-        !taken.includes(name))
-    ) {
-      return name
-    }
-    ctx.stderr.write(`${INIT_TEXT.badName(name)}\n`)
+): Promise<Choice<Candidate>> => {
+  const auth = await readAuthStatus(candidate.configDir, ctx)
+  return {
+    value: candidate,
+    name: INIT_TEXT.candidate(labelOf(candidate), formatAuth(auth)),
+    checked: auth.state === AUTH_STATE.loggedIn,
   }
 }
 
-// The hint for the first unusable entry, undefined when all are fine.
-const rejectEntry = (
-  entries: readonly string[],
+// Name and matchers of one picked directory; null when the user aborts.
+// The only profile needs no matchers: it is written as `onUnknown`.
+const askProfile = async (
+  candidate: Candidate,
+  context: { taken: readonly string[]; suggestion?: string; only: boolean },
   ctx: Context
-): string | undefined => {
-  const flavor = pathFlavor(ctx.platform)
-  for (const entry of entries) {
-    if (INIT_PATTERN.pathEntry.test(entry)) {
-      if (!flavor.isAbsolute(expandHome(entry, ctx.homedir))) {
-        return INIT_TEXT.badPath(entry)
-      }
-    } else if (normalizeRemote(entry) === null) {
-      return INIT_TEXT.badRemote(entry)
-    }
-  }
-  return undefined
-}
+): Promise<DraftProfile | null> => {
+  const name = await input(
+    {
+      message: INIT_TEXT.namePrompt(labelOf(candidate)),
+      default: candidate.suggestedName,
+      validate: value => validateName(value, context.taken),
+    },
+    ctx
+  )
+  if (name === null) return null
 
-const askMatchers = async (
-  reader: LineReader,
-  name: string,
-  suggestion: string | undefined,
-  ctx: Context
-): Promise<string[] | null> => {
-  for (;;) {
-    const line = await reader.readLine(
-      INIT_TEXT.matcherPrompt(name, suggestion)
-    )
-    if (line === null) return null
-    const answer = line.trim()
-    const entries = splitEntries(
-      answer === '' && suggestion !== undefined ? suggestion : answer
-    )
-    if (entries.length === 0) {
-      ctx.stderr.write(`${INIT_TEXT.matcherRequired}\n`)
-      continue
-    }
-    const rejected = rejectEntry(entries, ctx)
-    if (rejected === undefined) return entries
-    ctx.stderr.write(`${rejected}\n`)
+  const required = !context.only
+  const answer = await input(
+    {
+      message: INIT_TEXT.matcherPrompt(name, required),
+      default: context.suggestion,
+      validate: value => validateMatchers(value, required, ctx),
+    },
+    ctx
+  )
+  if (answer === null) return null
+
+  const entries = splitMatchers(answer)
+  return {
+    name,
+    ...(candidate.configDir !== undefined && {
+      configDir: toHomeForm(candidate.configDir),
+    }),
+    paths: entries.filter(entry => INIT_PATTERN.pathEntry.test(entry)),
+    remotes: entries.filter(entry => !INIT_PATTERN.pathEntry.test(entry)),
   }
 }
 
-const askOnUnknown = async (
-  reader: LineReader,
+const askOnUnknown = (
   names: readonly string[],
   ctx: Context
-): Promise<string | null> => {
-  for (;;) {
-    const line = await reader.readLine(INIT_TEXT.onUnknownPrompt(names))
-    if (line === null) return null
-    const answer = line.trim()
-    if (answer === '') return ON_UNKNOWN_PROMPT
-    if (answer === ON_UNKNOWN_PROMPT || names.includes(answer)) return answer
-    ctx.stderr.write(`${INIT_TEXT.badOnUnknown(answer)}\n`)
-  }
-}
+): Promise<string | null> =>
+  select(
+    {
+      message: INIT_TEXT.onUnknownPrompt,
+      choices: [
+        {
+          value: ON_UNKNOWN_PROMPT,
+          name: ON_UNKNOWN_PROMPT,
+          description: INIT_TEXT.askEveryTime,
+        },
+        ...names.map(name => ({
+          value: name,
+          name,
+          description: INIT_TEXT.useProfile(name),
+        })),
+      ],
+      default: ON_UNKNOWN_PROMPT,
+    },
+    ctx
+  )
 
-// Asks for a name and matchers per candidate. Returns null when the input
-// ends early (nothing is to be written then).
+// Asks which directories become profiles, then name and matchers of each.
+// Returns null when the user aborts (nothing is to be written then).
 const runWizard = async (
   ctx: Context,
   candidates: readonly Candidate[]
 ): Promise<WizardResult | null> => {
-  const reader = createLineReader(ctx)
-  try {
-    const suggestion = await suggestRemote(ctx)
-    const profiles: DraftProfile[] = []
+  const choices = await Promise.all(
+    candidates.map(candidate => toChoice(candidate, ctx))
+  )
+  const picked = await checkbox(
+    { message: INIT_TEXT.candidatesPrompt, choices },
+    ctx
+  )
+  if (picked === null) return null
 
-    for (const candidate of candidates) {
-      const auth = await readAuthStatus(candidate.configDir, ctx)
-      const label =
-        candidate.configDir === undefined
-          ? INIT_TEXT.defaultLabel
-          : toHomeForm(candidate.configDir)
-      ctx.stderr.write(`${INIT_TEXT.candidate(label, formatAuth(auth))}\n`)
-
-      const name = await askName(
-        reader,
-        candidate,
-        profiles.map(profile => profile.name),
-        ctx
-      )
-      if (name === null) return null
-      if (name === '') continue
-
-      const entries = await askMatchers(reader, name, suggestion, ctx)
-      if (entries === null) return null
-
-      profiles.push({
-        name,
-        ...(candidate.configDir !== undefined && {
-          configDir: toHomeForm(candidate.configDir),
-        }),
-        paths: entries.filter(entry => INIT_PATTERN.pathEntry.test(entry)),
-        remotes: entries.filter(entry => !INIT_PATTERN.pathEntry.test(entry)),
-      })
-    }
-
-    if (profiles.length === 0) return { profiles, onUnknown: ON_UNKNOWN_PROMPT }
-
-    const onUnknown = await askOnUnknown(
-      reader,
-      profiles.map(profile => profile.name),
+  const suggestion = await suggestRemote(ctx)
+  const only = picked.length === 1
+  const profiles: DraftProfile[] = []
+  for (const candidate of picked) {
+    const taken = profiles.map(profile => profile.name)
+    const profile = await askProfile(
+      candidate,
+      { taken, suggestion, only },
       ctx
     )
-    return onUnknown === null ? null : { profiles, onUnknown }
-  } finally {
-    reader.close()
+    if (profile === null) return null
+    profiles.push(profile)
   }
+
+  const [first] = profiles
+  if (only && first !== undefined) return { profiles, onUnknown: first.name }
+
+  const onUnknown = await askOnUnknown(
+    profiles.map(profile => profile.name),
+    ctx
+  )
+  return onUnknown === null ? null : { profiles, onUnknown }
 }
 
 export default runWizard

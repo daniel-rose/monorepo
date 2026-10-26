@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { Readable } from 'node:stream'
+import { PassThrough } from 'node:stream'
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -8,7 +8,10 @@ import setup from '../../../../src/cli/commands/setup'
 import type { ExitCode } from '../../../../src/constants'
 import { MARKER } from '../../../../src/constants'
 import type { RunCommand } from '../../../../src/context/types'
+import { confirm } from '../../../../src/prompt'
 import createSandbox from '../../../helpers/createSandbox'
+
+vi.mock('../../../../src/prompt')
 
 type Sandbox = Awaited<ReturnType<typeof createSandbox>>
 
@@ -33,7 +36,7 @@ describe('setup safety', () => {
   const makeCtx = (
     extra: {
       env?: Record<string, string>
-      stdin?: Readable
+      stdin?: PassThrough & { isTTY: boolean }
       runCommand?: RunCommand
     } = {}
   ) => {
@@ -209,15 +212,14 @@ describe('setup safety', () => {
     await sandbox.writeConfig({ profiles: [] })
     const zshrc = join(sandbox.home, '.zshrc')
     writeFileSync(zshrc, 'export A=1\n')
-    const stdin: Readable = new Readable({
-      read: () => {
-        writeFileSync(zshrc, 'export B=2\n')
-        stdin.push('y\n')
-        stdin.push(null)
-      },
+    vi.mocked(confirm).mockImplementationOnce(() => {
+      writeFileSync(zshrc, 'export B=2\n')
+      return Promise.resolve(true)
     })
 
-    const ctx = makeCtx({ stdin })
+    const ctx = makeCtx({
+      stdin: Object.assign(new PassThrough(), { isTTY: true }),
+    })
     expect(await setup(ctx, 'zsh', {}, deps)).toBe(1)
 
     expect(readFileSync(zshrc, 'utf8')).toBe('export B=2\n')

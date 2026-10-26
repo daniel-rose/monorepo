@@ -18,7 +18,7 @@ const LINK_TEXT = {
   pointsElsewhere: (to: string) => `points elsewhere (${to})`,
   sourceWrongKind: (source: string, kind: string) =>
     `source ${source} is not a ${kind}`,
-  applyPrompt: 'Create these links? [y/N] ',
+  applyPrompt: 'Create these links?',
   declined: 'ccprofile: nothing written',
   unchanged: 'ccprofile: nothing to change',
   done: (count: number) => `ccprofile: done, ${count} link(s) created`,

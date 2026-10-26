@@ -82,7 +82,6 @@ const runInit = async (
 
   const result = await runWizard(ctx, candidates)
   if (result === null) return failWith(ctx, [INIT_TEXT.aborted])
-  if (result.profiles.length === 0) return failWith(ctx, [INIT_TEXT.noProfiles])
 
   return writeNew(
     path,

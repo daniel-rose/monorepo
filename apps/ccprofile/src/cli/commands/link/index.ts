@@ -12,7 +12,7 @@ import {
 import type { Context } from '../../../context/types'
 import type { ApplyResult, LinkPlan } from '../../../link'
 import { applyLinks, planLinks } from '../../../link'
-import confirm from '../../../prompt/confirm'
+import approve from '../approve'
 import failWith from '../failWith'
 import formatPlan from './formatPlan'
 import type { LinkOptions } from './types'
@@ -89,9 +89,15 @@ const link = async (
     say(ctx, LINK_TEXT.unchanged)
     return conflicts ? EXIT_CODE.failure : EXIT_CODE.ok
   }
-  if (options.yes !== true && !(await confirm(LINK_TEXT.applyPrompt, ctx))) {
-    return failWith(ctx, [LINK_TEXT.declined])
-  }
+  const refused = await approve(
+    {
+      question: LINK_TEXT.applyPrompt,
+      declined: LINK_TEXT.declined,
+      yes: options.yes,
+    },
+    ctx
+  )
+  if (refused !== undefined) return failWith(ctx, [refused])
 
   const result = await applyLinks(pending, ctx.platform)
   reportFailures(ctx, result)

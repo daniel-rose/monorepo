@@ -105,6 +105,19 @@ describe('status', () => {
     expect(ctx.err()).toBe('')
   })
 
+  it('names the only profile instead of announcing a prompt', async () => {
+    const single = await createSandbox()
+    await single.writeConfig({ profiles: [CONFIG.profiles[0]] })
+    const ctx = single.ctx(single.dir('x'))
+
+    const code = await run(['status'], ctx)
+    await single.cleanup()
+
+    expect(code).toBe(0)
+    expect(ctx.out()).toBe('work (only profile)\n')
+    expect(ctx.err()).toBe('')
+  })
+
   it('exits 1 with the issues for an invalid config', async () => {
     const broken = await createSandbox()
     await broken.writeConfig('{')

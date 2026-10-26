@@ -17,6 +17,9 @@ const formatProfile = ({ profile, reason, match }: ProfileOutcome): string => {
   if (reason === RESOLVE_REASON.explicitProfile) {
     return STATUS_TEXT.explicitProfile(profile.name)
   }
+  if (reason === RESOLVE_REASON.onlyProfile) {
+    return STATUS_TEXT.onlyProfile(profile.name)
+  }
   return match === undefined
     ? STATUS_TEXT.onUnknown(profile.name)
     : STATUS_TEXT.matched(profile.name, match.via, match.entry)

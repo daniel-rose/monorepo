@@ -13,6 +13,8 @@ const RESOLVE_MESSAGE = {
   aborted: `${PREFIX} aborted`,
   usingOnUnknown: (name: string) =>
     `${PREFIX} no match, using "${name}" (onUnknown)\n`,
+  usingOnlyProfile: (name: string) =>
+    `${PREFIX} no match, using "${name}" (only profile)\n`,
   promptHint: `${PREFIX} add a "paths" or "remotes" entry to skip this prompt\n`,
   creatingProfile: (name: string, dir: string) =>
     `${PREFIX} creating new profile "${name}" at ${dir}, first start will ask for login\n`,

@@ -63,7 +63,7 @@ describe('list', () => {
         '  shared source: ~/.claude (default)',
         `  account: work-2 (${join(sandbox.home, '.claude-work-2')})`,
         '  remote: gitlab.example.com',
-        'onUnknown: prompt',
+        'onUnknown: prompt (only profile "work" is used)',
         '',
       ].join('\n')
     )

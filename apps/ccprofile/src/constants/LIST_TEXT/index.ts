@@ -18,6 +18,9 @@ const LIST_TEXT = {
   remote: (entry: string) => `  remote: ${entry}`,
   path: (entry: string) => `  path: ${entry}`,
   onUnknown: (value: string) => `onUnknown: ${value}`,
+  // `onUnknown: "prompt"` with a single profile never prompts.
+  onUnknownOnlyProfile: (value: string, name: string) =>
+    `onUnknown: ${value} (only profile "${name}" is used)`,
 } as const
 
 export default LIST_TEXT

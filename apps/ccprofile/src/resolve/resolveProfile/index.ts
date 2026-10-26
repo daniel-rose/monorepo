@@ -1,4 +1,5 @@
 import loadConfig from '../../config/loadConfig'
+import onlyProfile from '../../config/onlyProfile'
 import type {
   LoadConfigResult,
   ResolvedConfig,
@@ -58,6 +59,7 @@ type ProfileReason =
   | typeof RESOLVE_REASON.explicitProfile
   | typeof RESOLVE_REASON.match
   | typeof RESOLVE_REASON.onUnknown
+  | typeof RESOLVE_REASON.onlyProfile
   | typeof RESOLVE_REASON.prompt
 
 type UseProfile = (
@@ -110,6 +112,12 @@ const fallback = (
       ctx.stderr.write(RESOLVE_MESSAGE.usingOnUnknown(profile.name))
       return useProfile(profile, RESOLVE_REASON.onUnknown)
     }
+  }
+  // Needs no terminal: nothing is asked.
+  const only = onlyProfile(config)
+  if (only !== undefined) {
+    ctx.stderr.write(RESOLVE_MESSAGE.usingOnlyProfile(only.name))
+    return useProfile(only, RESOLVE_REASON.onlyProfile)
   }
   if (!options.interactive) return { kind: OUTCOME_KIND.noMatch }
 

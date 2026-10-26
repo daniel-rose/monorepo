@@ -21,4 +21,12 @@ if [ -n "${FAKE_CLAUDE_LOG-}" ]; then
   # The whole environment of the last run, for leak checks.
   env >"$FAKE_CLAUDE_LOG.env"
 fi
+# With FAKE_CLAUDE_HANDOFF, the first run writes it into the hook's handoff
+# file, as the mod does at /exit after /ccprofile-switch, and keeps the
+# file's path in $FAKE_CLAUDE_LOG.handoff.
+if [ -n "${FAKE_CLAUDE_HANDOFF-}" ] && [ -n "${CCPROFILE_HANDOFF-}" ] &&
+  [ ! -e "$FAKE_CLAUDE_LOG.handoff" ]; then
+  printf '%s' "$FAKE_CLAUDE_HANDOFF" >"$CCPROFILE_HANDOFF"
+  printf '%s' "$CCPROFILE_HANDOFF" >"$FAKE_CLAUDE_LOG.handoff"
+fi
 exit "${FAKE_CLAUDE_EXIT:-0}"

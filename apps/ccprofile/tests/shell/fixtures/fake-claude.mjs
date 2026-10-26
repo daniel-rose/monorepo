@@ -2,7 +2,7 @@
 // fake-claude.mjs %*`; the .cmd names the tool in FAKE_CLAUDE_TOOL). Same
 // report as fake-claude.sh: stdout plus $FAKE_CLAUDE_LOG, exit code from
 // $FAKE_CLAUDE_EXIT.
-import { appendFileSync, writeFileSync } from 'node:fs'
+import { appendFileSync, existsSync, writeFileSync } from 'node:fs'
 
 const read = name => process.env[name] ?? ''
 
@@ -28,5 +28,17 @@ if (read('FAKE_CLAUDE_LOG') !== '') {
       .map(([key, value]) => `${key}=${value}\n`)
       .join('')
   )
+}
+// With FAKE_CLAUDE_HANDOFF, the first run writes it into the hook's handoff
+// file, as the mod does at /exit after /ccprofile-switch, and keeps the
+// file's path in $FAKE_CLAUDE_LOG.handoff.
+const handoffMarker = `${read('FAKE_CLAUDE_LOG')}.handoff`
+if (
+  read('FAKE_CLAUDE_HANDOFF') !== '' &&
+  read('CCPROFILE_HANDOFF') !== '' &&
+  !existsSync(handoffMarker)
+) {
+  writeFileSync(read('CCPROFILE_HANDOFF'), read('FAKE_CLAUDE_HANDOFF'))
+  writeFileSync(handoffMarker, read('CCPROFILE_HANDOFF'))
 }
 process.exitCode = Number(read('FAKE_CLAUDE_EXIT') || '0')

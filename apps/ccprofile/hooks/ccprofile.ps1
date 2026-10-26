@@ -1,8 +1,9 @@
-# ccprofile hook v3
+# ccprofile hook v4
 # Starts Claude Code and the Codex CLI with the profile and account
 # `ccprofile resolve` picks for the current directory. CCPROFILE,
 # CCPROFILE_ACCOUNT and CLAUDE_CONFIG_DIR (claude) or CODEX_HOME (codex) are
-# set for the tool only and restored afterwards. Bypass with
+# set for the tool only and restored afterwards. After /ccprofile-switch and
+# /exit in claude, the session goes on with the next account. Bypass with
 # `& (Get-Command claude -CommandType Application)[0]` (codex alike).
 #
 # Keep this file ASCII: Windows PowerShell 5.1 reads files without a BOM as
@@ -83,9 +84,12 @@ function __ccprofile_run {
     $nativeArgs = @(foreach ($arg in $toolArgs) {
         if ($legacy -and [string]$arg -eq '') { '""' } else { $arg }
     })
-    # The `=` form: --mcp-config is variadic and would eat the next
-    # arguments. Before the user's arguments, or a user `--` would swallow it.
-    if ($mcpConfig) { $nativeArgs = @("--mcp-config=$mcpConfig") + $nativeArgs }
+    # claude with a profile gets an empty file in CCPROFILE_HANDOFF, fresh per
+    # start. The mod fills it at /exit after /ccprofile-switch; then `handoff`
+    # prints the account and session to resume
+    # (`name<TAB>account<TAB>dir<TAB>mcpConfig<TAB>sessionId`), and the loop
+    # starts claude again.
+    $switches = $name -and $ccprofileTool -eq 'claude'
 
     # `$env:X = $null` removes the variable. [Environment]::SetEnvironmentVariable
     # would not: PowerShell passes $null to a string parameter as "", which
@@ -94,22 +98,62 @@ function __ccprofile_run {
     $previousAccount = $env:CCPROFILE_ACCOUNT
     $previousConfigDir = $env:CLAUDE_CONFIG_DIR
     $previousCodexHome = $env:CODEX_HOME
+    $previousHandoff = $env:CCPROFILE_HANDOFF
     $exitCode = 0
-    try {
-        if ($name) {
-            $env:CCPROFILE = $name
-            $env:CCPROFILE_ACCOUNT = $account
-            if ($dir) {
-                if ($ccprofileTool -eq 'codex') { $env:CODEX_HOME = $dir } else { $env:CLAUDE_CONFIG_DIR = $dir }
-            }
+    while ($true) {
+        # The `=` form: --mcp-config is variadic and would eat the next
+        # arguments. Before the user's arguments, or a user `--` would
+        # swallow it.
+        $runArgs = @($nativeArgs)
+        if ($mcpConfig) { $runArgs = @("--mcp-config=$mcpConfig") + $runArgs }
+
+        $handoff = $null
+        if ($switches) {
+            try { $handoff = [System.IO.Path]::GetTempFileName() } catch { }
         }
-        & $toolCommand @nativeArgs
-        $exitCode = $LASTEXITCODE
-    } finally {
-        $env:CCPROFILE = $previousProfile
-        $env:CCPROFILE_ACCOUNT = $previousAccount
-        $env:CLAUDE_CONFIG_DIR = $previousConfigDir
-        $env:CODEX_HOME = $previousCodexHome
+        $next = $null
+        try {
+            if ($name) {
+                $env:CCPROFILE = $name
+                $env:CCPROFILE_ACCOUNT = $account
+                if ($dir) {
+                    if ($ccprofileTool -eq 'codex') { $env:CODEX_HOME = $dir } else { $env:CLAUDE_CONFIG_DIR = $dir }
+                }
+            }
+            # Also without a file: an inherited handoff is not claude's.
+            if ($switches) { $env:CCPROFILE_HANDOFF = $handoff }
+            & $toolCommand @runArgs
+            $exitCode = $LASTEXITCODE
+
+            if ($handoff -and (Get-Item -LiteralPath $handoff -ErrorAction SilentlyContinue).Length -gt 0) {
+                # handoff prints UTF-8, as resolve does.
+                $previousEncoding = $null
+                try {
+                    try {
+                        $previousEncoding = [Console]::OutputEncoding
+                        [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+                    } catch { }
+                    $next = & $ccprofile handoff --protocol 2 --file $handoff
+                } finally {
+                    if ($null -ne $previousEncoding) {
+                        try { [Console]::OutputEncoding = $previousEncoding } catch { }
+                    }
+                }
+            }
+        } finally {
+            $env:CCPROFILE = $previousProfile
+            $env:CCPROFILE_ACCOUNT = $previousAccount
+            $env:CLAUDE_CONFIG_DIR = $previousConfigDir
+            $env:CODEX_HOME = $previousCodexHome
+            $env:CCPROFILE_HANDOFF = $previousHandoff
+            if ($handoff) { Remove-Item -LiteralPath $handoff -Force -ErrorAction SilentlyContinue }
+        }
+
+        $line = [string]($next | Select-Object -First 1)
+        if (-not $line) { break }
+        $name, $account, $dir, $mcpConfig, $sessionId = $line -split "`t", 5
+        # The original arguments are not repeated: they could resend a prompt.
+        $nativeArgs = @('--resume', $sessionId)
     }
     $global:LASTEXITCODE = $exitCode
 }

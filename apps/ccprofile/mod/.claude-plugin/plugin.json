@@ -1,6 +1,6 @@
 {
   "name": "ccprofile",
-  "description": "Records the rate limits of the account a session runs on, so ccprofile can start the next session with an account that is not full.",
+  "description": "Records the rate limits of the account a session runs on, so ccprofile can start the next session with an account that is not full, and moves a running session to another account with /ccprofile-switch.",
   "author": { "name": "Daniel Rose" },
   "homepage": "https://github.com/daniel-rose/monorepo/tree/main/apps/ccprofile",
   "license": "MIT"

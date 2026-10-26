@@ -21,7 +21,7 @@ ccprofile setup                      # installs the shell hook, then creates a c
 
 ## How it works
 
-`setup` installs shell functions named `claude` and `codex`. On every call they ask `ccprofile resolve` (a short Node process, nothing runs on shell startup) which profile and account apply, and then start the real `claude` (or `codex`) as a direct child with `CCPROFILE`, `CCPROFILE_ACCOUNT` and `CLAUDE_CONFIG_DIR` (or `CODEX_HOME`) set **for that child only**. Your shell environment is never changed, and the exit status of the tool is the exit status of the function.
+`setup` installs shell functions named `claude` and `codex`. On every call they ask `ccprofile resolve` (a short Node process, nothing runs on shell startup) which profile and account apply, and then start the real `claude` (or `codex`) as a direct child with `CCPROFILE`, `CCPROFILE_ACCOUNT` and `CLAUDE_CONFIG_DIR` (or `CODEX_HOME`) set **for that child only**. Your shell environment is never changed, and the exit status of the tool is the exit status of the function (after a [switch](#switching-a-running-session), that of the last `claude`).
 
 Bypass the hook any time with `command claude` or `command codex` (zsh, bash, fish) or by calling the executable directly.
 
@@ -135,12 +135,28 @@ How `resolve` chooses (only for `claude`, only for profiles with `accounts`):
 
 - `CCPROFILE_ACCOUNT` always wins. Without it, the accounts are checked in order and the first one that is **not full** is used. An account is full when any window (`five_hour`, `seven_day`, a gateway's `spend_limit`) is at or above `accountThreshold` percent (default `90`) and has not reset yet. A window whose reset has passed counts as 0 %; a window without a reset time is ignored; an account without data counts as not full. Without any data the first account is used, as without the mod.
 - Every choice other than the first account is printed: `ccprofile: profile "private" → account "seat-2" (≥90%: private five_hour 97% until 14:30)`. When every account is full, the one that is free first is used, with a warning even if that is the first account: `… (all ≥90%, free at Tue 09:00)`. Times are local; a weekday means another day.
-- The choice happens only at start. A running session never switches, and a `claude` started inside a Claude Code session (`CLAUDECODE` set) does not choose by limits: it keeps the inherited `CCPROFILE_ACCOUNT`, else the first account, so it cannot jump away from the session it runs in.
+- The choice happens only at start; a running session switches only when you ask for it (see [Switching a running session](#switching-a-running-session)). A `claude` started inside a Claude Code session (`CLAUDECODE` set) does not choose by limits: it keeps the inherited `CCPROFILE_ACCOUNT`, else the first account, so it cannot jump away from the session it runs in.
 - `codex` never chooses by limits: it takes the first account or `CCPROFILE_ACCOUNT`.
 - The data is what **this machine** saw. Usage on claude.ai or another computer shows up only after the next session of that account here. Worst case, a session starts on an account that is already full.
 - The mod cannot write to a network path: a `configDir` on a UNC share (`\\server\share\...`) gets no limit file.
 
 `ccprofile status` names the reason after the account, `ccprofile list` shows the last reading of every account (`5h 42% · 7d 80%`, `5h reset`, `no data`) once one account of the profile has a file, and `ccprofile doctor` warns when no account of a profile has usable data (`ccprofile mod not installed?` when there is no file at all) and names broken or newer files.
+
+## Switching a running session
+
+With the mod installed and the hook v4 (`ccprofile setup`), a session can move to another account of its profile without losing the conversation:
+
+1. Type `/ccprofile-switch` in Claude Code. The mod asks `ccprofile switch` for the next account of the profile that is not full (in config order, the first account included) and answers `after /exit this session continues as account "seat-2" …`, or why there is none. That account is fixed now and not checked again at `/exit`; running the command again picks anew, `/ccprofile-switch off` cancels.
+2. Type `/exit`. The mod leaves a handoff for the hook, the hook prints `ccprofile: resuming session 8064d7e7 as account "seat-2" of profile "private"` and starts `claude --resume <id>` with that account.
+
+When a window of the running account reaches `accountThreshold` and another account is free, the mod suggests the switch with a toast, once per window (if no account is free yet, it asks again after the next turns). Switching stays within one profile and only happens after `/ccprofile-switch`.
+
+- The shared `projects/` (`ccprofile link`) is what makes the session visible to the other account.
+- If the other account belongs to **another organization** (two personal subscriptions, for example), Claude cannot reuse the earlier thinking of the session there: the next answers are slower and use more tokens. Seats of one organization do not have this cost.
+- Once armed, any interactive exit switches: `/exit`, ctrl+c and ctrl+d alike. `/clear`, `/resume` and logout drop the switch.
+- The resumed session starts with `--resume <id>` only (plus the profile's `--mcp-config`); the arguments of the first start (`--model`, `--permission-mode`, a prompt) are not repeated.
+- No switch in a `claude` started inside another Claude Code session, nor in one started without the hook.
+- If the handoff cannot be followed (the account was removed from the config, say), the hook prints `ccprofile: switch skipped (…)`, followed by `– resume by hand with "claude --resume <id>"` whenever it can read the session id. If the mod cannot write the handoff, the session just ends.
 
 ## Codex CLI
 
@@ -185,6 +201,7 @@ An empty value counts as unset.
 | `CCPROFILE_CONFIG`  | Path of the config file.                                                                                                                                                              |
 | `CLAUDECODE`        | Set by Claude Code in its child processes. A nested `claude` then does not choose by rate limits: the inherited `CCPROFILE_ACCOUNT`, else the first account.                          |
 | `CCPROFILE_ARGV`    | Used by the PowerShell hook to hand the arguments to `ccprofile` as a JSON array. Not for manual use.                                                                                 |
+| `CCPROFILE_HANDOFF` | Set by the hook v4 for `claude`: an empty temporary file the mod fills at `/exit` after `/ccprofile-switch`. Not for manual use.                                                      |
 
 Decision order of `resolve`: `CLAUDE_CONFIG_DIR` set (for `codex`: `CODEX_HOME` set), passthrough argument, no config file (no-op until you configure one), then config validation, `CCPROFILE`, matching, `onUnknown`, and last the account (`CCPROFILE_ACCOUNT`, else for `claude` the rate limits, else the first).
 
@@ -198,6 +215,8 @@ Decision order of `resolve`: `CLAUDE_CONFIG_DIR` set (for `codex`: `CODEX_HOME` 
 | `ccprofile hook <shell>`                                    | Print the hook (`zsh`, `bash`, `fish`, `pwsh`, `powershell`)                                                                                                                                                                                                                                                                                                                                |
 | `ccprofile link [profile] [--yes]`                          | Link the shared config of a profile (default: all) into its further accounts, for `claude` and `codex`, and create missing Codex homes; never overwrites                                                                                                                                                                                                                                    |
 | `ccprofile resolve --protocol 2 [--tool codex] [--] <args>` | What the hook calls; prints `name<TAB>account<TAB>dir<TAB>mcpConfig` (account empty for the first; `dir` is the `configDir`, with `--tool codex` the `CODEX_HOME`, which never gets an `mcpConfig`) or nothing                                                                                                                                                                              |
+| `ccprofile switch [--json]`                                 | Which account the running session (`CCPROFILE`, `CCPROFILE_ACCOUNT`) would switch to, and why none; the mod asks with `--json`                                                                                                                                                                                                                                                              |
+| `ccprofile handoff --protocol 2 --file <path>`              | What the hook calls after `claude` exits; takes the mod's handoff and prints `name<TAB>account<TAB>dir<TAB>mcpConfig<TAB>sessionId`, or nothing                                                                                                                                                                                                                                             |
 | `ccprofile setup [shell] [--yes] [--remove]`                | Install or update the hook; `--remove` removes the block and the hook file, never your config                                                                                                                                                                                                                                                                                               |
 | `ccprofile init [--example]`                                | Create the config; never overwrites. Without a terminal `--example` is required                                                                                                                                                                                                                                                                                                             |
 | `ccprofile doctor`                                          | Check config, `claude` on PATH, Claude logins, rate-limit data, Codex logins, account links, hook and shell startup file; exit 1 on any `fail`                                                                                                                                                                                                                                              |
@@ -228,7 +247,7 @@ Bash on macOS and Windows starts as a login shell and reads `~/.bash_profile`, n
 
 - The hook only affects `claude` and `codex` started from your shell. **IDE extensions, GUI launchers and anything else that starts the binary directly bypass it** and use `CLAUDE_CONFIG_DIR` or `CODEX_HOME` from their own environment.
 - `doctor` warns when `CLAUDE_CONFIG_DIR`, `CODEX_HOME` or `CCPROFILE` is set in the current shell: such a shell bypasses detection.
-- ccprofile never touches credentials or the contents of Claude's or Codex's files; `link` only adds symlinks and empty directories, and the mod writes only its own `ccprofile/limits.json`. Login state is read through the tools' own CLIs (`claude auth status --json`, `codex login status`); directories are only listed to suggest candidates.
+- ccprofile never touches credentials or the contents of Claude's or Codex's files; `link` only adds symlinks and empty directories, and the mod writes only its own `ccprofile/limits.json` and the handoff file the hook gives it. Login state is read through the tools' own CLIs (`claude auth status --json`, `codex login status`); directories are only listed to suggest candidates.
 - Claude Desktop, claude.ai, API keys and usage tracking are out of scope; the rate limits come only from the sessions the mod sees.
 
 ## License

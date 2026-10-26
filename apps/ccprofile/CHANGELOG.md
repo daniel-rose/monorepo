@@ -1,3 +1,15 @@
+# @daniel-rose/ccprofile [3.0.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/ccprofile@2.4.0...@daniel-rose/ccprofile@3.0.0) (2026-10-26)
+
+
+* feat(ccprofile)!: interactive prompts with inquirer ([#192](https://github.com/daniel-rose/monorepo/issues/192)) ([d1155f7](https://github.com/daniel-rose/monorepo/commit/d1155f7a743f2e44b51ea9a6daa65d2e7f5fe3c4))
+
+
+### BREAKING CHANGES
+
+* setup and link no longer read the answer from piped stdin;
+without a terminal pass --yes. In the profile prompt an empty answer no
+longer aborts (Enter picks the highlighted profile); Ctrl-C or Ctrl-D does.
+
 # @daniel-rose/ccprofile [2.4.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/ccprofile@2.3.0...@daniel-rose/ccprofile@2.4.0) (2026-10-26)
 
 

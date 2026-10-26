@@ -1,6 +1,5 @@
 import { rmSync } from 'node:fs'
 import { join } from 'node:path'
-import { Readable } from 'node:stream'
 
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 
@@ -29,7 +28,6 @@ let plain = ''
 let privateNotes = ''
 let privateForeign = ''
 
-const interactive = { interactive: true }
 const batch = { interactive: false }
 
 const profileOf = (outcome: ResolveOutcome) =>
@@ -250,55 +248,5 @@ describe('resolveProfile passthrough list', () => {
     await sandbox.writeConfig({ ...BASE, passthrough: ['-x', 'update'] })
     const outcome = await resolveProfile(args, sandbox.ctx(workRepo), batch)
     expect(outcome.kind).toBe(kind)
-  })
-})
-
-describe('resolveProfile prompt', () => {
-  const ask = (input: string) => {
-    const ctx = sandbox.ctx(foreign)
-    return { ctx, stdin: Readable.from([input]) }
-  }
-
-  it('selects a profile and prints the hint', async () => {
-    await sandbox.writeConfig(BASE)
-    sandbox.dir('.claude-private')
-    const { ctx, stdin } = ask('2\n')
-    const outcome = await resolveProfile([], { ...ctx, stdin }, interactive)
-    expect(outcome).toMatchObject({ kind: 'profile', reason: 'prompt' })
-    expect(profileOf(outcome)?.name).toBe('private')
-    expect(
-      ctx
-        .err()
-        .endsWith(
-          'ccprofile: add a "paths" or "remotes" entry to skip this prompt\n'
-        )
-    ).toBe(true)
-  })
-
-  it('aborts on an empty answer', async () => {
-    await sandbox.writeConfig(BASE)
-    const { ctx, stdin } = ask('\n')
-    expect(await resolveProfile([], { ...ctx, stdin }, interactive)).toEqual({
-      kind: 'error',
-      messages: ['ccprofile: aborted'],
-    })
-  })
-
-  it('does not prompt when not interactive', async () => {
-    await sandbox.writeConfig(BASE)
-    const { ctx, stdin } = ask('2\n')
-    expect(await resolveProfile([], { ...ctx, stdin }, batch)).toEqual({
-      kind: 'noMatch',
-    })
-    expect(ctx.err()).toBe('')
-  })
-
-  it('warns about a missing configDir after a pick', async () => {
-    await sandbox.writeConfig(BASE)
-    const { ctx, stdin } = ask('2\n')
-    await resolveProfile([], { ...ctx, stdin }, interactive)
-    expect(ctx.err()).toContain(
-      `ccprofile: creating new profile "private" at ${join(sandbox.home, '.claude-private')}, first start will ask for login`
-    )
   })
 })

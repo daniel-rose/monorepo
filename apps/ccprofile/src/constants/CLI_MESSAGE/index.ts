@@ -12,6 +12,7 @@ const CLI_MESSAGE = {
     `ccprofile: unsupported tool "${tool}" – run "ccprofile setup"`,
   argvNotJson: 'not valid JSON',
   argvNotStringArray: 'not an array of strings',
+  needsYes: 'ccprofile: no terminal to ask in – pass --yes, nothing written',
   unknownShell: (name: string, valid: readonly string[]) =>
     `ccprofile: unknown shell "${name}" (valid: ${valid.join(', ')})`,
 } as const

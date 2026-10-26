@@ -1,11 +1,15 @@
 import { rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { PassThrough } from 'node:stream'
+import { setTimeout as delay } from 'node:timers/promises'
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import run from '../../../../src/cli'
+import { PROFILE_PROMPT_TEXT } from '../../../../src/constants'
 import createSandbox from '../../../helpers/createSandbox'
+import KEY from '../../../prompt/KEY'
+import typeKeys from '../../../prompt/typeKeys'
 
 const V2 = ['resolve', '--protocol', '2']
 
@@ -210,10 +214,16 @@ describe('resolve', () => {
     )
   })
 
+  // The real prompt: it writes to stderr, stdout carries only the line.
   it('prompts when stdin is a TTY', async () => {
     const stdin = Object.assign(new PassThrough(), { isTTY: true })
-    stdin.end('1\n')
     const ctx = { ...sandbox.ctx(plain), stdin }
+    // Keys typed before the prompt listens are lost.
+    const answer = async () => {
+      while (!ctx.err().includes(PROFILE_PROMPT_TEXT.message)) await delay(5)
+      await typeKeys(stdin, ['1', KEY.enter])
+    }
+    void answer()
 
     const code = await run([...V2, '--', 'x'], ctx)
 

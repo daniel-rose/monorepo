@@ -1,15 +1,12 @@
-import { POSITIVE_ANSWER_PATTERN } from '../../constants'
-import type { Context } from '../../context/types'
-import createLineReader from '../createLineReader'
+import inquirerConfirm from '@inquirer/confirm'
 
-const confirm = async (question: string, ctx: Context): Promise<boolean> => {
-  const reader = createLineReader(ctx)
-  try {
-    const line = await reader.readLine(question)
-    return POSITIVE_ANSWER_PATTERN.test(line?.trim() ?? '')
-  } finally {
-    reader.close()
-  }
-}
+import type { Context } from '../../context/types'
+import ask from '../ask'
+
+// y/N: false unless answered yes; Ctrl-C/Ctrl-D count as no.
+const confirm = async (message: string, ctx: Context): Promise<boolean> =>
+  (await ask(ctx, context =>
+    inquirerConfirm({ message, default: false }, context)
+  )) === true
 
 export default confirm

@@ -17,7 +17,7 @@ pnpm add -g @daniel-rose/ccprofile   # or npm i -g, yarn global add, bun add -g
 ccprofile setup                      # installs the shell hook, then creates a config
 ```
 
-`setup` detects your shell from `$SHELL` (on Windows pass it: `ccprofile setup pwsh`). It shows a diff of the changes to your shell startup file and asks `y/N` (`--yes` skips the question). Open a new terminal afterwards.
+`setup` detects your shell from `$SHELL` (on Windows pass it: `ccprofile setup pwsh`). It shows a diff of the changes to your shell startup file and asks `y/N` (`--yes` skips the question; without a terminal `--yes` is required). Open a new terminal afterwards.
 
 ## How it works
 
@@ -89,7 +89,7 @@ Profiles are checked in array order, the first match wins. Within a profile, `pa
 
 - `onUnknown` is a profile name: that profile is used and `ccprofile: no match, using "<name>" (onUnknown)` goes to stderr.
 - `onUnknown` is `"prompt"` and the config has a single profile: that profile is used, with or without a terminal, and `ccprofile: no match, using "<name>" (only profile)` goes to stderr.
-- `onUnknown` is `"prompt"` and stdin is a terminal: you pick a profile from a list (empty input, EOF or Ctrl-C aborts without starting `claude`).
+- `onUnknown` is `"prompt"` and stdin is a terminal: you pick a profile from a list with the arrow keys or its number, each entry with its `configDir` and accounts (Ctrl-C or Ctrl-D aborts without starting `claude`).
 - `onUnknown` is `"prompt"` and stdin is not a terminal: exit 1 with a message that names `onUnknown` and `CCPROFILE=<name> claude`.
 
 ### Arguments that skip profile selection
@@ -110,7 +110,7 @@ A profile is a cost center: its matchers, one shared config (settings, plugins, 
 ```
 
 - **Choosing an account:** the first account (named after the profile) is used unless `CCPROFILE_ACCOUNT=<name>` names another account of the resolved profile (`CCPROFILE_ACCOUNT=seat-2 claude`) or, with the ccprofile mod installed, the first account is full (see [Choosing the account by rate limits](#choosing-the-account-by-rate-limits)). An unknown name, or `CCPROFILE_ACCOUNT` without any profile, stops with exit 1. Crossing profiles stays explicit (`CCPROFILE=...`).
-- **Sharing the config:** `ccprofile link [profile]` links these entries of every further account to the shared source: `settings.json`, `CLAUDE.md`, `keybindings.json`, `rules/`, `skills/`, `agents/`, `commands/`, `output-styles/`, `workflows/`, `plugins/`, `themes/` and `projects/` (the history, so `claude --resume` works across the accounts). It shows the plan and asks `y/N` (`--yes` skips the question). Missing directories are created; a missing source file is skipped as `no source` rather than linked to nothing.
+- **Sharing the config:** `ccprofile link [profile]` links these entries of every further account to the shared source: `settings.json`, `CLAUDE.md`, `keybindings.json`, `rules/`, `skills/`, `agents/`, `commands/`, `output-styles/`, `workflows/`, `plugins/`, `themes/` and `projects/` (the history, so `claude --resume` works across the accounts). It shows the plan and asks `y/N` (`--yes` skips the question; without a terminal `--yes` is required). Missing directories are created; a missing source file is skipped as `no source` rather than linked to nothing.
 - **What stays per account:** the login (`.claude.json`, credentials, on macOS a keychain entry per directory) and everything Claude caches. Log in once per account: `CCPROFILE_ACCOUNT=seat-2 claude`, then `/login`.
 - **MCP servers:** user-scope MCP servers live in `.claude.json` next to the login and cannot be shared by a link. Put the servers of a profile into a plugin or into `<shared source>/.mcp.json`; the hook passes that file as `--mcp-config=<file>` to every account of the profile, in addition to any `--mcp-config` you pass yourself.
 - **Conflicts:** `link` never deletes or overwrites. A regular file, a directory or a link pointing elsewhere in the account dir is listed as a conflict and left alone, the other links are still created, and the exit code is 1. To resolve one, merge its content into the shared source, delete the entry in the account dir and run `link` again.
@@ -222,7 +222,7 @@ Decision order of `resolve`: `CLAUDE_CONFIG_DIR` set (for `codex`: `CODEX_HOME` 
 | `ccprofile init [--example]`                                | Create the config; never overwrites. Without a terminal `--example` is required                                                                                                                                                                                                                                                                                                                                      |
 | `ccprofile doctor`                                          | Check config, `claude` on PATH, Claude logins, rate-limit data, Codex logins, account links, hook and shell startup file; exit 1 on any `fail`                                                                                                                                                                                                                                                                       |
 
-`init` in a terminal is a wizard: it finds `~/.claude` and every `~/.claude-*` directory with a `.claude.json`, shows the login state from `claude auth status --json`, and asks for a name and at least one remote or path prefix per profile.
+`init` in a terminal is a wizard: it finds `~/.claude` and every `~/.claude-*` directory with a `.claude.json` and lets you check the ones that become profiles, with the login state from `claude auth status --json` (logged-in ones are checked). Per profile it asks for a name (Enter takes the suggestion) and at least one remote or path prefix, then for `onUnknown`. A single profile needs no remote or path: it becomes the `onUnknown` profile. Ctrl-C or Ctrl-D aborts without writing.
 
 ### What `setup` changes
 

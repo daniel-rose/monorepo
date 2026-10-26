@@ -18,10 +18,10 @@ import {
   TOOL,
 } from '../../constants'
 import type { Context } from '../../context/types'
-import { selectProfile } from '../../prompt'
 import findProfile from '../findProfile'
 import isPassthrough from '../isPassthrough'
 import pickProfileAccount from '../pickProfileAccount'
+import selectProfile from '../selectProfile'
 import toolTarget from '../toolTarget'
 import type { ResolveOptions, ResolveOutcome } from '../types'
 

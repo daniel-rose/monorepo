@@ -25,7 +25,7 @@ const SETUP_TEXT = {
   removeLine: (file: string) => `remove ${file}`,
   keptHook: (file: string, shell: string) =>
     `kept ${file} – still used by ${shell} profile`,
-  applyPrompt: 'Apply these changes? [y/N] ',
+  applyPrompt: 'Apply these changes?',
   declined: 'ccprofile: nothing written',
   unchanged: 'ccprofile: nothing to change, already up to date (unchanged)',
   unchangedRemove: 'ccprofile: nothing to remove (unchanged)',

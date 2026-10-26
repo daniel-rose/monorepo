@@ -14,7 +14,6 @@ import {
 import type { Context } from '../../../context/types'
 import { isShell, readHook } from '../../../hook'
 import { runInit } from '../../../init'
-import confirm from '../../../prompt/confirm'
 import type { FileChange, SetupMode } from '../../../setup'
 import {
   buildPlan,
@@ -25,6 +24,7 @@ import {
   renderDiff,
   writeFileAtomic,
 } from '../../../setup'
+import approve from '../approve'
 import failWith from '../failWith'
 import type { SetupDeps, SetupOptions } from './types'
 
@@ -144,12 +144,15 @@ const setup = async (
       )
     } else {
       describeChanges(ctx, plan.changes)
-      if (
-        options.yes !== true &&
-        !(await confirm(SETUP_TEXT.applyPrompt, ctx))
-      ) {
-        return failWith(ctx, [SETUP_TEXT.declined])
-      }
+      const refused = await approve(
+        {
+          question: SETUP_TEXT.applyPrompt,
+          declined: SETUP_TEXT.declined,
+          yes: options.yes,
+        },
+        ctx
+      )
+      if (refused !== undefined) return failWith(ctx, [refused])
       await applyChanges(plan.changes, mode)
       say(ctx, SETUP_TEXT.done(plan.changes.length))
     }

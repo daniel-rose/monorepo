@@ -7,12 +7,15 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { join } from 'node:path'
-import { Readable } from 'node:stream'
+import { PassThrough } from 'node:stream'
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import run from '../../../../src/cli'
+import { confirm } from '../../../../src/prompt'
 import createSandbox from '../../../helpers/createSandbox'
+
+vi.mock('../../../../src/prompt')
 
 const CONFIG = {
   profiles: [
@@ -40,10 +43,14 @@ const linkTarget = (path: string): string | null =>
     ? readlinkSync(path)
     : null
 
-const link = async (args: string[], stdin?: string) => {
+// `answer`: run in a terminal and answer the question with it.
+const link = async (args: string[], answer?: boolean) => {
   const ctx = sandbox.ctx(sandbox.home)
+  if (answer !== undefined) vi.mocked(confirm).mockResolvedValueOnce(answer)
   const withInput =
-    stdin === undefined ? ctx : { ...ctx, stdin: Readable.from([stdin]) }
+    answer === undefined
+      ? ctx
+      : { ...ctx, stdin: Object.assign(new PassThrough(), { isTTY: true }) }
   const code = await run(['link', ...args], withInput)
   return { code, out: ctx.out(), err: ctx.err() }
 }
@@ -134,7 +141,7 @@ describe('link', () => {
   })
 
   it('writes nothing when the question is declined', async () => {
-    const result = await link(['private'], 'n\n')
+    const result = await link(['private'], false)
 
     expect(result.code).toBe(1)
     expect(existsSync(account)).toBe(false)
@@ -142,10 +149,24 @@ describe('link', () => {
   })
 
   it('applies after a yes', async () => {
-    const result = await link(['private'], 'y\n')
+    const result = await link(['private'], true)
 
     expect(result.code).toBe(0)
+    expect(confirm).toHaveBeenCalledWith(
+      'Create these links?',
+      expect.anything()
+    )
     expect(linkTarget(join(account, 'skills'))).toBe(join(source, 'skills'))
+  })
+
+  it('needs --yes without a terminal', async () => {
+    const result = await link(['private'])
+
+    expect(result.code).toBe(1)
+    expect(existsSync(account)).toBe(false)
+    expect(result.err).toContain(
+      'ccprofile: no terminal to ask in – pass --yes, nothing written'
+    )
   })
 
   it('links every profile without an argument, ~/.claude for the default one', async () => {

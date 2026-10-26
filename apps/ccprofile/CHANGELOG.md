@@ -1,3 +1,10 @@
+# @daniel-rose/ccprofile [2.4.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/ccprofile@2.3.0...@daniel-rose/ccprofile@2.4.0) (2026-10-26)
+
+
+### Features
+
+* **ccprofile:** use the only profile without asking ([#191](https://github.com/daniel-rose/monorepo/issues/191)) ([3f01cb6](https://github.com/daniel-rose/monorepo/commit/3f01cb6164d52644059915ed02a0a93fbc7c4d01))
+
 # @daniel-rose/ccprofile [2.3.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/ccprofile@2.2.0...@daniel-rose/ccprofile@2.3.0) (2026-10-26)
 
 

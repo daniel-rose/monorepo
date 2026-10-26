@@ -2,3 +2,5 @@ node_modules
 dist
 coverage
 schema.json
+# Written by Claude Code when it loads the mod; extends its local types.
+mod/tsconfig.json

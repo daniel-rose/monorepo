@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
 import type { Shell } from '../../../../src/constants'
@@ -58,6 +59,10 @@ const createHookContext = async (
     },
     invocations: () => readInvocations(logPath),
     childEnv: () => readChildEnv(logPath),
+    handoffFile: () => {
+      const marker = `${logPath}.handoff`
+      return existsSync(marker) ? readFileSync(marker, 'utf8') : undefined
+    },
     cleanup: async () => {
       // A shell still running (the test timed out) blocks the removal.
       running.abort()

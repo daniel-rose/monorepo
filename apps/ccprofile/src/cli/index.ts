@@ -6,6 +6,8 @@ import readPackageVersion from '../context/readPackageVersion'
 import type { Context } from '../context/types'
 import config from './commands/config'
 import doctor from './commands/doctor'
+import handoff from './commands/handoff'
+import type { HandoffOptions } from './commands/handoff/types'
 import hook from './commands/hook'
 import init from './commands/init'
 import link from './commands/link'
@@ -15,6 +17,8 @@ import resolve from './commands/resolve'
 import type { ResolveCommandOptions } from './commands/resolve/types'
 import setup from './commands/setup'
 import status from './commands/status'
+import switchAccount from './commands/switch'
+import type { SwitchOptions } from './commands/switch/types'
 
 const COMMANDER_SUCCESS_CODES: readonly string[] = [
   'commander.helpDisplayed',
@@ -105,6 +109,29 @@ const registerCommands = (
     .passThroughOptions()
     .action(async (args: string[], options: ResolveCommandOptions) =>
       setExitCode(await resolve(ctx, args, options))
+    )
+
+  // Used by the mod: where the running session would continue.
+  program
+    .command('switch')
+    .description(
+      'show which account the running claude session would switch to'
+    )
+    .option('--json', 'print one JSON line (used by the ccprofile mod)')
+    .action(async (options: SwitchOptions) =>
+      setExitCode(await switchAccount(ctx, options))
+    )
+
+  // Used by the shell hooks after claude exits.
+  program
+    .command('handoff')
+    .description(
+      'print the session to resume after a switch (used by the hooks)'
+    )
+    .option('--protocol <version>', 'line format the hook reads')
+    .requiredOption('--file <path>', 'the handoff file of the mod')
+    .action(async (options: HandoffOptions) =>
+      setExitCode(await handoff(ctx, options))
     )
 }
 

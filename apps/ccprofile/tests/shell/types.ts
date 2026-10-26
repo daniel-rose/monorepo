@@ -46,6 +46,9 @@ export type HookContext = {
   invocations: () => Invocation[]
   // The complete environment of the last fake claude run.
   childEnv: () => Record<string, string>
+  // The handoff file the fake claude filled (FAKE_CLAUDE_HANDOFF), as the
+  // shell spelled it; undefined when it filled none.
+  handoffFile: () => string | undefined
 }
 
 export type HookCase = {

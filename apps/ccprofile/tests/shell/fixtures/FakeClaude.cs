@@ -42,6 +42,17 @@ public static class FakeClaude
             File.AppendAllText(log, report.ToString(), utf8);
         }
 
+        // With FAKE_CLAUDE_HANDOFF, the first run writes it into the hook's
+        // handoff file, as the mod does at /exit after /ccprofile-switch, and
+        // keeps the file's path in FAKE_CLAUDE_LOG.handoff.
+        var handoff = Read("CCPROFILE_HANDOFF");
+        var marker = log + ".handoff";
+        if (Read("FAKE_CLAUDE_HANDOFF") != "" && handoff != "" && !File.Exists(marker))
+        {
+            File.WriteAllText(handoff, Read("FAKE_CLAUDE_HANDOFF"), utf8);
+            File.WriteAllText(marker, handoff, utf8);
+        }
+
         int code;
         return int.TryParse(Read("FAKE_CLAUDE_EXIT"), out code) ? code : 0;
     }

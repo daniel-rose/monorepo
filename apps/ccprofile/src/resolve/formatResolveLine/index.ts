@@ -1,4 +1,5 @@
 import { TOOL } from '../../constants'
+import formatProfileLine from '../formatProfileLine'
 import type { ResolveOutcome } from '../types'
 
 type ProfileOutcome = Extract<ResolveOutcome, { kind: 'profile' }>
@@ -7,21 +8,21 @@ type ProfileOutcome = Extract<ResolveOutcome, { kind: 'profile' }>
 // fields, `name<TAB>account<TAB>dir<TAB>mcpConfig`, empty ones included.
 // `dir` is the CLAUDE_CONFIG_DIR or, with `--tool codex`, the CODEX_HOME;
 // codex never gets an mcpConfig.
-// The account is empty for the first account: the hook exports it, and an
-// inherited first-account name would make a nested `CCPROFILE=<other>
-// claude` fail (the default profile sets no CLAUDE_CONFIG_DIR to stop it).
 const formatResolveLine = (outcome: ProfileOutcome): string => {
   const { profile, account } = outcome
-  const [dir, mcpConfig] =
-    outcome.tool === TOOL.codex
-      ? [outcome.codexHome.dir, undefined]
-      : [account.configDir, outcome.mcpConfig]
-  return `${[
-    profile.name,
-    account.name === profile.name ? '' : account.name,
-    dir ?? '',
-    mcpConfig ?? '',
-  ].join('\t')}\n`
+  return outcome.tool === TOOL.codex
+    ? formatProfileLine({
+        profile,
+        account,
+        dir: outcome.codexHome.dir,
+        mcpConfig: undefined,
+      })
+    : formatProfileLine({
+        profile,
+        account,
+        dir: account.configDir,
+        mcpConfig: outcome.mcpConfig,
+      })
 }
 
 export default formatResolveLine

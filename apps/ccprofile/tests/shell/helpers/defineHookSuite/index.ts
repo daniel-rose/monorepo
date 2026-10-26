@@ -8,6 +8,7 @@ import codexCases from '../../cases/codexCases'
 import failureCases from '../../cases/failureCases'
 import profileCases from '../../cases/profileCases'
 import sessionCases from '../../cases/sessionCases'
+import switchCases from '../../cases/switchCases'
 import FAKE_VARIANT from '../../constants/FAKE_VARIANT'
 import type { FakeVariant, HookCase } from '../../types'
 import createHookContext from '../createHookContext'
@@ -20,6 +21,7 @@ const CASES: readonly HookCase[] = [
   ...argumentCases,
   ...failureCases,
   ...sessionCases,
+  ...switchCases,
   ...codexCases,
 ]
 

@@ -18,7 +18,7 @@ catalog:
   '@inquirer/checkbox': ^5.2.7
   '@inquirer/confirm': ^6.3.4
   '@inquirer/input': ^5.1.8
-  '@inquirer/select': ^5.2.7
+  '@inquirer/select': ^5.2.8
   '@playwright/test': ^1.64.1
   '@secretlint/core': ^13.0.7
   '@secretlint/secretlint-rule-preset-recommend': ^13.0.7

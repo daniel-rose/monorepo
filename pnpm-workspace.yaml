@@ -54,7 +54,7 @@ catalog:
   zod: ^4.6.7
 catalogs:
   prod:
-    '@anolilab/semantic-release-pnpm': ^8.1.35
+    '@anolilab/semantic-release-pnpm': ^8.1.36
     '@eslint/js': ^10.0.1
     '@semantic-release/changelog': ^7.0.0
     '@semantic-release/commit-analyzer': ^13.0.1

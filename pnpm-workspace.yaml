@@ -33,13 +33,13 @@ catalog:
   '@vitest/eslint-plugin': ^1.6.28
   commander: ^15.0.0
   eslint: ^10.13.0
-  eslint-config-next: ^16.4.2
+  eslint-config-next: ^16.4.3
   eslint-plugin-jsx-a11y-x: ^0.2.0
   eslint-plugin-react-hooks: ^7.1.1
   eslint-plugin-react-refresh: ^0.5.7
   eslint-plugin-tailwindcss: ^4.4.0
   husky: ^9.1.7
-  next: ^16.4.2
+  next: ^16.4.3
   playwright: ^1.64.1
   prettier: ^3.9.10
   react: ^19.3.1

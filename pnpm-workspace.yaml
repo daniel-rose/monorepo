@@ -20,7 +20,7 @@ catalog:
   '@inquirer/input': ^5.1.8
   '@inquirer/select': ^5.2.7
   '@playwright/test': ^1.64.1
-  '@secretlint/core': ^13.0.7
+  '@secretlint/core': ^13.1.0
   '@secretlint/secretlint-rule-preset-recommend': ^13.0.7
   '@types/node': ^26.6.5
   '@types/react': ^19.3.0

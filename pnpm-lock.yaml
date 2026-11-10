@@ -286,8 +286,8 @@ catalogs:
       version: 4.6.7
   prod:
     '@anolilab/semantic-release-pnpm':
-      specifier: ^8.1.35
-      version: 8.1.35
+      specifier: ^8.1.36
+      version: 8.1.36
     '@eslint/js':
       specifier: ^10.0.1
       version: 10.0.1
@@ -482,7 +482,7 @@ importers:
     dependencies:
       '@anolilab/semantic-release-pnpm':
         specifier: catalog:prod
-        version: 8.1.35(json5@2.2.3)(supports-color@7.2.0)(yaml@2.9.1)
+        version: 8.1.36(json5@2.2.3)(supports-color@7.2.0)(yaml@2.9.1)
       '@semantic-release/changelog':
         specifier: catalog:prod
         version: 7.0.0(semantic-release@25.0.9(supports-color@7.2.0)(typescript@5.9.3))
@@ -666,8 +666,8 @@ packages:
     resolution: {integrity: sha512-e3KBrm9Fr2xCmSyKc17cWyL6jOwHJWciiSb6FbRveAmykn0vwYQT1Bf4BJNkuEhCUXNsJL1aN70czA5atzlGzw==}
     engines: {node: ^22.14.0 || >=24.10.0}
 
-  '@anolilab/semantic-release-pnpm@8.1.35':
-    resolution: {integrity: sha512-vVj4uK19ngCqglz3b9mMz1/CKzBfjVYZ/VOfl0WVoPC3I3HFar6TdPLcau3fABCHnADQyVSiQ80gf6/4dTeCoA==}
+  '@anolilab/semantic-release-pnpm@8.1.36':
+    resolution: {integrity: sha512-oPvhZuZ0YlKUSLBpcGvqtmVp61cAXXo0pYUNT3gKF6QE3oCSMy2kLvHDoSGxm6qEcpK2F8VRF5FLXAjcBu10cw==}
     engines: {node: ^22.14.0 || >=24.10.0}
 
   '@antfu/install-pkg@2.1.0':
@@ -4764,7 +4764,7 @@ snapshots:
       ini: 7.0.0
       ts-deepmerge: 8.0.0
 
-  '@anolilab/semantic-release-pnpm@8.1.35(json5@2.2.3)(supports-color@7.2.0)(yaml@2.9.1)':
+  '@anolilab/semantic-release-pnpm@8.1.36(json5@2.2.3)(supports-color@7.2.0)(yaml@2.9.1)':
     dependencies:
       '@actions/core': 3.0.1
       '@anolilab/rc': 4.0.9

@@ -5,13 +5,18 @@ import formatPath from '../formatPath'
 
 type Issue = z.core.$ZodIssue
 
-// A union whose value had the shape of one option (every issue of that
-// option lies below the value) reports that option's issues, so
-// `codex: {}` names `codex.home` instead of the whole union.
+// An issue that shows the value had the option's shape: it lies below the
+// value, or names unknown keys of it (those sit on the value itself).
+const isInsideValue = (error: Issue): boolean =>
+  error.path.length > 0 || error.code === 'unrecognized_keys'
+
+// A union whose value had the shape of one option reports that option's
+// issues, so `codex: {}` names `codex.home` and `codex: { "hom": … }` also
+// `codex.hom` instead of the whole union.
 const nestedIssues = (issue: Issue): Issue[] | undefined => {
   if (issue.code !== 'invalid_union') return undefined
   const option = issue.errors.find(
-    errors => errors.length > 0 && errors.every(error => error.path.length > 0)
+    errors => errors.length > 0 && errors.every(isInsideValue)
   )
   return option?.map(error => ({
     ...error,

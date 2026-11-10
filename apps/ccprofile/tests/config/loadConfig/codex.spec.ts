@@ -275,4 +275,13 @@ describe('loadConfig with codex', () => {
   ])('rejects %s', async (_label, content, expected) => {
     expect(await issuesOf(content)).toEqual([expected])
   })
+
+  it('names the missing home and the unknown key of a misspelled codex', async () => {
+    expect(
+      await issuesOf({ profiles: [{ ...work, codex: { hom: '/p/c' } }] })
+    ).toEqual([
+      'profiles[0].codex.home: Invalid input: expected string, received undefined',
+      'profiles[0].codex.hom: unknown key',
+    ])
+  })
 })

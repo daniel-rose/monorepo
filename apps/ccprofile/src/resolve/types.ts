@@ -71,5 +71,10 @@ export type ResolveOutcome =
   // claude: mcpConfig is <shared source>/.mcp.json when it exists.
   | (ProfileOutcomeBase & ToolTarget)
   | { kind: typeof OUTCOME_KIND.noMatch }
+  // codex in a profile with `codex: false`: nothing may start.
+  | (Omit<ProfileOutcomeBase, 'kind'> & {
+      kind: typeof OUTCOME_KIND.disabled
+      tool: typeof TOOL.codex
+    })
   // Every message starts with `ccprofile: `; the caller prints them.
   | { kind: typeof OUTCOME_KIND.error; messages: string[] }

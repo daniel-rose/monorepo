@@ -4,6 +4,7 @@ import type { ExitCode } from '../constants'
 import { CLI_MESSAGE, EXIT_CODE } from '../constants'
 import readPackageVersion from '../context/readPackageVersion'
 import type { Context } from '../context/types'
+import add from './commands/add'
 import config from './commands/config'
 import doctor from './commands/doctor'
 import handoff from './commands/handoff'
@@ -59,6 +60,15 @@ const registerCommands = (
     .option('--example', 'write the example config without asking')
     .action(async (options: { example?: boolean }) =>
       setExitCode(await init(ctx, options))
+    )
+
+  program
+    .command('add')
+    .description('add a profile to the config (wizard)')
+    .argument('[name]', 'name of the new profile (asked when omitted)')
+    .option('--yes', 'write without asking')
+    .action(async (name: string | undefined, options: { yes?: boolean }) =>
+      setExitCode(await add(ctx, name, options))
     )
 
   program

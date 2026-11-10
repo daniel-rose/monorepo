@@ -65,7 +65,7 @@ const handoff = async (
         profile,
         account,
         dir: account.configDir,
-        mcpConfig: target.tool === TOOL.claude ? target.mcpConfig : undefined,
+        mcpConfig: target?.tool === TOOL.claude ? target.mcpConfig : undefined,
       },
       [taken.sessionId]
     )

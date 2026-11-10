@@ -4,6 +4,7 @@ import {
   CLI_MESSAGE,
   EXIT_CODE,
   OUTCOME_KIND,
+  RESOLVE_MESSAGE,
   RESOLVE_PROTOCOL,
   TOOL,
 } from '../../../constants'
@@ -59,6 +60,10 @@ const resolve = async (
         current
           ? CLI_MESSAGE.noMatch(locateConfig(ctx))
           : CLI_MESSAGE.hookOutdated,
+      ])
+    case OUTCOME_KIND.disabled:
+      return failWith(ctx, [
+        RESOLVE_MESSAGE.codexDisabled(outcome.profile.name),
       ])
     case OUTCOME_KIND.error:
       return failWith(ctx, outcome.messages)

@@ -13,6 +13,7 @@ const createConfig = (
   schema,
   profiles: profiles.map(profile => ({
     configDir: undefined,
+    codex: { mode: 'default' },
     paths: [],
     remotes: [],
     accounts: [],

@@ -34,11 +34,14 @@ const contextFor = (answer: (home: string | undefined) => RunCommandResult) =>
     },
   })
 
+const own = (home: string) => ({ mode: 'home', home }) as const
+const disabled = { mode: 'disabled' } as const
+
 const privateConfig = () =>
   createConfig([
     {
       name: 'private',
-      codexHome: privateHome,
+      codex: own(privateHome),
       accounts: [
         { name: 'seat-2', configDir: '/p/c2', codexHome: seatHome },
         { name: 'seat-3', configDir: '/p/c3' },
@@ -89,7 +92,7 @@ describe('checkCodexLogin', () => {
     const ctx = contextFor(() => result({}))
     const config = createConfig([
       { name: 'work' },
-      { name: 'private', codexHome: privateHome },
+      { name: 'private', codex: own(privateHome) },
     ])
 
     expect(await checkCodexLogin(ctx, config)).toEqual([
@@ -99,10 +102,44 @@ describe('checkCodexLogin', () => {
     expect(calls).toContain(undefined)
   })
 
+  it('names a disabled codex without checking a login for it', async () => {
+    const ctx = contextFor(() => result({}))
+    const config = createConfig([
+      { name: 'work' },
+      {
+        name: 'private',
+        codex: disabled,
+        accounts: [{ name: 'seat-2', configDir: '/p/c2' }],
+      },
+    ])
+
+    expect(await checkCodexLogin(ctx, config)).toEqual([
+      { status: 'ok', message: 'codex ~/.codex (default): logged in' },
+      {
+        status: 'ok',
+        message: 'profile private: codex disabled (codex: false)',
+      },
+    ])
+    expect(calls).toEqual([undefined])
+  })
+
+  it('checks nothing but names it when every profile disables codex', async () => {
+    const ctx = contextFor(() => result({}))
+    const config = createConfig([{ name: 'private', codex: disabled }])
+
+    expect(await checkCodexLogin(ctx, config)).toEqual([
+      {
+        status: 'ok',
+        message: 'profile private: codex disabled (codex: false)',
+      },
+    ])
+    expect(calls).toEqual([])
+  })
+
   it('reports a missing codex home instead of its login', async () => {
     const missing = join(sandbox.home, '.codex-missing')
     const ctx = contextFor(() => result({}))
-    const config = createConfig([{ name: 'private', codexHome: missing }])
+    const config = createConfig([{ name: 'private', codex: own(missing) }])
 
     expect(await checkCodexLogin(ctx, config)).toEqual([
       {
@@ -127,7 +164,7 @@ describe('checkCodexLogin', () => {
 
   it('warns about an unknown login state', async () => {
     const ctx = contextFor(() => result({ timedOut: true }))
-    const config = createConfig([{ name: 'private', codexHome: privateHome }])
+    const config = createConfig([{ name: 'private', codex: own(privateHome) }])
 
     expect(await checkCodexLogin(ctx, config)).toEqual([
       {
@@ -142,7 +179,7 @@ describe('checkCodexLogin', () => {
     const config = createConfig([
       { name: 'work' },
       { name: 'client' },
-      { name: 'private', codexHome: privateHome },
+      { name: 'private', codex: own(privateHome) },
     ])
 
     expect(await checkCodexLogin(ctx, config)).toContainEqual({
@@ -150,5 +187,18 @@ describe('checkCodexLogin', () => {
       message:
         'profiles work, client share ~/.codex – give each its own codex.home',
     })
+  })
+
+  it('does not count disabled profiles as sharing ~/.codex', async () => {
+    const ctx = contextFor(() => result({}))
+    const config = createConfig([
+      { name: 'work' },
+      { name: 'client', codex: disabled },
+      { name: 'private', codex: own(privateHome) },
+    ])
+
+    expect(
+      (await checkCodexLogin(ctx, config)).map(({ message }) => message)
+    ).not.toContainEqual(expect.stringContaining('share ~/.codex'))
   })
 })

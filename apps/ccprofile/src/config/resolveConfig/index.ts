@@ -1,43 +1,18 @@
-import { realpath, stat } from 'node:fs/promises'
-
-import { CONFIG_FILE, CONFIG_REASON } from '../../constants'
+import { CODEX_MODE, CONFIG_FILE, CONFIG_REASON } from '../../constants'
 import type { Context } from '../../context/types'
 import { normalizeRemote } from '../../match'
 import expandHome from '../expandHome'
 import formatPath from '../formatPath'
+import identifyDir from '../identifyDir'
 import pathFlavor from '../pathFlavor'
 import type {
   Account,
+  DirIdentity,
   ParsedConfig,
+  ProfileCodex,
   ResolveConfigResult,
   ResolvedProfile,
 } from '../types'
-
-const CASE_INSENSITIVE_PLATFORMS: readonly NodeJS.Platform[] = [
-  'win32',
-  'darwin',
-]
-
-type DirIdentity = { keys: string[]; isFile: boolean }
-
-// Keys that identify a directory: its resolved path plus, when it exists,
-// the real path behind symlinks.
-const identify = async (
-  resolved: string,
-  fold: (value: string) => string
-): Promise<DirIdentity> => {
-  try {
-    if (!(await stat(resolved)).isDirectory()) {
-      return { keys: [fold(resolved)], isFile: true }
-    }
-    return {
-      keys: [fold(resolved), fold(await realpath(resolved))],
-      isFile: false,
-    }
-  } catch {
-    return { keys: [fold(resolved)], isFile: false }
-  }
-}
 
 // Everything that needs the home directory, the platform or the filesystem:
 // `~` expansion, absolute paths, remote normalization and configDir checks.
@@ -47,10 +22,7 @@ const resolveConfig = async (
   ctx: Context
 ): Promise<ResolveConfigResult> => {
   const flavor = pathFlavor(ctx.platform)
-  const fold = (value: string) =>
-    CASE_INSENSITIVE_PLATFORMS.includes(ctx.platform)
-      ? value.toLowerCase()
-      : value
+  const identify = (dir: string) => identifyDir(dir, ctx.platform)
   const issues: string[] = []
   const report = (path: readonly PropertyKey[], reason: string) => {
     issues.push(`${formatPath(path)}: ${reason}`)
@@ -62,12 +34,10 @@ const resolveConfig = async (
   }
 
   const claudeHome = await identify(
-    flavor.resolve(ctx.homedir, CONFIG_FILE.claudeDirName),
-    fold
+    flavor.resolve(ctx.homedir, CONFIG_FILE.claudeDirName)
   )
   const codexHome = await identify(
-    flavor.resolve(ctx.homedir, CONFIG_FILE.codexDirName),
-    fold
+    flavor.resolve(ctx.homedir, CONFIG_FILE.codexDirName)
   )
   const seenDirs: { owner: string; keys: string[] }[] = []
   const isSame = (a: DirIdentity, b: DirIdentity) =>
@@ -90,7 +60,7 @@ const resolveConfig = async (
       return undefined
     }
 
-    const identity = await identify(dir, fold)
+    const identity = await identify(dir)
     for (const [home, reason] of defaults) {
       if (isSame(home, identity)) report(at, reason)
     }
@@ -125,6 +95,18 @@ const resolveConfig = async (
           [claudeHome, CONFIG_REASON.codexInClaudeHome],
         ])
 
+  // `false` names no directory: nothing to check, nothing reserved.
+  const checkProfileCodex = async (
+    codex: { home: string } | false | undefined,
+    owner: readonly PropertyKey[]
+  ): Promise<ProfileCodex> => {
+    if (codex === false) return { mode: CODEX_MODE.disabled }
+    const home = await checkCodexHome(codex, owner)
+    return home === undefined
+      ? { mode: CODEX_MODE.default }
+      : { mode: CODEX_MODE.home, home }
+  }
+
   const profiles: ResolvedProfile[] = []
 
   for (const [index, profile] of parsed.profiles.entries()) {
@@ -152,7 +134,7 @@ const resolveConfig = async (
       profile.configDir === undefined
         ? undefined
         : await checkConfigDir(profile.configDir, at())
-    const codexHome = await checkCodexHome(profile.codex, at())
+    const codex = await checkProfileCodex(profile.codex, at())
 
     const accounts: Account[] = []
     for (const [entry, account] of profile.accounts.entries()) {
@@ -173,7 +155,7 @@ const resolveConfig = async (
     profiles.push({
       name: profile.name,
       configDir,
-      codexHome,
+      codex,
       paths,
       remotes,
       accounts,

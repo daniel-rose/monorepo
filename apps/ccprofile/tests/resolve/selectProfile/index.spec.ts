@@ -14,6 +14,7 @@ const profile = (
 ): ResolvedProfile => ({
   name,
   configDir,
+  codex: { mode: 'default' },
   paths: [],
   remotes: [],
   accounts: accounts.map(account => ({

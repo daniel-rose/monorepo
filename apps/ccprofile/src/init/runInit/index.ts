@@ -8,20 +8,12 @@ import type { ExitCode } from '../../constants'
 import { EXAMPLE_CONFIG, INIT_TEXT } from '../../constants'
 import readSchemaUrl from '../../context/readSchemaUrl'
 import type { Context } from '../../context/types'
+import { toConfigProfile } from '../../profile'
 import findCandidates from '../findCandidates'
 import runWizard from '../runWizard'
-import type { DraftProfile } from '../types'
 import validateConfig from '../validateConfig'
 
 const JSON_INDENT = 2
-
-// Empty `paths`/`remotes` stay out of the file.
-const toConfigProfile = (profile: DraftProfile) => ({
-  name: profile.name,
-  ...(profile.configDir !== undefined && { configDir: profile.configDir }),
-  ...(profile.remotes.length > 0 && { remotes: profile.remotes }),
-  ...(profile.paths.length > 0 && { paths: profile.paths }),
-})
 
 const pathExists = async (path: string): Promise<boolean> => {
   try {

@@ -66,6 +66,23 @@ const codexCases: readonly HookCase[] = [
     },
   },
   {
+    title: 'does not start codex in a profile with codex: false',
+    test: async t => {
+      t.writeConfig()
+
+      const result = await t.run([], {
+        cwd: t.dirs.unicode,
+        scenario: SCENARIO.codex,
+      })
+
+      expect(result.exitCode).not.toBe(0)
+      expect(result.stderr).toContain(
+        'ccprofile: profile "unicode" has no codex (codex: false)'
+      )
+      expect(t.invocations()).toEqual([])
+    },
+  },
+  {
     title: 'gives codex neither CLAUDE_CONFIG_DIR nor --mcp-config',
     test: async t => {
       t.writeConfig()

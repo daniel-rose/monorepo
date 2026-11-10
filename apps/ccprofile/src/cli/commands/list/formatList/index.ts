@@ -1,6 +1,6 @@
 import type { ResolvedConfig, ResolvedProfile } from '../../../../config'
-import { onlyProfile, usesCodex } from '../../../../config'
-import { LIMITS_STATUS, LIST_TEXT } from '../../../../constants'
+import { onlyProfile, ownCodexHome, usesCodex } from '../../../../config'
+import { CODEX_MODE, LIMITS_STATUS, LIST_TEXT } from '../../../../constants'
 import type { AccountLimits } from '../../../../limits'
 import { formatReading } from '../../../../limits'
 import type { ProfileLimits } from '../types'
@@ -37,19 +37,26 @@ const formatAccounts = (
 
 // Once any profile uses codex, every profile shows its Codex home (so
 // profiles sharing ~/.codex are visible), then where each account's comes
-// from: its own, the profile's, or ~/.codex.
-const formatCodex = ({ codexHome, accounts }: ResolvedProfile): string[] => [
-  LIST_TEXT.codex(codexHome),
-  ...accounts.map(account =>
-    LIST_TEXT.codexAccount(
-      account.name,
-      account.codexHome ??
-        (codexHome === undefined
-          ? LIST_TEXT.codexDefault
-          : LIST_TEXT.codexFromProfile)
-    )
-  ),
-]
+// from: its own, the profile's, or ~/.codex. A disabled codex is one line:
+// its accounts have none either.
+const formatCodex = (profile: ResolvedProfile): string[] => {
+  if (profile.codex.mode === CODEX_MODE.disabled) {
+    return [LIST_TEXT.codexDisabled]
+  }
+  const home = ownCodexHome(profile)
+  return [
+    LIST_TEXT.codex(home),
+    ...profile.accounts.map(account =>
+      LIST_TEXT.codexAccount(
+        account.name,
+        account.codexHome ??
+          (home === undefined
+            ? LIST_TEXT.codexDefault
+            : LIST_TEXT.codexFromProfile)
+      )
+    ),
+  ]
+}
 
 const formatOnUnknown = (config: ResolvedConfig): string => {
   const only = onlyProfile(config)

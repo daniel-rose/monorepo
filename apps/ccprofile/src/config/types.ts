@@ -1,9 +1,20 @@
 import type { z } from 'zod'
 
-import type { LOAD_STATUS } from '../constants'
+import type { CODEX_MODE, LOAD_STATUS } from '../constants'
 import type configSchema from './schema'
 
 type CodexEntry = { home: string }
+
+// What identifies a directory (`identifyDir`); `isFile`: it exists but is no
+// directory.
+export type DirIdentity = { keys: string[]; isFile: boolean }
+
+// The `codex` of a profile, resolved: ~/.codex, its own expanded home, or
+// none (`codex: false`).
+export type ProfileCodex =
+  | { mode: typeof CODEX_MODE.default }
+  | { mode: typeof CODEX_MODE.home; home: string }
+  | { mode: typeof CODEX_MODE.disabled }
 
 // A further account, resolved. `codexHome` undefined: the account uses the
 // Codex home of its profile.
@@ -17,7 +28,7 @@ export type Account = {
 export type Profile = {
   name: string
   configDir?: string
-  codex?: CodexEntry
+  codex?: CodexEntry | false
   paths: string[]
   remotes: string[]
   accounts: { name: string; configDir: string; codex?: CodexEntry }[]
@@ -25,11 +36,11 @@ export type Profile = {
 
 // Expanded absolute paths and normalized remotes. `configDir` undefined is
 // the default profile (~/.claude); it is also the first account, `accounts`
-// holds the further ones. `codexHome` undefined is ~/.codex.
+// holds the further ones. With `codex` disabled no account has a codexHome.
 export type ResolvedProfile = {
   name: string
   configDir: string | undefined
-  codexHome?: string
+  codex: ProfileCodex
   paths: string[]
   remotes: string[]
   accounts: Account[]

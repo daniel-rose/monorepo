@@ -40,6 +40,7 @@ const DOCTOR_TEXT = {
   codexHomeMissing: (owner: string, dir: string) =>
     `${owner}: codex home ${dir} does not exist – run ccprofile link`,
   codexFromProfile: (owner: string) => `${owner}: codex from profile`,
+  codexDisabled: (owner: string) => `${owner}: codex disabled (codex: false)`,
   profileOwner: (profile: string) => `profile ${profile}`,
   accountOwner: (profile: string, account: string) =>
     `profile ${profile}, account ${account}`,

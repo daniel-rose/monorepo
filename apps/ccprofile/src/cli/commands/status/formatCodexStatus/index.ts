@@ -10,7 +10,8 @@ import type { Context } from '../../../../context/types'
 import type { ResolveOutcome } from '../../../../resolve'
 
 // The `codex:` line of `status`, or null when codex gets no profile here
-// (no match, no config): then the first line already says why.
+// (no match, no config): then the first line already says why. A profile
+// with `codex: false` shows as disabled, not as an error.
 const formatCodexStatus = (
   outcome: ResolveOutcome,
   ctx: Context
@@ -21,6 +22,7 @@ const formatCodexStatus = (
   ) {
     return STATUS_TEXT.codexExplicit(ctx.env[ENV_VAR.codexHome] ?? '')
   }
+  if (outcome.kind === OUTCOME_KIND.disabled) return STATUS_TEXT.codexDisabled
   if (outcome.kind !== OUTCOME_KIND.profile || outcome.tool !== TOOL.codex) {
     return null
   }

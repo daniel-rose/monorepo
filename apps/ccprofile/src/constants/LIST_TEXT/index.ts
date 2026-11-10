@@ -15,6 +15,7 @@ const LIST_TEXT = {
     `  codex account: ${name} (${dir})`,
   codexFromProfile: 'from profile',
   codexDefault: '~/.codex (default)',
+  codexDisabled: '  codex: disabled (codex: false)',
   remote: (entry: string) => `  remote: ${entry}`,
   path: (entry: string) => `  path: ${entry}`,
   onUnknown: (value: string) => `onUnknown: ${value}`,

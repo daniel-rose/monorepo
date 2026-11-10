@@ -21,6 +21,10 @@ beforeEach(async () => {
   vi.mocked(checkbox).mockReset()
   vi.mocked(input).mockReset()
   vi.mocked(select).mockReset()
+  // Enter on every select: the preset.
+  vi.mocked(select).mockImplementation(({ default: preset }) =>
+    Promise.resolve(preset ?? null)
+  )
 })
 
 afterEach(() => sandbox.cleanup())
@@ -50,6 +54,16 @@ const answerInputs = (...answers: (string | null)[]) => {
   for (const answer of answers) vi.mocked(input).mockResolvedValueOnce(answer)
 }
 
+const answerSelects = (...answers: (string | null)[]) => {
+  for (const answer of answers) vi.mocked(select).mockResolvedValueOnce(answer)
+}
+
+const selectConfig = (index: number) => {
+  const config = vi.mocked(select).mock.calls[index]?.[0]
+  if (config === undefined) throw new Error(`no select #${index}`)
+  return config
+}
+
 const inputConfig = (index: number) => {
   const config = vi.mocked(input).mock.calls[index]?.[0]
   if (config === undefined) throw new Error(`no input #${index}`)
@@ -69,23 +83,72 @@ describe('runInit wizard', () => {
       'private',
       '~/Projects/private'
     )
-    vi.mocked(select).mockResolvedValueOnce('prompt')
 
     const code = await runInit(ctx, { example: false })
 
     expect(code).toBe(0)
-    expect(written()).toMatchObject({
+    expect(written()).toEqual({
+      $schema: expect.any(String) as string,
       onUnknown: 'prompt',
       profiles: [
         { name: 'default', remotes: ['gitlab.example.com'] },
         {
           name: 'private',
           configDir: '~/.claude-private',
+          codex: false,
           paths: ['~/Projects/private'],
         },
       ],
     })
     expect(ctx.out()).toBe('no match (will prompt)\n')
+  })
+
+  it('keeps ~/.codex for the first profile and disables it for further ones', async () => {
+    prepareClaudeDirs()
+    keepChecked()
+    answerInputs('default', 'x.test', 'private', 'y.test')
+
+    await runInit(ttyContext(sandbox.dir('plain')), { example: false })
+
+    expect(selectConfig(0)).toMatchObject({
+      message: 'Codex CLI for default',
+      default: 'default',
+    })
+    expect(selectConfig(1)).toMatchObject({
+      message: 'Codex CLI for private',
+      default: 'disabled',
+    })
+    expect(selectConfig(0).choices.map(choice => choice.value)).toEqual([
+      'disabled',
+      'home',
+      'default',
+    ])
+  })
+
+  it('writes an own codex home and refuses one already taken', async () => {
+    prepareClaudeDirs()
+    keepChecked()
+    answerSelects('disabled', 'home')
+    answerInputs('default', 'x.test', 'private', '~/.codex-private', 'y.test')
+
+    await runInit(ttyContext(sandbox.dir('plain')), { example: false })
+
+    const homeInput = inputConfig(3)
+    expect(homeInput).toMatchObject({
+      message: 'Codex home for private',
+      default: '~/.codex-private',
+    })
+    expect(homeInput.validate?.('~/.claude-private')).toBe(
+      '"~/.claude-private" is already used (by the config, ~/.claude or ~/.codex)'
+    )
+    expect(homeInput.validate?.('~/.codex')).toContain('already used')
+    expect(homeInput.validate?.('rel')).toContain('not an absolute path')
+    expect(written()).toMatchObject({
+      profiles: [
+        { name: 'default', codex: false },
+        { name: 'private', codex: { home: '~/.codex-private' } },
+      ],
+    })
   })
 
   it('offers each directory with its login, logged-in ones checked', async () => {
@@ -148,7 +211,8 @@ describe('runInit wizard', () => {
     expect(code).toBe(0)
     expect(inputConfig(1).message).toContain('(optional)')
     expect(inputConfig(1).validate?.('')).toBe(true)
-    expect(select).not.toHaveBeenCalled()
+    // Only the codex question, no onUnknown question.
+    expect(select).toHaveBeenCalledOnce()
     expect(written()).toMatchObject({
       onUnknown: 'default',
       profiles: [{ name: 'default' }],
@@ -178,13 +242,13 @@ describe('runInit wizard', () => {
     prepareClaudeDirs()
     keepChecked()
     answerInputs('default', 'gitlab.example.com', 'private', 'github.com/jane')
-    vi.mocked(select).mockResolvedValueOnce('private')
+    answerSelects('default', 'disabled', 'private')
 
     await runInit(ttyContext(sandbox.dir('plain')), { example: false })
 
-    const config = vi.mocked(select).mock.calls[0]?.[0]
-    expect(config?.default).toBe('prompt')
-    expect(config?.choices.map(choice => choice.value)).toEqual([
+    const config = selectConfig(2)
+    expect(config.default).toBe('prompt')
+    expect(config.choices.map(choice => choice.value)).toEqual([
       'prompt',
       'default',
       'private',
@@ -205,11 +269,27 @@ describe('runInit wizard', () => {
       },
     },
     {
+      label: 'the codex choice',
+      setup: () => {
+        keepChecked()
+        answerInputs('default')
+        answerSelects(null)
+      },
+    },
+    {
+      label: 'the codex home',
+      setup: () => {
+        keepChecked()
+        answerInputs('default', null)
+        answerSelects('home')
+      },
+    },
+    {
       label: 'onUnknown',
       setup: () => {
         keepChecked()
         answerInputs('default', 'gitlab.example.com', 'private', 'x.test')
-        vi.mocked(select).mockResolvedValueOnce(null)
+        answerSelects('default', 'disabled', null)
       },
     },
   ])('writes nothing when $label is cancelled', async ({ setup }) => {

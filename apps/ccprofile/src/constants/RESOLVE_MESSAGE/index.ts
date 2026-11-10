@@ -24,6 +24,8 @@ const RESOLVE_MESSAGE = {
   // from the first account (or all accounts are full).
   accountChoice: (profile: string, account: string, detail: string) =>
     `${PREFIX} profile "${profile}" → account "${account}" (${detail})\n`,
+  codexDisabled: (profile: string) =>
+    `${PREFIX} profile "${profile}" has no codex (codex: false)`,
   // Codex never creates its CODEX_HOME; `link` does.
   codexHomeMissing: (dir: string, account: string) =>
     `${PREFIX} codex home ${dir} of account "${account}" does not exist – run "ccprofile link"\n`,

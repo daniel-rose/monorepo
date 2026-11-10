@@ -2,20 +2,25 @@ import { basename } from 'node:path'
 
 import {
   AUTH_STATE,
+  CODEX_MODE,
   CONFIG_FILE,
-  INIT_PATTERN,
   INIT_TEXT,
   ON_UNKNOWN_PROMPT,
 } from '../../constants'
 import type { Context } from '../../context/types'
+import type { DraftProfile } from '../../profile'
+import {
+  askCodex,
+  askMatchers,
+  collectDirKeys,
+  validateNewDir,
+} from '../../profile'
 import type { Choice } from '../../prompt'
 import { checkbox, input, select } from '../../prompt'
 import formatAuth from '../formatAuth'
 import readAuthStatus from '../readAuthStatus'
-import splitMatchers from '../splitMatchers'
 import suggestRemote from '../suggestRemote'
-import type { Candidate, DraftProfile, WizardResult } from '../types'
-import validateMatchers from '../validateMatchers'
+import type { Candidate, WizardResult } from '../types'
 import validateName from '../validateName'
 
 const toHomeForm = (configDir: string): string =>
@@ -39,42 +44,75 @@ const toChoice = async (
   }
 }
 
-// Name and matchers of one picked directory; null when the user aborts.
-// The only profile needs no matchers: it is written as `onUnknown`.
+type ProfileContext = {
+  drafts: readonly DraftProfile[]
+  // Every picked directory: an own Codex home must be none of them.
+  picked: readonly Candidate[]
+  suggestion?: string
+  only: boolean
+}
+
+// The first profile on ~/.codex keeps it; every further one gets no codex
+// unless asked, so ~/.codex is never shared by accident.
+const codexPreset = (drafts: readonly DraftProfile[]) =>
+  drafts.some(draft => draft.codex.mode === CODEX_MODE.default)
+    ? CODEX_MODE.disabled
+    : CODEX_MODE.default
+
+const takenDirs = ({ drafts, picked }: ProfileContext): string[] => [
+  ...picked.flatMap(({ configDir }) =>
+    configDir === undefined ? [] : [configDir]
+  ),
+  ...drafts.flatMap(({ codex }) =>
+    codex.mode === CODEX_MODE.home ? [codex.home] : []
+  ),
+]
+
+// Name, codex and matchers of one picked directory; null when the user
+// aborts. The only profile needs no matchers: it is written as `onUnknown`.
 const askProfile = async (
   candidate: Candidate,
-  context: { taken: readonly string[]; suggestion?: string; only: boolean },
+  context: ProfileContext,
   ctx: Context
 ): Promise<DraftProfile | null> => {
   const name = await input(
     {
       message: INIT_TEXT.namePrompt(labelOf(candidate)),
       default: candidate.suggestedName,
-      validate: value => validateName(value, context.taken),
+      validate: value =>
+        validateName(
+          value,
+          context.drafts.map(draft => draft.name)
+        ),
     },
     ctx
   )
   if (name === null) return null
 
-  const required = !context.only
-  const answer = await input(
+  const taken = await collectDirKeys(takenDirs(context), ctx)
+  const codex = await askCodex(
     {
-      message: INIT_TEXT.matcherPrompt(name, required),
-      default: context.suggestion,
-      validate: value => validateMatchers(value, required, ctx),
+      name,
+      preset: codexPreset(context.drafts),
+      validateHome: value => validateNewDir(value, taken, ctx),
     },
     ctx
   )
-  if (answer === null) return null
+  if (codex === null) return null
 
-  const entries = splitMatchers(answer)
+  const matchers = await askMatchers(
+    { name, required: !context.only, suggestion: context.suggestion },
+    ctx
+  )
+  if (matchers === null) return null
+
   return {
     name,
     ...(candidate.configDir !== undefined && {
       configDir: toHomeForm(candidate.configDir),
     }),
-    paths: entries.filter(entry => INIT_PATTERN.pathEntry.test(entry)),
-    remotes: entries.filter(entry => !INIT_PATTERN.pathEntry.test(entry)),
+    codex,
+    ...matchers,
   }
 }
 
@@ -102,8 +140,8 @@ const askOnUnknown = (
     ctx
   )
 
-// Asks which directories become profiles, then name and matchers of each.
-// Returns null when the user aborts (nothing is to be written then).
+// Asks which directories become profiles, then name, codex and matchers of
+// each. Returns null when the user aborts (nothing is to be written then).
 const runWizard = async (
   ctx: Context,
   candidates: readonly Candidate[]
@@ -119,26 +157,27 @@ const runWizard = async (
 
   const suggestion = await suggestRemote(ctx)
   const only = picked.length === 1
-  const profiles: DraftProfile[] = []
+  const drafts: DraftProfile[] = []
   for (const candidate of picked) {
-    const taken = profiles.map(profile => profile.name)
     const profile = await askProfile(
       candidate,
-      { taken, suggestion, only },
+      { drafts, picked, suggestion, only },
       ctx
     )
     if (profile === null) return null
-    profiles.push(profile)
+    drafts.push(profile)
   }
 
-  const [first] = profiles
-  if (only && first !== undefined) return { profiles, onUnknown: first.name }
+  const [first] = drafts
+  if (only && first !== undefined) {
+    return { profiles: drafts, onUnknown: first.name }
+  }
 
   const onUnknown = await askOnUnknown(
-    profiles.map(profile => profile.name),
+    drafts.map(profile => profile.name),
     ctx
   )
-  return onUnknown === null ? null : { profiles, onUnknown }
+  return onUnknown === null ? null : { profiles: drafts, onUnknown }
 }
 
 export default runWizard

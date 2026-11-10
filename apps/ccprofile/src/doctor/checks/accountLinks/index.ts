@@ -1,5 +1,6 @@
 import { stat } from 'node:fs/promises'
 
+import ownCodexHome from '../../../config/ownCodexHome'
 import type { ResolvedProfile } from '../../../config/types'
 import {
   CHECK_STATUS,
@@ -139,7 +140,7 @@ const sourceLine = (
   status: CHECK_STATUS.ok,
   message:
     group.tool === TOOL.codex
-      ? DOCTOR_TEXT.codexSharedSource(profile.name, profile.codexHome)
+      ? DOCTOR_TEXT.codexSharedSource(profile.name, ownCodexHome(profile))
       : DOCTOR_TEXT.sharedSource(profile.name, profile.configDir),
 })
 

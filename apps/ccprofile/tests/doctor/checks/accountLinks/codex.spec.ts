@@ -18,7 +18,10 @@ const configOf = (codexHome: string | undefined) =>
     {
       name: 'private',
       configDir: '/p/claude-private',
-      codexHome,
+      codex:
+        codexHome === undefined
+          ? { mode: 'default' }
+          : { mode: 'home', home: codexHome },
       accounts: [
         { name: 'seat-2', configDir: '/p/claude-private-2', codexHome: seat },
       ],

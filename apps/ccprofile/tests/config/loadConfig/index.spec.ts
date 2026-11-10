@@ -107,6 +107,7 @@ describe('loadConfig', () => {
             {
               name: 'work',
               configDir: undefined,
+              codex: { mode: 'default' },
               paths: [],
               remotes: ['gitlab.example.com', 'github.com/acme/app'],
               accounts: [],
@@ -114,6 +115,7 @@ describe('loadConfig', () => {
             {
               name: 'private',
               configDir: join(home, '.claude-private'),
+              codex: { mode: 'default' },
               paths: [join(home, 'Projects', 'private')],
               remotes: ['github.com/jane'],
               accounts: [],

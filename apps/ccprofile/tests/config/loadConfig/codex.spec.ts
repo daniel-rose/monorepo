@@ -75,7 +75,7 @@ describe('loadConfig with codex', () => {
       config: {
         profiles: [
           {
-            codexHome: join(home, '.codex-private'),
+            codex: { mode: 'home', home: join(home, '.codex-private') },
             accounts: [
               { name: 'seat-2', codexHome: join(home, '.codex-private-2') },
               { name: 'seat-3', codexHome: undefined },
@@ -86,12 +86,53 @@ describe('loadConfig with codex', () => {
     })
   })
 
-  it('leaves codexHome unset without a codex entry', async () => {
+  it('uses ~/.codex without a codex entry', async () => {
     const result = await load({ profiles: [work] })
 
     expect(result).toMatchObject({
       status: 'ok',
-      config: { profiles: [{ codexHome: undefined }] },
+      config: { profiles: [{ codex: { mode: 'default' } }] },
+    })
+  })
+
+  it('disables codex with codex: false, in several profiles', async () => {
+    const result = await load({
+      profiles: [
+        { ...work, codex: false },
+        { ...priv, codex: false, accounts: [seat] },
+      ],
+    })
+
+    expect(result).toMatchObject({
+      status: 'ok',
+      config: {
+        profiles: [
+          { codex: { mode: 'disabled' } },
+          {
+            codex: { mode: 'disabled' },
+            accounts: [{ name: 'seat-2', codexHome: undefined }],
+          },
+        ],
+      },
+    })
+  })
+
+  it('lets another profile use ~/.codex as its own home next to codex: false', async () => {
+    const result = await load({
+      profiles: [
+        { ...work, codex: false },
+        { ...priv, codex: { home: '/p/codex' } },
+      ],
+    })
+
+    expect(result).toMatchObject({
+      status: 'ok',
+      config: {
+        profiles: [
+          { codex: { mode: 'disabled' } },
+          { codex: { mode: 'home', home: '/p/codex' } },
+        ],
+      },
     })
   })
 
@@ -106,7 +147,10 @@ describe('loadConfig with codex', () => {
       status: 'ok',
       config: {
         profiles: [
-          { codexHome: undefined, accounts: [{ codexHome: '/p/codex-2' }] },
+          {
+            codex: { mode: 'default' },
+            accounts: [{ codexHome: '/p/codex-2' }],
+          },
         ],
       },
     })
@@ -122,6 +166,34 @@ describe('loadConfig with codex', () => {
       'codex without home',
       { profiles: [{ ...work, codex: {} }] },
       'profiles[0].codex.home: Invalid input: expected string, received undefined',
+    ],
+    [
+      'codex: true',
+      { profiles: [{ ...work, codex: true }] },
+      'profiles[0].codex: must be { "home": "<dir>" } or false',
+    ],
+    [
+      'codex as a string',
+      { profiles: [{ ...work, codex: '~/.codex-work' }] },
+      'profiles[0].codex: must be { "home": "<dir>" } or false',
+    ],
+    [
+      'account codex: false',
+      { profiles: [{ ...priv, accounts: [{ ...seat, codex: false }] }] },
+      'profiles[0].accounts[0].codex: Invalid input: expected object, received boolean',
+    ],
+    [
+      'account codex.home under a profile with codex: false',
+      {
+        profiles: [
+          {
+            ...priv,
+            codex: false,
+            accounts: [{ ...seat, codex: { home: '/p/codex-2' } }],
+          },
+        ],
+      },
+      'profiles[0].accounts[0].codex: not allowed, the profile disables codex (codex: false)',
     ],
     [
       'relative codex.home',
@@ -202,5 +274,14 @@ describe('loadConfig with codex', () => {
     ],
   ])('rejects %s', async (_label, content, expected) => {
     expect(await issuesOf(content)).toEqual([expected])
+  })
+
+  it('names the missing home and the unknown key of a misspelled codex', async () => {
+    expect(
+      await issuesOf({ profiles: [{ ...work, codex: { hom: '/p/c' } }] })
+    ).toEqual([
+      'profiles[0].codex.home: Invalid input: expected string, received undefined',
+      'profiles[0].codex.hom: unknown key',
+    ])
   })
 })

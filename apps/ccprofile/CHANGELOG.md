@@ -1,3 +1,10 @@
+# @daniel-rose/ccprofile [3.1.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/ccprofile@3.0.0...@daniel-rose/ccprofile@3.1.0) (2026-11-10)
+
+
+### Features
+
+* **ccprofile:** add profiles with a wizard, disable codex per profile ([#204](https://github.com/daniel-rose/monorepo/issues/204)) ([0834754](https://github.com/daniel-rose/monorepo/commit/08347547fb51fd33269d008cf6ca6aa8e93f0a94))
+
 # @daniel-rose/ccprofile [3.0.0](https://github.com/daniel-rose/monorepo/compare/@daniel-rose/ccprofile@2.4.0...@daniel-rose/ccprofile@3.0.0) (2026-10-26)
 
 

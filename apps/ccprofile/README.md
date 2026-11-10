@@ -27,7 +27,7 @@ Bypass the hook any time with `command claude` or `command codex` (zsh, bash, fi
 
 ## Configuration
 
-Location: `$CCPROFILE_CONFIG`, else `${XDG_CONFIG_HOME:-~/.config}/ccprofile/config.json`, on Windows `%APPDATA%\ccprofile\config.json`. The file is read on every call and never written by `resolve`. Create it with `ccprofile init` (wizard) or `ccprofile init --example`.
+Location: `$CCPROFILE_CONFIG`, else `${XDG_CONFIG_HOME:-~/.config}/ccprofile/config.json`, on Windows `%APPDATA%\ccprofile\config.json`. The file is read on every call and never written by `resolve`. Create it with `ccprofile init` (wizard) or `ccprofile init --example`, and add further profiles with `ccprofile add` (wizard) instead of editing the file.
 
 ```json
 {
@@ -222,9 +222,22 @@ Decision order of `resolve`: `CLAUDE_CONFIG_DIR` set (for `codex`: `CODEX_HOME` 
 | `ccprofile handoff --protocol 2 --file <path>`              | What the hook calls after `claude` exits; takes the mod's handoff and prints `name<TAB>account<TAB>dir<TAB>mcpConfig<TAB>sessionId`, or nothing                                                                                                                                                                                                                                                                                                 |
 | `ccprofile setup [shell] [--yes] [--remove]`                | Install or update the hook; `--remove` removes the block and the hook file, never your config                                                                                                                                                                                                                                                                                                                                                   |
 | `ccprofile init [--example]`                                | Create the config; never overwrites. Without a terminal `--example` is required                                                                                                                                                                                                                                                                                                                                                                 |
+| `ccprofile add [name] [--yes]`                              | Add a profile to an existing, valid config (wizard, needs a terminal); shows the change and asks `y/N` (`--yes` skips the question)                                                                                                                                                                                                                                                                                                             |
 | `ccprofile doctor`                                          | Check config, `claude` on PATH, Claude logins, rate-limit data, Codex logins, account links, hook and shell startup file; exit 1 on any `fail`                                                                                                                                                                                                                                                                                                  |
 
-`init` in a terminal is a wizard: it finds `~/.claude` and every `~/.claude-*` directory with a `.claude.json` and lets you check the ones that become profiles, with the login state from `claude auth status --json` (logged-in ones are checked). Per profile it asks for a name (Enter takes the suggestion) and at least one remote or path prefix, then for `onUnknown`. A single profile needs no remote or path: it becomes the `onUnknown` profile. Ctrl-C or Ctrl-D aborts without writing.
+`init` in a terminal is a wizard: it finds `~/.claude` and every `~/.claude-*` directory with a `.claude.json` and lets you check the ones that become profiles, with the login state from `claude auth status --json` (logged-in ones are checked). Per profile it asks for a name (Enter takes the suggestion), for codex (see below) and at least one remote or path prefix, then for `onUnknown`. A single profile needs no remote or path: it becomes the `onUnknown` profile. Ctrl-C or Ctrl-D aborts without writing.
+
+The codex question offers `no codex` (`"codex": false`), `own Codex home` (asks for the directory, `~/.codex-<name>` by default) and `~/.codex (default)`. The first profile on `~/.codex` keeps it; for every further profile `no codex` is preselected, so `~/.codex` is never shared by accident.
+
+`add` asks the same for one new profile and inserts it into the config you have:
+
+1. its name, unless given as `ccprofile add <name>`;
+2. its Claude config directory: an existing one that no profile or account uses yet (with its login state; `~/.claude` only while no profile omits `configDir`), or a new directory, `~/.claude-<name>` by default. No login is needed beforehand;
+3. codex, with `no codex` preselected while another profile uses `~/.codex`;
+4. at least one remote or path prefix (Enter takes the `origin` of the current repository without its last segment);
+5. where it goes: before one of the existing profiles or at the end (the default), since the first matching profile wins.
+
+It then shows the change and asks `y/N`, creates the new directories and writes the file. Everything else in the file stays as it is, `$schema` and `onUnknown` included; the file is written with two-space indentation. If the file changed while the wizard was open, nothing is written. At the end `add` prints how to log in (`CCPROFILE=<name> claude`, then `/login`; for an own Codex home `CCPROFILE=<name> codex login`). Ctrl-C, Ctrl-D or `N` abort without creating or writing anything.
 
 ### What `setup` changes
 

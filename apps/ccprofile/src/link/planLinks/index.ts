@@ -1,5 +1,6 @@
 import { stat } from 'node:fs/promises'
 
+import ownCodexHome from '../../config/ownCodexHome'
 import type { ResolvedProfile } from '../../config/types'
 import type { Tool } from '../../constants'
 import {
@@ -100,21 +101,24 @@ const planGroup = async (group: LinkGroup): Promise<LinkPlan[]> => {
 }
 
 // Codex refuses to start without its CODEX_HOME, so `link` creates the
-// profile's even without further accounts.
-const planCodexHome = async (profile: ResolvedProfile): Promise<LinkPlan[]> =>
-  profile.codexHome === undefined || (await exists(profile.codexHome))
+// profile's even without further accounts (~/.codex and a disabled codex
+// have none to create).
+const planCodexHome = async (profile: ResolvedProfile): Promise<LinkPlan[]> => {
+  const home = ownCodexHome(profile)
+  return home === undefined || (await exists(home))
     ? []
     : [
         {
           tool: TOOL.codex,
           profile: profile.name,
           account: profile.name,
-          dir: profile.codexHome,
+          dir: home,
           createDir: true,
           createSourceDirs: [],
           steps: [],
         },
       ]
+}
 
 // What `link` would do for the given profiles: per profile the Claude
 // accounts, the profile's Codex home, the Codex accounts. Reads only;

@@ -4,12 +4,7 @@ import pathFlavor from '../../config/pathFlavor'
 import sharedSource from '../../config/sharedSource'
 import type { ResolvedProfile } from '../../config/types'
 import type { Tool } from '../../constants'
-import {
-  CODEX_HOME_SOURCE,
-  CONFIG_FILE,
-  RESOLVE_MESSAGE,
-  TOOL,
-} from '../../constants'
+import { CONFIG_FILE, RESOLVE_MESSAGE, TOOL } from '../../constants'
 import type { Context } from '../../context/types'
 import selectCodexHome from '../selectCodexHome'
 import type { SelectedAccount, ToolTarget } from '../types'
@@ -49,17 +44,16 @@ const claudeTarget = async (
 }
 
 // codex: the CODEX_HOME, with a hint when it is missing (codex refuses to
-// start without it, `link` creates it).
+// start without it, `link` creates it); null when the profile disables
+// codex.
 const codexTarget = async (
   profile: ResolvedProfile,
   account: SelectedAccount,
   ctx: Context
-): Promise<ToolTarget> => {
+): Promise<ToolTarget | null> => {
   const codexHome = selectCodexHome(profile, account.name)
-  if (
-    codexHome.source !== CODEX_HOME_SOURCE.default &&
-    !(await exists(codexHome.dir))
-  ) {
+  if (codexHome === null) return null
+  if (codexHome.dir !== undefined && !(await exists(codexHome.dir))) {
     ctx.stderr.write(
       RESOLVE_MESSAGE.codexHomeMissing(codexHome.dir, account.name)
     )
@@ -73,11 +67,12 @@ type Selection = {
   account: SelectedAccount
 }
 
-// What the selected account needs to start its tool.
+// What the selected account needs to start its tool; null when that tool is
+// disabled in the profile (only codex can be).
 const toolTarget = (
   { tool, profile, account }: Selection,
   ctx: Context
-): Promise<ToolTarget> =>
+): Promise<ToolTarget | null> =>
   tool === TOOL.codex
     ? codexTarget(profile, account, ctx)
     : claudeTarget(profile, account, ctx)

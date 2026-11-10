@@ -15,6 +15,7 @@ const STATUS_TEXT = {
   codex: (dir: string) => `codex: ${dir}`,
   codexFromProfile: (dir: string) => `codex: ${dir} (from profile)`,
   codexDefault: 'codex: ~/.codex (default)',
+  codexDisabled: 'codex: disabled (codex: false)',
   codexExplicit: (value: string) => `codex: explicit (CODEX_HOME=${value})`,
 } as const
 

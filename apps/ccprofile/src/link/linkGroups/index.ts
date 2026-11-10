@@ -62,7 +62,7 @@ const claudeGroup = (
       }
 
 // Only accounts with their own codex.home link to the profile's Codex home;
-// the others use that home itself.
+// the others use that home itself. Nothing for a profile without codex.
 const codexGroup = async (
   profile: ResolvedProfile,
   ctx: Pick<Context, 'homedir' | 'platform'>
@@ -72,9 +72,9 @@ const codexGroup = async (
       ? []
       : [{ account: account.name, dir: account.codexHome }]
   )
-  if (targets.length === 0) return null
-
   const source = codexSource(profile, ctx)
+  if (targets.length === 0 || source === null) return null
+
   return {
     tool: TOOL.codex,
     profile: profile.name,

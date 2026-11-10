@@ -17,6 +17,8 @@ const CONFIG_REASON = {
   notDirectory: 'exists but is not a directory',
   noHost: 'has no host',
   accountIsProfile: 'must differ from the profile name',
+  codexDisabled: 'not allowed, the profile disables codex (codex: false)',
+  badCodex: 'must be { "home": "<dir>" } or false',
 } as const
 
 export default CONFIG_REASON

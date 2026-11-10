@@ -7,46 +7,10 @@ import {
   LIMITS,
   ON_UNKNOWN_PROMPT,
 } from '../../constants'
-
-const text = (description: string) =>
-  z
-    .string()
-    .regex(CONFIG_PATTERN.nonBlank, CONFIG_REASON.empty)
-    .describe(description)
-
-const configDirText = (description: string) =>
-  text(description).regex(
-    CONFIG_PATTERN.noLineControl,
-    CONFIG_REASON.lineControl
-  )
-
-const codexSchema = (description: string) =>
-  z
-    .strictObject({
-      home: configDirText(
-        'CODEX_HOME (`~` is expanded); must not be ~/.codex, the default. `ccprofile link` creates it.'
-      ),
-    })
-    .describe(description)
-
-const accountSchema = z
-  .strictObject({
-    name: z
-      .string()
-      .regex(CONFIG_PATTERN.name, CONFIG_REASON.badName)
-      .describe(
-        'Account name: unique within the profile and different from the profile name; selects this account through the CCPROFILE_ACCOUNT variable.'
-      ),
-    configDir: configDirText(
-      'CLAUDE_CONFIG_DIR of this account (its own login); `~` is expanded. `ccprofile link` links the shared config of the profile into it.'
-    ),
-    codex: codexSchema(
-      'Codex CLI login of this account. `ccprofile link` links the Codex config of the profile into it. Omit it to use the Codex home of the profile.'
-    ).optional(),
-  })
-  .describe(
-    'A further login of the profile. It shares the config of the profile configDir.'
-  )
+import accountSchema from './accountSchema'
+import configDirText from './configDirText'
+import profileCodexSchema from './profileCodexSchema'
+import text from './text'
 
 const profileSchema = z
   .strictObject({
@@ -60,9 +24,7 @@ const profileSchema = z
     configDir: configDirText(
       'CLAUDE_CONFIG_DIR of this profile; `~` is expanded. Omit it for the default profile (~/.claude). At most one profile may omit it. It is the first account and the shared config of all accounts.'
     ).optional(),
-    codex: codexSchema(
-      'Codex CLI of this profile: the first Codex account and the shared Codex config of all accounts. Omit it to use ~/.codex.'
-    ).optional(),
+    codex: profileCodexSchema,
     paths: z
       .array(
         text('Directory (`~` expanded) whose subtree selects this profile.')
@@ -98,7 +60,14 @@ const checkAccounts = (
   ctx: z.RefinementCtx
 ): void => {
   const seen = new Set<string>()
-  profile.accounts.forEach(({ name }, entry) => {
+  profile.accounts.forEach(({ name, codex }, entry) => {
+    if (profile.codex === false && codex !== undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['profiles', index, 'accounts', entry, 'codex'],
+        message: CONFIG_REASON.codexDisabled,
+      })
+    }
     const path = ['profiles', index, 'accounts', entry, 'name']
     if (name === profile.name) {
       ctx.addIssue({

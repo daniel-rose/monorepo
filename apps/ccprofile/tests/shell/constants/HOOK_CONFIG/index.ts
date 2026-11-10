@@ -1,7 +1,7 @@
 // Config of the shell tests. `work` is the default profile (no configDir,
 // no codex: ~/.codex); path entries use forward slashes on every platform.
 // `work` and `private` have a second account each; `private` and its
-// `seat-2` have their own Codex homes.
+// `seat-2` have their own Codex homes; `unicode` disables codex.
 const HOOK_CONFIG = {
   profiles: [
     {
@@ -25,6 +25,7 @@ const HOOK_CONFIG = {
     {
       name: 'unicode',
       configDir: '~/.claude-ü',
+      codex: false,
       paths: ['~/Projects/unicode'],
     },
   ],

@@ -11,7 +11,8 @@ import { formatSelection } from '../../../../limits'
 import type { ResolveOutcome } from '../../../../resolve'
 
 type StatusOutcome = Exclude<ResolveOutcome, { kind: 'error' }>
-type ProfileOutcome = Extract<ResolveOutcome, { kind: 'profile' }>
+// `disabled` (only codex can be) still names the profile that applies.
+type ProfileOutcome = Extract<ResolveOutcome, { kind: 'profile' | 'disabled' }>
 
 const formatProfile = ({ profile, reason, match }: ProfileOutcome): string => {
   if (reason === RESOLVE_REASON.explicitProfile) {
@@ -50,6 +51,7 @@ const formatStatus = (outcome: StatusOutcome, ctx: Context): string => {
         ? STATUS_TEXT.explicitConfigDir(ctx.env[ENV_VAR.claudeConfigDir] ?? '')
         : STATUS_TEXT.noProfiles(locateConfig(ctx))
     case OUTCOME_KIND.profile:
+    case OUTCOME_KIND.disabled:
       return `${formatProfile(outcome)}${formatAccount(outcome, ctx)}`
   }
 }

@@ -87,15 +87,11 @@ const createUseProfile =
     }
 
     const { account, selection } = picked
-    return {
-      kind: OUTCOME_KIND.profile,
-      profile,
-      account,
-      selection,
-      reason,
-      match,
-      ...(await toolTarget({ tool, profile, account }, ctx)),
-    }
+    const base = { profile, account, selection, reason, match }
+    const target = await toolTarget({ tool, profile, account }, ctx)
+    return target === null
+      ? { ...base, kind: OUTCOME_KIND.disabled, tool: TOOL.codex }
+      : { ...base, kind: OUTCOME_KIND.profile, ...target }
   }
 
 const fallback = (

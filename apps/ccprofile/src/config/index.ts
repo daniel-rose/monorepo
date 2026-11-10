@@ -4,6 +4,7 @@ export { default as loadConfig } from './loadConfig'
 export { default as locateConfig } from './locateConfig'
 export { default as locateConfigHome } from './locateConfigHome'
 export { default as onlyProfile } from './onlyProfile'
+export { default as ownCodexHome } from './ownCodexHome'
 export { default as profileAccounts } from './profileAccounts'
 export { default as configSchema } from './schema'
 export { default as sharedSource } from './sharedSource'
@@ -12,6 +13,7 @@ export type {
   LoadConfigResult,
   Profile,
   ProfileAccount,
+  ProfileCodex,
   ResolvedConfig,
   ResolvedProfile,
 } from './types'
